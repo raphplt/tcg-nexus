@@ -18,7 +18,7 @@ export class CollectionInventoryAndListings1786101000000
     if (
       await schemaAlreadyHas(
         queryRunner,
-        `SELECT 1 FROM information_schema.columns WHERE table_name = 'collection_item' AND column_name = 'quantityAvailable'`,
+        `SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'collection_item' AND column_name = 'quantityAvailable'`,
       )
     ) {
       return;
@@ -62,7 +62,9 @@ export class CollectionInventoryAndListings1786101000000
     await queryRunner.query(`
       DO $$ BEGIN
         IF NOT EXISTS (
-          SELECT 1 FROM pg_constraint WHERE conname = 'FK_listing_inventory_item'
+          SELECT 1 FROM pg_constraint
+           WHERE connamespace = current_schema()::regnamespace
+             AND conname = 'FK_listing_inventory_item'
         ) THEN
           ALTER TABLE "listing"
             ADD CONSTRAINT "FK_listing_inventory_item"

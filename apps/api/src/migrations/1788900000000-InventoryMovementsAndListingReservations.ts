@@ -22,7 +22,7 @@ export class InventoryMovementsAndListingReservations1788900000000
     if (
       await schemaAlreadyHas(
         queryRunner,
-        `SELECT 1 FROM information_schema.tables WHERE table_name = 'inventory_movement'`,
+        `SELECT 1 FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = 'inventory_movement'`,
       )
     ) {
       return;

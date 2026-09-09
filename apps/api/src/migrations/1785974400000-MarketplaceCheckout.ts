@@ -10,7 +10,7 @@ export class MarketplaceCheckout1785974400000 implements MigrationInterface {
     if (
       await schemaAlreadyHas(
         queryRunner,
-        `SELECT 1 FROM information_schema.tables WHERE table_name = 'order_item'`,
+        `SELECT 1 FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = 'order_item'`,
       )
     ) {
       return;
@@ -191,7 +191,9 @@ export class MarketplaceCheckout1785974400000 implements MigrationInterface {
         FROM pg_constraint con
         JOIN pg_class rel ON rel.oid = con.conrelid
         JOIN pg_attribute att ON att.attrelid = rel.oid AND att.attnum = ANY(con.conkey)
-        WHERE con.contype = 'f' AND rel.relname = $1 AND att.attname = $2
+        WHERE con.contype = 'f'
+          AND rel.relnamespace = current_schema()::regnamespace
+          AND rel.relname = $1 AND att.attname = $2
       `,
       [table, column],
     );

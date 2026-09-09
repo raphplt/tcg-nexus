@@ -18,7 +18,7 @@ export class ProcessedEvents1789300000000 implements MigrationInterface {
     if (
       await schemaAlreadyHas(
         queryRunner,
-        `SELECT 1 FROM information_schema.tables WHERE table_name = 'processed_event'`,
+        `SELECT 1 FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = 'processed_event'`,
       )
     ) {
       return;

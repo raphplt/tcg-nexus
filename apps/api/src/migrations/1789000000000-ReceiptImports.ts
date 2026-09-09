@@ -18,7 +18,7 @@ export class ReceiptImports1789000000000 implements MigrationInterface {
     if (
       await schemaAlreadyHas(
         queryRunner,
-        `SELECT 1 FROM information_schema.tables WHERE table_name = 'receipt_import'`,
+        `SELECT 1 FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = 'receipt_import'`,
       )
     ) {
       return;
@@ -69,7 +69,7 @@ export class ReceiptImports1789000000000 implements MigrationInterface {
       BEGIN
         SELECT quote_ident(column_name) INTO collection_column
           FROM information_schema.columns
-         WHERE table_name = 'collection_item'
+         WHERE table_schema = current_schema() AND table_name = 'collection_item'
            AND column_name IN ('collectionId', 'collection_id') LIMIT 1;
         IF collection_column IS NULL THEN
           RAISE EXCEPTION 'collection_item collection column is missing';

@@ -20,7 +20,7 @@ export class SellerLedgerAndPayoutExecution1788800000000
     if (
       await schemaAlreadyHas(
         queryRunner,
-        `SELECT 1 FROM information_schema.tables WHERE table_name = 'seller_ledger_entry'`,
+        `SELECT 1 FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = 'seller_ledger_entry'`,
       )
     ) {
       return;
@@ -80,16 +80,16 @@ export class SellerLedgerAndPayoutExecution1788800000000
         currency_type text;
       BEGIN
         SELECT quote_ident(column_name) INTO pending FROM information_schema.columns
-          WHERE table_name = 'seller_settlement_account'
+          WHERE table_schema = current_schema() AND table_name = 'seller_settlement_account'
             AND column_name IN ('balancePending', 'balance_pending') LIMIT 1;
         SELECT quote_ident(column_name) INTO available FROM information_schema.columns
-          WHERE table_name = 'seller_settlement_account'
+          WHERE table_schema = current_schema() AND table_name = 'seller_settlement_account'
             AND column_name IN ('balanceAvailable', 'balance_available') LIMIT 1;
         SELECT quote_ident(column_name) INTO on_hold FROM information_schema.columns
-          WHERE table_name = 'seller_settlement_account'
+          WHERE table_schema = current_schema() AND table_name = 'seller_settlement_account'
             AND column_name IN ('balanceOnHold', 'balance_on_hold') LIMIT 1;
         SELECT quote_ident(column_name) INTO paid_out FROM information_schema.columns
-          WHERE table_name = 'seller_settlement_account'
+          WHERE table_schema = current_schema() AND table_name = 'seller_settlement_account'
             AND column_name IN ('balancePaidOut', 'balance_paid_out') LIMIT 1;
         IF pending IS NULL OR available IS NULL OR on_hold IS NULL OR paid_out IS NULL THEN
           RAISE EXCEPTION 'seller_settlement_account balance columns are missing';

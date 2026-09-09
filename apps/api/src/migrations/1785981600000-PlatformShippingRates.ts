@@ -10,7 +10,7 @@ export class PlatformShippingRates1785981600000 implements MigrationInterface {
     if (
       await schemaAlreadyHas(
         queryRunner,
-        `SELECT 1 FROM information_schema.columns WHERE table_name = 'listing' AND column_name = 'handlingTimeDays'`,
+        `SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'listing' AND column_name = 'handlingTimeDays'`,
       )
     ) {
       return;

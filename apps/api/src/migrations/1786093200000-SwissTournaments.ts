@@ -21,7 +21,7 @@ export class SwissTournaments1786093200000 implements MigrationInterface {
     if (
       await schemaAlreadyHas(
         queryRunner,
-        `SELECT 1 FROM information_schema.columns WHERE table_name = 'match' AND column_name = 'isBye'`,
+        `SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'match' AND column_name = 'isBye'`,
       )
     ) {
       return;

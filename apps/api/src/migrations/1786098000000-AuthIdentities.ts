@@ -11,7 +11,7 @@ export class AuthIdentities1786098000000 implements MigrationInterface {
     if (
       await schemaAlreadyHas(
         queryRunner,
-        `SELECT 1 FROM information_schema.tables WHERE table_name = 'auth_identity'`,
+        `SELECT 1 FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = 'auth_identity'`,
       )
     ) {
       return;

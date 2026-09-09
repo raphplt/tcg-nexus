@@ -15,7 +15,7 @@ export class CheckoutAttemptAndAuditOutbox1786099000000
     if (
       await schemaAlreadyHas(
         queryRunner,
-        `SELECT 1 FROM information_schema.tables WHERE table_name = 'outbox_event'`,
+        `SELECT 1 FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = 'outbox_event'`,
       )
     ) {
       return;

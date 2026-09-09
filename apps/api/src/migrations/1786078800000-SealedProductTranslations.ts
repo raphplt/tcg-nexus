@@ -27,7 +27,7 @@ export class SealedProductTranslations1786078800000
     if (
       await schemaAlreadyHas(
         queryRunner,
-        `SELECT 1 FROM information_schema.tables WHERE table_name = 'sealed_product_locale'`,
+        `SELECT 1 FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = 'sealed_product_locale'`,
       )
     ) {
       return;

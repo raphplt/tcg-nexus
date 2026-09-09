@@ -12,7 +12,7 @@ export class NotificationTranslations1786068000000
     if (
       await schemaAlreadyHas(
         queryRunner,
-        `SELECT 1 FROM information_schema.columns WHERE table_name = 'notification' AND column_name = 'translationKey'`,
+        `SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'notification' AND column_name = 'translationKey'`,
       )
     ) {
       return;

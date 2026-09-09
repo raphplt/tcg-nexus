@@ -10,7 +10,7 @@ export class UserPreferredLocale1786064400000 implements MigrationInterface {
     if (
       await schemaAlreadyHas(
         queryRunner,
-        `SELECT 1 FROM information_schema.columns WHERE table_name = 'user' AND column_name ILIKE '%referredlocale%'`,
+        `SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'user' AND column_name ILIKE '%referredlocale%'`,
       )
     ) {
       return;

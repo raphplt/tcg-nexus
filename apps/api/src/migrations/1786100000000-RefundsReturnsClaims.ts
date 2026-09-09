@@ -13,7 +13,7 @@ export class RefundsReturnsClaims1786100000000 implements MigrationInterface {
     if (
       await schemaAlreadyHas(
         queryRunner,
-        `SELECT 1 FROM information_schema.tables WHERE table_name = 'refund_operation'`,
+        `SELECT 1 FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = 'refund_operation'`,
       )
     ) {
       return;

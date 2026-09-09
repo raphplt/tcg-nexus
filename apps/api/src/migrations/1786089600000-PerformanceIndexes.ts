@@ -18,7 +18,7 @@ export class PerformanceIndexes1786089600000 implements MigrationInterface {
     if (
       await schemaAlreadyHas(
         queryRunner,
-        `SELECT 1 FROM information_schema.columns WHERE table_name = 'ranked_match_history' AND column_name = 'matchId'`,
+        `SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'ranked_match_history' AND column_name = 'matchId'`,
       )
     ) {
       return;

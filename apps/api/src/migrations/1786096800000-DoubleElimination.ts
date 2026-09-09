@@ -21,7 +21,7 @@ export class DoubleElimination1786096800000 implements MigrationInterface {
     if (
       await schemaAlreadyHas(
         queryRunner,
-        `SELECT 1 FROM information_schema.columns WHERE table_name = 'match' AND column_name = 'bracketSide'`,
+        `SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'match' AND column_name = 'bracketSide'`,
       )
     ) {
       return;

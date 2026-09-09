@@ -25,7 +25,7 @@ export class DropLegacyCatalogColumns1786075200000
     if (
       await schemaAlreadyHas(
         queryRunner,
-        `SELECT 1 WHERE NOT EXISTS ( SELECT 1 FROM information_schema.columns WHERE table_name = 'card' AND column_name = 'name')`,
+        `SELECT 1 WHERE NOT EXISTS ( SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'card' AND column_name = 'name')`,
       )
     ) {
       return;

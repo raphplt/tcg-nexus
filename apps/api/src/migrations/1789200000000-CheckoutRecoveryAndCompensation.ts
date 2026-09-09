@@ -19,7 +19,7 @@ export class CheckoutRecoveryAndCompensation1789200000000
     if (
       await schemaAlreadyHas(
         queryRunner,
-        `SELECT 1 FROM information_schema.columns WHERE table_name = 'payment_transaction' AND column_name = 'compensationRequiredAt'`,
+        `SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'payment_transaction' AND column_name = 'compensationRequiredAt'`,
       )
     ) {
       return;

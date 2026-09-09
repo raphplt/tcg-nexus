@@ -10,7 +10,7 @@ export class ShippingFees1785978000000 implements MigrationInterface {
     if (
       await schemaAlreadyHas(
         queryRunner,
-        `SELECT 1 FROM information_schema.columns WHERE table_name = 'order' AND column_name ILIKE '%shipping%'`,
+        `SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'order' AND column_name ILIKE '%shipping%'`,
       )
     ) {
       return;

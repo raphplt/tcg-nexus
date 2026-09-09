@@ -45,10 +45,10 @@ export class RepairLegacyColumnNames1789500000000
             BEGIN
               IF EXISTS (
                 SELECT 1 FROM information_schema.columns
-                 WHERE table_name = '${table}' AND column_name = '${written}'
+                 WHERE table_schema = current_schema() AND table_name = '${table}' AND column_name = '${written}'
               ) AND NOT EXISTS (
                 SELECT 1 FROM information_schema.columns
-                 WHERE table_name = '${table}' AND column_name = '${expected}'
+                 WHERE table_schema = current_schema() AND table_name = '${table}' AND column_name = '${expected}'
               ) THEN
                 ALTER TABLE "${table}" RENAME COLUMN "${written}" TO "${expected}";
               END IF;

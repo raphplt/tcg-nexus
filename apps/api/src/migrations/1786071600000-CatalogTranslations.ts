@@ -16,7 +16,7 @@ export class CatalogTranslations1786071600000 implements MigrationInterface {
     if (
       await schemaAlreadyHas(
         queryRunner,
-        `SELECT 1 FROM information_schema.tables WHERE table_name = 'card_translation'`,
+        `SELECT 1 FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = 'card_translation'`,
       )
     ) {
       return;

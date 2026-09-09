@@ -20,7 +20,7 @@ export class OnlinePlaySessions1786086000000 implements MigrationInterface {
     if (
       await schemaAlreadyHas(
         queryRunner,
-        `SELECT 1 FROM information_schema.tables WHERE table_name = 'online_match_session'`,
+        `SELECT 1 FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = 'online_match_session'`,
       )
     ) {
       return;
@@ -158,7 +158,8 @@ export class OnlinePlaySessions1786086000000 implements MigrationInterface {
     definition: string,
   ): Promise<void> {
     const [existing] = await queryRunner.query(
-      `SELECT 1 FROM pg_constraint WHERE conname = $1`,
+      `SELECT 1 FROM pg_constraint
+        WHERE connamespace = current_schema()::regnamespace AND conname = $1`,
       [constraintName],
     );
 

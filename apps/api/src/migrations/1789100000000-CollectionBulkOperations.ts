@@ -21,7 +21,7 @@ export class CollectionBulkOperations1789100000000
     if (
       await schemaAlreadyHas(
         queryRunner,
-        `SELECT 1 FROM information_schema.tables WHERE table_name = 'collection_bulk_operation'`,
+        `SELECT 1 FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = 'collection_bulk_operation'`,
       )
     ) {
       return;
@@ -82,7 +82,7 @@ export class CollectionBulkOperations1789100000000
       BEGIN
         SELECT quote_ident(column_name) INTO collection_column
           FROM information_schema.columns
-         WHERE table_name = 'collection_item'
+         WHERE table_schema = current_schema() AND table_name = 'collection_item'
            AND column_name IN ('collectionId', 'collection_id') LIMIT 1;
         IF collection_column IS NULL THEN
           RAISE EXCEPTION 'collection_item collection column is missing';
