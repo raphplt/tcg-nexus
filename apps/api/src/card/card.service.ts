@@ -1,4 +1,9 @@
-import { Injectable, Logger, type OnModuleInit } from "@nestjs/common";
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  type OnModuleInit,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { In, Repository } from "typeorm";
 import { CardGame } from "../common/enums/cardGame";
@@ -120,7 +125,7 @@ export class CardService implements OnModuleInit {
       relations: ["set", "pokemonDetails"],
     });
     if (!card) {
-      throw new Error(`Card with id ${id} not found`);
+      throw new NotFoundException(`Card with id ${id} not found`);
     }
     return card;
   }

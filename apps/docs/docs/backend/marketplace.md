@@ -51,6 +51,8 @@ C'est volontairement redondant avec le `Listing`. Une commande est une pièce co
 
 ## Réservation de stock
 
+Les prix unitaires figés sur les lignes utilisent les mêmes prix relus sous verrou que le total de la commande, même si une annonce a changé depuis la lecture du panier.
+
 Le stock est décrémenté **au moment du checkout**, pas à la confirmation du paiement. Sinon deux acheteurs peuvent payer le même exemplaire unique.
 
 `reserveStockAndCreateOrder` ouvre une transaction et pose un **verrou pessimiste** (`SELECT ... FOR UPDATE`) sur chaque annonce du panier avant de vérifier puis décrémenter `quantityAvailable`. Un deuxième acheteur sur le dernier exemplaire attend le verrou, puis reçoit une erreur de stock insuffisant.
@@ -66,6 +68,15 @@ Trois issues :
 | Rien ne se passe pendant 20 min | `OrderReservationScheduler` (cron toutes les 5 min) appelle `expireStaleReservations` → `PENDING → CANCELLED`, stock restitué |
 
 Le drapeau `order.stockReleased` garantit que la restitution n'a lieu **qu'une fois**, quel que soit le nombre de fois où l'annulation est déclenchée (webhook rejoué + cron + action admin).
+
+Un remboursement ne réapprovisionne **jamais automatiquement** une annonce,
+même avant expédition : il ne prouve ni le retour physique ni l’état revendable.
+Seule l’annulation d’une réservation `Pending` libère automatiquement le stock.
+Une commande `Paid` peut déjà contenir des lignes expédiées par un vendeur ; son
+annulation globale ne suffit donc pas non plus à remettre les articles en vente.
+Le workflow de retour avec inspection, disposition et mouvement de stock audité
+reste à implémenter dans MKT-02. Les statuts et les montants publics ne changent pas.
+
 
 ## Parcours de paiement
 
@@ -171,7 +182,8 @@ Filtres de `GET /marketplace/listings` (`FindAllListingsQuery`) : `search`, `car
 |---|---|
 | `payment_intent.succeeded` | `markOrderPaid` (idempotent) |
 | `payment_intent.payment_failed` | commande annulée, stock restitué |
-| `charge.refunded` | commande passée en `Refunded` |
+| `charge.refunded` | Reconcile each provider refund; only the successful total can mark the order `Refunded` |
+| `refund.created`, `refund.updated`, `refund.failed` | Re-read current provider outcomes, including pending and failed refunds |
 
 La contrainte d'unicité sur `payment_transaction.transactionId` empêche qu'un rejeu crée une seconde transaction.
 
@@ -186,3 +198,70 @@ Les fonds arrivent sur le compte Stripe de la plateforme et **n'en repartent pas
 | `STRIPE_SECRET_KEY` | clé serveur. Absente, les paiements sont désactivés proprement (l'API le signale au démarrage et le checkout renvoie une erreur explicite) |
 | `STRIPE_WEBHOOK_SECRET` | vérification de signature du webhook |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | côté web, monte le formulaire Stripe Elements |
+
+## Refund and return authorization
+
+`GET /marketplace/orders/:id/refunds`, `GET /marketplace/orders/:id/refunds/remaining` and `GET /marketplace/orders/:id/returns` require an authenticated order participant or staff member. An unrelated account receives 403. Buyers and staff retain the complete order view; a seller receives only their own line amounts and returns. Shared refund reasons, provider references and initiating-user details are excluded from seller projections.
+
+`POST /marketplace/orders/:id/refund` requires a seller to provide explicit `lines` owned by that seller. Cross-seller lines return 403; missing or foreign order-item identities return 400 before the payment provider is called. Staff may still submit order-wide amounts. The reservation and provider reconciliation boundary is described below.
+
+
+## Durable refund reservations
+
+`POST /marketplace/orders/:id/refund` accepts an optional `requestKey` (maximum 128 characters). Generate a key for each intentional refund and retain it with the unchanged payload through retries. The same key returns the existing operation; changing its payload returns 409. Legacy requests without a key use a payload fingerprint and are conservatively deduplicated. An intentionally repeated identical refund needs a new explicit key.
+
+Authorization, completed-payment validation, unique line membership, cumulative quantities, merchandise amounts, shipping amounts and the order ceiling are checked inside an order-row lock. Pending and successful refunds consume the allowance; failed refunds do not. Amounts use integer accounting cents, with currency-specific provider units (JPY has no fractional unit). Each line must have an integer `quantity`; zero represents a price or shipping adjustment without another refunded copy. Staff amount-only requests are allocated across the remaining line balances. Money movement never restocks physical inventory.
+
+The pending operation, lines and reservation audit commit before contacting Stripe. Provider calls use `refund-{operationId}` and carry the operation ID as metadata. An ambiguous exception returns 503 and retains the reservation. A retry searches all provider refund pages for that operation before creating anything. After 23 hours from the first recorded attempt, absence of a matching provider record returns 409 and retains the reservation for manual reconciliation. This margin accounts for Stripe potentially pruning idempotency keys after 24 hours; simply generating a new key would risk another refund. See [Stripe idempotent requests](https://docs.stripe.com/api/idempotent_requests) and [refund pagination](https://docs.stripe.com/api/refunds/list).
+
+Successful HTTP transport does not imply a successful refund: callers must inspect the returned operation `status`. `PENDING` also covers provider `requires_action`; no success event is emitted for it. The balance response keeps `alreadyRefunded` limited to confirmed successes and excludes both pending and successful reservations from `remainingAmount`.
+
+Subscribe the signed webhook to `charge.refunded`, `refund.created`, `refund.updated` and `refund.failed`. Reconciliation fetches current individual refund records under the order lock instead of trusting cumulative charge amounts or event order. Each confirmed status change and its outbox record commit together. Partial refunds preserve the order/payment state. Full confirmed refunds mark both refunded; a later bank rejection restores the saved fulfillment state and releases that refund's allowance. Stripe documents these asynchronous outcomes in [refund and cancel payments](https://docs.stripe.com/refunds).
+
+Provider-originated refunds without local line allocations are recorded once, count toward the order balance, and block additional line refunds until reviewed. Legacy records are preserved by the additive `RefundReservations1788768000000` migration; they are not retroactively claimed to have provider proof. The targeted migration test runs actual DDL against a legacy table. Repair of the historical migration chain remains a separate block.
+
+Recovery currently uses a retry of the original authorized POST or provider webhook redelivery. There is no autonomous refund recovery worker in this sub-block. After a 409 for an expired ambiguous attempt, staff must compare the operation metadata and full refund history in Stripe before deciding a correction; never delete the reservation merely to retry. Seller balance deductions, payout freezes, claim holds and Connect execution are the next financial sub-block and are not established by these refund tests. Provider tests are simulated; a Stripe sandbox rehearsal remains required before enabling production refunds.
+
+## Seller settlement ledger, holds and payouts
+
+Seller balances are a projection of `seller_ledger_entry`, an append-only table of integer-cent movements. Every escrow, release, hold, refund adjustment and payout writes one entry under a `pessimistic_write` lock on the settlement account, inside the caller's transaction when one is open. Each entry carries a `requestKey` unique per account, so a replayed business event (a repeated payment confirmation, a redelivered claim, a retried refund reconciliation) is recorded once and moves no balance twice. Reversals are new negating entries, never edits.
+
+`GET /marketplace/admin/settlements/reconcile` verifies, per account, that the stored pending, available, on-hold and paid-out balances equal the sum of their entries and that disbursed funds equal the completed payouts. `GET /marketplace/seller/settlement/ledger` exposes the same movements to the seller.
+
+Order payment escrows the seller net amount (merchandise plus shipping, less the 5% commission) as `pending`. Delivery of every one of that seller's items in the order releases it to `available`. Opening a buyer claim moves the allocation to `on_hold` from whichever bucket held it; closing the support ticket returns it to that same bucket. A succeeded refund debits the seller for the refunded merchandise less its proportional commission, plus refunded shipping, and a provider-confirmed late failure of that refund restores it. Allocation rows record `refundedAmount` and `commissionReversedAmount` alongside the remaining net.
+
+Payouts follow one state machine: `REQUESTED -> PROCESSING -> COMPLETED | FAILED`, with `CANCELLED` reachable only from `REQUESTED`. Terminal states accept no further action; a replayed `COMPLETE` or `FAIL` returns 409 instead of moving funds again. `POST /marketplace/seller/settlement/payouts` accepts an optional `requestKey`: the same key returns the existing payout, a changed amount under that key returns 409. Validation reads the balance the account lock protects, so concurrent requests cannot overdraw it.
+
+A manual or bank payout is completed by an administrator only with a `transactionReference`, which is stored on the payout as disbursement evidence. A `stripe_connect` payout cannot be declared complete by an administrator at all: `PROCESS` executes a provider transfer keyed `payout-{payoutId}` carrying the payout ID as metadata, and only the provider's own outcome completes it. An ambiguous provider response returns 503 and keeps the payout `PROCESSING` with its reservation; a retry searches the connected account's transfers for that payout before creating anything, and after 23 hours returns 409 for manual reconciliation. A reversed transfer fails the payout and returns the reserved amount to `available`.
+
+Settlement changes are additive through `SellerLedgerAndPayoutExecution1788800000000`, which adopts existing balances as one opening entry per account so reconciliation is meaningful from installation. Provider tests are simulated; a Stripe sandbox rehearsal remains required before enabling production disbursements, and no test moves real money.
+
+## Physical inventory conservation
+
+Every change to a collection item's available, reserved or sold copies is an entry in `inventory_movement`, applied under a `pessimistic_write` lock on that item and keyed by the transition that caused it. A movement redistributes copies and never creates them: its available, reserved and sold deltas sum to zero, and no component may become negative. The first movement of an item adopts the quantities it already carried, so `InventoryLedgerService.reconcileItem` can prove stored quantities equal the sum of their movements and surface any write that bypassed the ledger.
+
+An inventory-backed listing stores the copies it holds in `inventoryReservedQuantity`: the quantity it offers plus any copy committed to a pending order. Creation, deactivation, reactivation, quantity edits and deletion each reserve or release exactly the difference between the previous and the next offer. Deactivating twice, or deleting an already inactive listing, therefore moves nothing further, and reactivation reacquires its copies — failing with 400 when the collection can no longer back the offer. Checkout holds stock on the listing itself; payment converts the seller's reserved copies to sold once per order line, so a replayed payment confirmation cannot sell the same copy twice and a later deletion cannot release copies the buyer owns.
+
+Return dispositions are applied by difference and identified by a revision, so a corrected inspection is safe: `RESTOCK` returns the received copies to the listing that still offers them (or to the collection when it does not), a correction to `DAMAGED` or `DISCARDED` reverses that restock, and re-submitting the same disposition changes no stock at all. Both reads happen under the same lock as the write, so concurrent inspections cannot both restock. Money movement stays decoupled: a refund never restocks by itself.
+
+Migration `InventoryMovementsAndListingReservations1788900000000` is additive: it adopts each collection item's current quantities as one opening movement and records each inventory-backed listing's held copies from its offer plus its pending orders.
+
+## Delivery receipts
+
+Receiving a purchase into a collection is recorded in `receipt_import`, keyed by the order line rather than by the destination collection. The cumulative received quantity of a line therefore counts every collection it was filed into, and can never exceed the purchased quantity: importing the same delivered line into a second collection consumes the remaining copies instead of creating them again. Deleting the collection item that an import created leaves its receipt in place, so the purchase does not become receivable a second time.
+
+`POST /marketplace/orders/:id/receipt-import` accepts an optional `quantity` per line (defaulting to what remains) and an optional `requestKey`; the same key returns the existing receipt instead of importing twice, and each line is locked while its remaining quantity is checked and written, so concurrent imports cannot overshoot. `allowDuplicates` now only permits receiving a line that already has a receipt — the purchased quantity stays the ceiling. `GET /marketplace/orders/:id/receipt-preview` reports `importedQuantity`, `remainingQuantity` and `receiptConfirmedAt` per line.
+
+A seller marking a line delivered is a declaration; only the buyer's confirmation (`POST /marketplace/orders/:orderId/items/:itemId/confirm-receipt`, which stamps `receiptConfirmedAt`) makes its copies eligible for import. Staff may file a receipt during support work, and it is filed in the buyer's collection, never the staff member's.
+
+Migration `ReceiptImports1789000000000` is additive: it adopts existing collection items carrying marketplace provenance as receipts, capped at their line's purchased quantity, and stamps `receiptConfirmedAt` from the existing delivery date — a declaration and a confirmation cannot be told apart retroactively.
+
+## Checkout recovery and capture compensation
+
+A checkout attempt key identifies one checkout: the order stores a fingerprint of its listings, quantities and destination, and reusing that key for a different cart returns 409 instead of resuming the wrong purchase. A retry under the same key resumes the existing order, and a checkout interrupted between order creation and provider setup is recovered — the intent is created under the order's own idempotency key `order-{orderId}`, so a recovered attempt reuses the same intent rather than creating a second chargeable one and always returns a usable client secret.
+
+Buyer cancellation reads the order status under the row lock that also releases the stock, so concurrent cancellations return the copies exactly once and an already cancelled order answers idempotently. Once the cancellation is committed, the provider side is settled outside the transaction: an intent still awaiting payment is cancelled, and one that already succeeded is recorded as owing compensation.
+
+Money captured against an order that can no longer be honoured is never silently kept. `payment_transaction` carries `compensationRequiredAt`, `compensationReason` and `compensatedAt`; the flag is raised both by the cancellation reconciliation and by a payment webhook arriving for a cancelled order — which no longer resurrects the order or re-sells the stock. `GET /admin/ops/payments/compensation` lists what is owed, `POST /admin/ops/payments/:id/compensate` refunds it under the key `late-payment-{paymentId}` and reconciles the refund from the provider's own view, and `GET /admin/ops/metrics` counts the queue in `orders.paymentsAwaitingCompensation`.
+
+The operational sweep `POST /admin/ops/orders/expire-stale` no longer writes order and stock state itself: it delegates to the order state machine, which locks and re-reads every candidate, releases its stock once, audits and publishes the transition, and settles its provider intent. A sweep racing a payment or a buyer cancellation therefore changes nothing, and a second sweep finds no candidate. `GET /admin/ops/settlement/reconcile` now reports paid-out balances against disbursed payouts per currency and includes the per-account ledger check, so a single mixed-currency total can no longer declare the platform reconciled.

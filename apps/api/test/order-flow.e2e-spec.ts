@@ -15,11 +15,35 @@ jest.setTimeout(60000);
 
 const SHIPPING_ADDRESS = "12 rue des Cartes, 75001 Paris, France";
 
+const remoteRefunds = new Map<string, Record<string, unknown>>();
+
 const stripeServiceMock = {
   onModuleInit: jest.fn(),
   createPaymentIntent: jest.fn(),
   retrievePaymentIntent: jest.fn(),
   constructEventFromPayload: jest.fn(),
+  findRefundForOperation: jest.fn().mockResolvedValue(undefined),
+  retrieveRefund: jest.fn(async (id: string) => remoteRefunds.get(id)),
+  createRefund: jest.fn(
+    async (
+      intent: string,
+      amount: number,
+      _reason: string,
+      key: string,
+      operationId: string,
+    ) => {
+      const refund = {
+        id: `re_${operationId}`,
+        status: "succeeded",
+        amount,
+        currency: "eur",
+        payment_intent: intent,
+        metadata: { operationId },
+      };
+      remoteRefunds.set(refund.id, refund);
+      return refund;
+    },
+  ),
 };
 
 describe("Order flow (e2e)", () => {
@@ -60,6 +84,14 @@ describe("Order flow (e2e)", () => {
     // un checkout refusé laisse le panier rempli : sans ça l'article fuite sur
     // les tests suivants, dont le checkout échoue alors en "stock insuffisant"
     await request(httpServer).delete("/user-cart/me/clear").set(authAs(buyer));
+    const active = await request(httpServer)
+      .get("/marketplace/checkout/pending")
+      .set(authAs(buyer));
+    if (active.body?.orderId) {
+      await request(httpServer)
+        .post(`/marketplace/orders/${active.body.orderId}/cancel`)
+        .set(authAs(buyer));
+    }
 
     jest.clearAllMocks();
     let counter = 0;
@@ -70,6 +102,16 @@ describe("Order flow (e2e)", () => {
         amount: Math.round(amount * 100),
         currency,
         metadata,
+        status: "requires_payment_method",
+      }),
+    );
+    stripeServiceMock.retrievePaymentIntent.mockImplementation(
+      async (id: string) => ({
+        id,
+        client_secret: "secret_e2e",
+        amount: 1000,
+        currency: "eur",
+        metadata: {},
         status: "requires_payment_method",
       }),
     );
@@ -318,6 +360,241 @@ describe("Order flow (e2e)", () => {
         .set(authAs(buyer))
         .send({ fulfillmentStatus: FulfillmentStatus.PREPARING })
         .expect(403);
+    });
+  });
+
+  describe("checkout idempotency and resumption (MKT-01)", () => {
+    it("returns existing pending session without double reserving stock on duplicate attemptKey", async () => {
+      const listingId = await seedListingForSeller(app, seller, {
+        price: 25,
+        quantityAvailable: 5,
+      });
+      await addToCart(listingId, 2).expect(201);
+
+      const attemptKey = `attempt_${Date.now()}`;
+      const checkout1 = await request(httpServer)
+        .post("/marketplace/checkout")
+        .set(authAs(buyer))
+        .send({ shippingAddress: SHIPPING_ADDRESS, attemptKey })
+        .expect(201);
+
+      const listingAfterFirst = await listingRepo.findOneByOrFail({
+        id: listingId,
+      });
+      expect(listingAfterFirst.quantityAvailable).toBe(3);
+
+      const checkout2 = await request(httpServer)
+        .post("/marketplace/checkout")
+        .set(authAs(buyer))
+        .send({ shippingAddress: SHIPPING_ADDRESS, attemptKey })
+        .expect(201);
+
+      expect(checkout2.body.orderId).toBe(checkout1.body.orderId);
+      expect(checkout2.body.clientSecret).toBe(checkout1.body.clientSecret);
+
+      const listingAfterSecond = await listingRepo.findOneByOrFail({
+        id: listingId,
+      });
+      expect(listingAfterSecond.quantityAvailable).toBe(3);
+
+      await request(httpServer)
+        .post(`/marketplace/orders/${checkout1.body.orderId}/cancel`)
+        .set(authAs(buyer))
+        .expect(201);
+    });
+
+    it("allows buyer to retrieve active pending checkout session and cancel reservation", async () => {
+      const listingId = await seedListingForSeller(app, seller, {
+        price: 30,
+        quantityAvailable: 3,
+      });
+      await addToCart(listingId, 1).expect(201);
+
+      const checkout = await request(httpServer)
+        .post("/marketplace/checkout")
+        .set(authAs(buyer))
+        .send({ shippingAddress: SHIPPING_ADDRESS })
+        .expect(201);
+
+      const orderId = checkout.body.orderId;
+
+      const pendingRes = await request(httpServer)
+        .get("/marketplace/checkout/pending")
+        .set(authAs(buyer))
+        .expect(200);
+
+      expect(pendingRes.body.orderId).toBe(orderId);
+      expect(pendingRes.body.amount).toBe(30);
+      expect(pendingRes.body.items).toHaveLength(1);
+      expect(pendingRes.body.clientSecret).toBeDefined();
+
+      await request(httpServer)
+        .post(`/marketplace/orders/${orderId}/cancel`)
+        .set(authAs(buyer))
+        .expect(201);
+
+      const listingAfterCancel = await listingRepo.findOneByOrFail({
+        id: listingId,
+      });
+      expect(listingAfterCancel.quantityAvailable).toBe(3);
+
+      const afterCancelRes = await request(httpServer)
+        .get("/marketplace/checkout/pending")
+        .set(authAs(buyer))
+        .expect(200);
+
+      expect(afterCancelRes.body?.orderId).toBeUndefined();
+    });
+  });
+
+  describe("receipt confirmation, claims, refunds, and returns (MKT-02, MKT-04, MKT-05)", () => {
+    it("handles end-to-end receipt confirmation, claim, partial refund, and return disposition", async () => {
+      const initialStock = 5;
+      const listingId = await seedListingForSeller(app, seller, {
+        price: 50,
+        quantityAvailable: initialStock,
+      });
+
+      await addToCart(listingId, 1).expect(201);
+      const checkout = await request(httpServer)
+        .post("/marketplace/checkout")
+        .set(authAs(buyer))
+        .send({ shippingAddress: SHIPPING_ADDRESS })
+        .expect(201);
+
+      const orderId = checkout.body.orderId;
+
+      const intentPromise =
+        stripeServiceMock.createPaymentIntent.mock.results.at(-1)
+          ?.value as Promise<{ id: string }>;
+      const { id: paymentIntentId } = await intentPromise;
+      stripeServiceMock.retrievePaymentIntent.mockResolvedValue({
+        id: paymentIntentId,
+        status: "succeeded",
+        amount: Math.round(Number(checkout.body.amount) * 100),
+        currency: "eur",
+        metadata: { orderId: String(orderId), userId: String(buyer.id) },
+      });
+
+      // Confirm payment
+      await request(httpServer)
+        .post(`/marketplace/orders/${orderId}/confirm`)
+        .set(authAs(buyer))
+        .expect(201);
+
+      // Stock should have decreased by 1
+      let listing = await listingRepo.findOneByOrFail({ id: listingId });
+      expect(listing.quantityAvailable).toBe(initialStock - 1);
+
+      // Get order to find item id
+      const orderRes = await request(httpServer)
+        .get(`/marketplace/orders/${orderId}`)
+        .set(authAs(buyer))
+        .expect(200);
+
+      const itemId = orderRes.body.orderItems[0].id;
+      const orderTotal = Number(orderRes.body.totalAmount);
+
+      // Seller ships the item
+      await request(httpServer)
+        .patch(`/marketplace/sales/${itemId}/fulfillment`)
+        .set(authAs(seller))
+        .send({
+          fulfillmentStatus: FulfillmentStatus.SHIPPED,
+          carrier: "Chronopost",
+          trackingNumber: "EE123456789FR",
+        })
+        .expect(200);
+
+      // Buyer confirms receipt (MKT-05)
+      const confirmReceiptRes = await request(httpServer)
+        .post(`/marketplace/orders/${orderId}/items/${itemId}/confirm-receipt`)
+        .set(authAs(buyer))
+        .expect(201);
+
+      expect(confirmReceiptRes.body.fulfillmentStatus).toBe(
+        FulfillmentStatus.DELIVERED,
+      );
+      expect(confirmReceiptRes.body.deliveredAt).toBeDefined();
+
+      // Buyer opens a claim (MKT-04)
+      const claimRes = await request(httpServer)
+        .post(`/marketplace/orders/${orderId}/items/${itemId}/claim`)
+        .set(authAs(buyer))
+        .send({
+          claimCategory: "damaged_item",
+          subject: "Damaged corner",
+          message: "Card has slight whitening on back corner",
+        })
+        .expect(201);
+
+      expect(claimRes.body.id).toBeDefined();
+      expect(claimRes.body.claimCategory).toBe("damaged_item");
+      expect(claimRes.body.subject).toBe("Damaged corner");
+
+      // Check refundable balance (MKT-02)
+      const balanceRes1 = await request(httpServer)
+        .get(`/marketplace/orders/${orderId}/refunds/remaining`)
+        .set(authAs(seller))
+        .expect(200);
+
+      expect(balanceRes1.body.totalAmount).toBe(orderTotal);
+      expect(balanceRes1.body.alreadyRefunded).toBe(0);
+      expect(balanceRes1.body.remainingAmount).toBe(orderTotal);
+
+      // Partial refund without restock (MKT-02)
+      await request(httpServer)
+        .post(`/marketplace/orders/${orderId}/refund`)
+        .set(authAs(seller))
+        .send({
+          reason: "Partial refund agreed for corner whitening",
+          lines: [{ orderItemId: itemId, quantity: 1, amount: 15 }],
+        })
+        .expect(201);
+
+      // Verify stock was NOT modified by refund (decoupling)
+      listing = await listingRepo.findOneByOrFail({ id: listingId });
+      expect(listing.quantityAvailable).toBe(initialStock - 1);
+
+      // Check balance updated
+      const balanceRes2 = await request(httpServer)
+        .get(`/marketplace/orders/${orderId}/refunds/remaining`)
+        .set(authAs(seller))
+        .expect(200);
+
+      expect(balanceRes2.body.alreadyRefunded).toBe(15);
+      expect(balanceRes2.body.remainingAmount).toBe(orderTotal - 15);
+
+      // Buyer requests a return (MKT-02)
+      const returnRes = await request(httpServer)
+        .post(`/marketplace/orders/${orderId}/items/${itemId}/returns`)
+        .set(authAs(buyer))
+        .send({
+          quantity: 1,
+          reason: "Returning card as agreed",
+        })
+        .expect(201);
+
+      const returnId = returnRes.body.id;
+      expect(returnId).toBeDefined();
+      expect(returnRes.body.status).toBe("requested");
+
+      // Seller inspects and sets disposition to RESTOCK (MKT-02)
+      const dispositionRes = await request(httpServer)
+        .patch(`/marketplace/returns/${returnId}/disposition`)
+        .set(authAs(seller))
+        .send({
+          disposition: "restock",
+          notes: "Inspected and restored to available inventory",
+        })
+        .expect(200);
+
+      expect(dispositionRes.body.disposition).toBe("restock");
+      expect(dispositionRes.body.status).toBe("received");
+
+      // Now stock MUST have incremented back!
+      listing = await listingRepo.findOneByOrFail({ id: listingId });
+      expect(listing.quantityAvailable).toBe(initialStock);
     });
   });
 });

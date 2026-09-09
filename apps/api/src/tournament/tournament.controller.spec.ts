@@ -13,6 +13,10 @@ import { TournamentRegistration } from "./entities/tournament-registration.entit
 import { TournamentOrganizerGuard } from "./guards/tournament-organizer.guard";
 import { TournamentOwnerGuard } from "./guards/tournament-owner.guard";
 import { TournamentParticipantGuard } from "./guards/tournament-participant.guard";
+import { RankingService } from "../ranking/ranking.service";
+import { TournamentDeckSnapshotService } from "./services/tournament-deck-snapshot.service";
+import { TournamentIncidentService } from "./services/tournament-incident.service";
+import { TournamentRoundClockService } from "./services/tournament-round-clock.service";
 import { TournamentController } from "./tournament.controller";
 import { TournamentService } from "./tournament.service";
 
@@ -64,6 +68,37 @@ describe("TournamentController", () => {
       controllers: [TournamentController],
       providers: [
         { provide: TournamentService, useValue: mockTournamentService },
+        {
+          provide: RankingService,
+          useValue: { getExplainableStandings: jest.fn() },
+        },
+        {
+          provide: TournamentDeckSnapshotService,
+          useValue: {
+            submitDeckSnapshot: jest.fn(),
+            getMyDeckSnapshot: jest.fn(),
+            getTournamentDeckSnapshots: jest.fn(),
+          },
+        },
+        {
+          provide: TournamentRoundClockService,
+          useValue: {
+            startRoundClock: jest.fn(),
+            pauseRoundClock: jest.fn(),
+            resumeRoundClock: jest.fn(),
+            extendRoundClock: jest.fn(),
+            getRoundClockStatus: jest.fn(),
+          },
+        },
+        {
+          provide: TournamentIncidentService,
+          useValue: {
+            dropPlayer: jest.fn(),
+            previewScoreCorrection: jest.fn(),
+            applyScoreCorrection: jest.fn(),
+            getPlayerDashboard: jest.fn(),
+          },
+        },
         {
           provide: TournamentOrganizerGuard,
           useValue: { canActivate: jest.fn().mockReturnValue(true) },

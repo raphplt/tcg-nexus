@@ -1,4 +1,5 @@
 import { api } from "./api";
+import { secureApi } from "./secureApi";
 import type {
   PaginatedResponse,
   Tournament,
@@ -91,7 +92,7 @@ export const tournamentService = {
    * Retrieves the current user's pending tournament match.
    */
   async getMyPendingMatch(id: number): Promise<any> {
-    const response = await api.get(`/tournaments/${id}/matches/me`);
+    const response = await secureApi.get(`/tournaments/${id}/matches/me`);
     return response.data;
   },
 
@@ -99,7 +100,7 @@ export const tournamentService = {
    * Creates a new tournament (administrators only).
    */
   async createTournament(data: Partial<Tournament>): Promise<Tournament> {
-    const response = await api.post<Tournament>("/tournaments", data);
+    const response = await secureApi.post<Tournament>("/tournaments", data);
     return response.data;
   },
 
@@ -110,7 +111,7 @@ export const tournamentService = {
     playerId: number,
     query?: TournamentQueryDto,
   ): Promise<PaginatedResponse<Tournament>> {
-    const response = await api.get<PaginatedResponse<Tournament>>(
+    const response = await secureApi.get<PaginatedResponse<Tournament>>(
       `/tournaments/player/${playerId}`,
       {
         params: query,
@@ -120,17 +121,20 @@ export const tournamentService = {
   },
 
   /**
-   * Registers the current player for a tournament.
+   * Registers the authenticated user for a tournament.
+   *
+   * The server resolves the player from the access token, so no player
+   * identifier is sent: the endpoint whitelists its payload and rejects any
+   * extra property with a 400.
+   *
+   * @param tournamentId - Tournament to join.
+   * @param notes - Optional message for the organizer.
    */
-  async registerTournament(
-    tournamentId: number,
-    playerId: number,
-    notes?: string,
-  ): Promise<any> {
-    const response = await api.post(`/tournaments/${tournamentId}/register`, {
-      playerId,
-      notes,
-    });
+  async registerTournament(tournamentId: number, notes?: string): Promise<any> {
+    const response = await secureApi.post(
+      `/tournaments/${tournamentId}/register`,
+      { notes },
+    );
     return response.data;
   },
 
@@ -141,9 +145,12 @@ export const tournamentService = {
     id: number,
     status: string,
   ): Promise<Tournament> {
-    const response = await api.patch<Tournament>(`/tournaments/${id}/status`, {
-      status,
-    });
+    const response = await secureApi.patch<Tournament>(
+      `/tournaments/${id}/status`,
+      {
+        status,
+      },
+    );
     return response.data;
   },
 };

@@ -1,4 +1,5 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
+import { schemaAlreadyHas } from "../common/migration-guard";
 
 /**
  * Creates the three tables backing online play: matchmaking (casual), tournament
@@ -14,6 +15,17 @@ export class OnlinePlaySessions1786086000000 implements MigrationInterface {
   name = "OnlinePlaySessions1786086000000";
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // The initial schema baseline already contains this change; the
+    // probe also lets a legacy database re-run the chain safely.
+    if (
+      await schemaAlreadyHas(
+        queryRunner,
+        `SELECT 1 FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = 'online_match_session'`,
+      )
+    ) {
+      return;
+    }
+
     await queryRunner.query(`
       DO $$ BEGIN
         CREATE TYPE "casual_match_session_status_enum" AS ENUM ('WAITING_FOR_DECKS', 'ACTIVE', 'FINISHED', 'CANCELLED');
@@ -146,7 +158,8 @@ export class OnlinePlaySessions1786086000000 implements MigrationInterface {
     definition: string,
   ): Promise<void> {
     const [existing] = await queryRunner.query(
-      `SELECT 1 FROM pg_constraint WHERE conname = $1`,
+      `SELECT 1 FROM pg_constraint
+        WHERE connamespace = current_schema()::regnamespace AND conname = $1`,
       [constraintName],
     );
 

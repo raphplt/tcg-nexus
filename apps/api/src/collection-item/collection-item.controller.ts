@@ -1,4 +1,11 @@
-import { Body, Controller, Param, ParseIntPipe, Post } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+} from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { CurrentUser } from "src/auth/decorators/current-user.decorator";
 import { User } from "src/user/entities/user.entity";
@@ -7,6 +14,7 @@ import {
   AddCardItemDto,
   AddSealedItemDto,
 } from "./dto/add-collection-item.dto";
+import { UpdateCollectionItemDto } from "./dto/update-collection-item.dto";
 
 @ApiTags("collection-item")
 @ApiBearerAuth()
@@ -75,5 +83,32 @@ export class CollectionItemController {
       user.id,
       dto.sealedProductId,
     );
+  }
+
+  @Patch(":id")
+  async updateItem(
+    @Param("id", ParseIntPipe) id: number,
+    @CurrentUser() user: User,
+    @Body() dto: UpdateCollectionItemDto,
+  ) {
+    return this.collectionItemService.updateItem(id, dto, user);
+  }
+
+  @Post(":id/split")
+  async splitItem(
+    @Param("id", ParseIntPipe) id: number,
+    @CurrentUser() user: User,
+    @Body("quantity", ParseIntPipe) quantity: number,
+  ) {
+    return this.collectionItemService.splitItem(id, quantity, user);
+  }
+
+  @Post(":id/merge/:targetId")
+  async mergeItem(
+    @Param("id", ParseIntPipe) id: number,
+    @Param("targetId", ParseIntPipe) targetId: number,
+    @CurrentUser() user: User,
+  ) {
+    return this.collectionItemService.mergeItem(id, targetId, user);
   }
 }

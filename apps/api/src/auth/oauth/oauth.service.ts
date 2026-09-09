@@ -349,9 +349,7 @@ export class OAuthService {
    * @param userId - User ID.
    * @returns Array of linked identity summaries.
    */
-  async getUserIdentities(
-    userId: number,
-  ): Promise<
+  async getUserIdentities(userId: number): Promise<
     Array<{
       id: number;
       provider: OAuthProvider;

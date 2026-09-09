@@ -152,4 +152,13 @@ export const decksService = {
   ): Promise<{ items: Deck[]; total: number; page: number; limit: number }> {
     return authedFetch("GET", `/deck/user/${userId}/public`, { params });
   },
+
+  async getInventoryRequirements(
+    deckId: number | string,
+  ): Promise<import("@/types/collection").DeckInventoryRequirements> {
+    return authedFetch<import("@/types/collection").DeckInventoryRequirements>(
+      "GET",
+      `/deck/${deckId}/inventory-requirements`,
+    );
+  },
 };

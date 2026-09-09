@@ -124,7 +124,7 @@ export default function TournamentDetailsScreen() {
 
     try {
       setIsJoining(true);
-      await tournamentService.registerTournament(Number(id), user.player.id);
+      await tournamentService.registerTournament(Number(id));
       Alert.alert("Succès", "Vous êtes inscrit à ce tournoi !");
       await loadTournamentDetails();
     } catch (err: any) {

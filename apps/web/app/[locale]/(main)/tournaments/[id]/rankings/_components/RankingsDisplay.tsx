@@ -104,6 +104,40 @@ function PlayerStats({ ranking, tournament }: PlayerStatsProps) {
             </div>
           )}
         </div>
+
+        {ranking.omwPercentage !== undefined &&
+          ranking.omwPercentage !== null && (
+            <div className="pt-3 border-t space-y-2">
+              <div className="text-xs font-semibold uppercase text-muted-foreground">
+                Départages officiels (Tiebreakers)
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                <div className="p-2 bg-muted/60 rounded">
+                  <div className="font-bold text-foreground">
+                    {Number(ranking.omwPercentage).toFixed(1)}%
+                  </div>
+                  <div className="text-muted-foreground">OMW%</div>
+                </div>
+                <div className="p-2 bg-muted/60 rounded">
+                  <div className="font-bold text-foreground">
+                    {Number(ranking.gwPercentage ?? 0).toFixed(1)}%
+                  </div>
+                  <div className="text-muted-foreground">GW%</div>
+                </div>
+                <div className="p-2 bg-muted/60 rounded">
+                  <div className="font-bold text-foreground">
+                    {Number(ranking.ogwPercentage ?? 0).toFixed(1)}%
+                  </div>
+                  <div className="text-muted-foreground">OGW%</div>
+                </div>
+              </div>
+              {ranking.tiebreakExplanation && (
+                <p className="text-xs text-muted-foreground italic mt-1">
+                  {ranking.tiebreakExplanation}
+                </p>
+              )}
+            </div>
+          )}
       </div>
     </div>
   );
@@ -195,6 +229,7 @@ export function RankingsDisplay({
                 <TableHead className="text-center">{t("points")}</TableHead>
                 <TableHead className="text-center">{t("wdl")}</TableHead>
                 <TableHead className="text-center">% Victoires</TableHead>
+                <TableHead className="text-center">OMW%</TableHead>
                 <TableHead className="text-center">{t("actions")}</TableHead>
               </TableRow>
             </TableHeader>
@@ -263,6 +298,14 @@ export function RankingsDisplay({
                         className={`font-medium ${getWinRateColor(ranking.winRate)}`}
                       >
                         {ranking.winRate.toFixed(1)}%
+                      </span>
+                    </TableCell>
+
+                    <TableCell className="text-center">
+                      <span className="font-mono text-sm text-muted-foreground">
+                        {ranking.omwPercentage !== undefined
+                          ? `${Number(ranking.omwPercentage).toFixed(1)}%`
+                          : "-"}
                       </span>
                     </TableCell>
 

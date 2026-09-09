@@ -28,6 +28,7 @@ import { PokemonSerie } from "src/pokemon-series/entities/pokemon-serie.entity";
 import { PokemonSerieTranslation } from "src/pokemon-series/entities/pokemon-serie-translation.entity";
 import { PokemonSet } from "src/pokemon-set/entities/pokemon-set.entity";
 import { PokemonSetTranslation } from "src/pokemon-set/entities/pokemon-set-translation.entity";
+import { RankedMatchHistory } from "src/ranking/entities/ranked-match-history.entity";
 import { Ranking } from "src/ranking/entities/ranking.entity";
 import { SealedProductModule } from "src/sealed-product/sealed-product.module";
 import { Statistics } from "src/statistics/entities/statistic.entity";
@@ -40,6 +41,7 @@ import { TournamentReward } from "src/tournament/entities/tournament-reward.enti
 import { TournamentModule } from "src/tournament/tournament.module";
 import { User } from "src/user/entities/user.entity";
 import { CatalogImportService } from "./catalog-import.service";
+import { DemoRefreshService } from "./demo-refresh.service";
 import { DemoService } from "./demo.service";
 import { SeedController } from "./seed.controller";
 import { SeedService } from "./seed.service";
@@ -68,6 +70,7 @@ const isSeedApiEnabled =
       Tournament,
       Player,
       Ranking,
+      RankedMatchHistory,
       Match,
       OnlineMatchSession,
       TournamentRegistration,
@@ -97,7 +100,13 @@ const isSeedApiEnabled =
     TournamentModule,
   ],
   controllers: isSeedApiEnabled ? [SeedController] : [],
-  providers: [SeedService, CatalogImportService, DemoService],
-  exports: [CatalogImportService, DemoService],
+  // NOTE: Both demo services remain available to CLI entry points in production.
+  providers: [
+    SeedService,
+    CatalogImportService,
+    DemoRefreshService,
+    DemoService,
+  ],
+  exports: [CatalogImportService, DemoRefreshService, DemoService],
 })
 export class SeedModule {}

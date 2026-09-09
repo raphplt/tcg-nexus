@@ -85,10 +85,50 @@ describe("TournamentController (e2e)", () => {
     const response = await request(httpServer)
       .post(`/tournaments/${tournamentId}/register`)
       .set("Authorization", `Bearer ${player.accessToken}`)
-      .send({ playerId });
+      .send({ notes: "Ready to play" });
 
     expect(response.status).toBe(201);
     expect(response.body.player.id).toBe(playerId);
+  });
+
+  // Mobile builds still post the player id alongside the notes. Rejecting the
+  // extra property left those users unable to join any tournament at all.
+  it("POST /tournaments/:id/register accepts the legacy playerId payload", async () => {
+    const latecomer = await createUser(httpServer, {
+      firstName: "Legacy",
+      lastName: "Client",
+    });
+    const latecomerPlayerId = await getPlayerId(
+      httpServer,
+      latecomer.accessToken,
+    );
+
+    const response = await request(httpServer)
+      .post(`/tournaments/${tournamentId}/register`)
+      .set("Authorization", `Bearer ${latecomer.accessToken}`)
+      .send({ playerId: latecomerPlayerId, notes: "" });
+
+    expect(response.status).toBe(201);
+    expect(response.body.player.id).toBe(latecomerPlayerId);
+  });
+
+  it("POST /tournaments/:id/register ignores a player id belonging to someone else", async () => {
+    const impersonator = await createUser(httpServer, {
+      firstName: "Imperso",
+      lastName: "Nator",
+    });
+    const impersonatorPlayerId = await getPlayerId(
+      httpServer,
+      impersonator.accessToken,
+    );
+
+    const response = await request(httpServer)
+      .post(`/tournaments/${tournamentId}/register`)
+      .set("Authorization", `Bearer ${impersonator.accessToken}`)
+      .send({ playerId });
+
+    expect(response.status).toBe(201);
+    expect(response.body.player.id).toBe(impersonatorPlayerId);
   });
 
   it("GET /tournaments/:id exposes the registered player publicly", async () => {

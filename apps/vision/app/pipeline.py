@@ -50,22 +50,20 @@ def _encode_png(img: np.ndarray) -> str:
     return base64.b64encode(buf.tobytes()).decode("ascii")
 
 
-def _order_points(pts: np.ndarray) -> np.ndarray:
-
+def _order_points(points: np.ndarray) -> np.ndarray:
     rect = np.zeros((4, 2), dtype="float32")
-    s = pts.sum(axis=1)
-    rect[0] = pts[np.argmin(s)]
-    rect[2] = pts[np.argmax(s)]
-    diff = np.diff(pts, axis=1)
-    rect[1] = pts[np.argmin(diff)]
-    rect[3] = pts[np.argmax(diff)]
+    point_sums = points.sum(axis=1)
+    rect[0] = points[np.argmin(point_sums)]
+    rect[2] = points[np.argmax(point_sums)]
+    point_diffs = np.diff(points, axis=1)
+    rect[1] = points[np.argmin(point_diffs)]
+    rect[3] = points[np.argmax(point_diffs)]
     return rect
 
 
 def _card_contours(img: np.ndarray) -> list:
-    """Contours candidats via 2 indices complémentaires : bords + saturation."""
+    """Finds candidate contours using two complementary features: edges and saturation."""
     candidates = []
-
 
     gray = cv2.GaussianBlur(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY), (5, 5), 0)
     edges = cv2.Canny(gray, 30, 120)
@@ -77,7 +75,6 @@ def _card_contours(img: np.ndarray) -> list:
         cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
     )
 
-
     sat = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)[:, :, 1]
     _, mask = cv2.threshold(sat, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, np.ones((25, 25), np.uint8))
@@ -88,31 +85,30 @@ def _card_contours(img: np.ndarray) -> list:
 
 
 def _find_card_box(img: np.ndarray):
-    """Rectangle (tourné) de la carte : on privilégie une forme grande ET centrée
-    (l'utilisateur vise la carte au centre, d'éventuelles voisines sont en bord)."""
-    h, w = img.shape[:2]
-    area = float(h * w)
-    cx, cy = w / 2.0, h / 2.0
-    diag = math.hypot(cx, cy)
+    """Finds rotated bounding box of the card, prioritizing large and centered shapes."""
+    height, width = img.shape[:2]
+    area = float(height * width)
+    center_x, center_y = width / 2.0, height / 2.0
+    diag = math.hypot(center_x, center_y)
 
     best = None
     best_score = -1.0
     for contour in _card_contours(img):
-        a = cv2.contourArea(contour)
-        if a < MIN_CARD_AREA_RATIO * area:
+        contour_area = cv2.contourArea(contour)
+        if contour_area < MIN_CARD_AREA_RATIO * area:
             continue
         moments = cv2.moments(contour)
         if moments["m00"] == 0:
             continue
         dist = (
             math.hypot(
-                moments["m10"] / moments["m00"] - cx,
-                moments["m01"] / moments["m00"] - cy,
+                moments["m10"] / moments["m00"] - center_x,
+                moments["m01"] / moments["m00"] - center_y,
             )
             / diag
         )
 
-        score = a / area - 0.6 * dist
+        score = contour_area / area - 0.6 * dist
         if score > best_score:
             best_score = score
             best = contour
@@ -120,19 +116,16 @@ def _find_card_box(img: np.ndarray):
     if best is None:
         return None
 
-
     return cv2.boxPoints(cv2.minAreaRect(best)).astype("float32")
 
 
 def _warp_card(img: np.ndarray, box: np.ndarray) -> np.ndarray:
-    """Redresse la carte et la ramène en portrait, en pleine résolution.
-    On NE réduit PAS ici : les ROI sont extraites de ce warp haute-déf pour
-    préserver le petit texte (nom/numéro) que l'OCR doit lire."""
+    """Warps card into portrait orientation at full resolution."""
     rect = _order_points(box)
-    tl, tr, br, bl = rect
+    top_left, top_right, bottom_right, bottom_left = rect
 
-    width = max(np.linalg.norm(br - bl), np.linalg.norm(tr - tl))
-    height = max(np.linalg.norm(tr - br), np.linalg.norm(tl - bl))
+    width = max(np.linalg.norm(bottom_right - bottom_left), np.linalg.norm(top_right - top_left))
+    height = max(np.linalg.norm(top_right - bottom_right), np.linalg.norm(top_left - bottom_left))
     max_w, max_h = max(int(width), 1), max(int(height), 1)
 
     dst = np.array(
@@ -151,10 +144,10 @@ def _warp_card(img: np.ndarray, box: np.ndarray) -> np.ndarray:
 
 
 def _cap_width(card: np.ndarray) -> np.ndarray:
-    """Borne la largeur (perf OCR) sans monter en résolution inutilement."""
-    w = card.shape[1]
-    if w > MAX_WARP_W:
-        scale = MAX_WARP_W / w
+    """Limits the card width to improve OCR performance without unnecessary upscaling."""
+    card_width = card.shape[1]
+    if card_width > MAX_WARP_W:
+        scale = MAX_WARP_W / card_width
         card = cv2.resize(
             card, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA
         )
@@ -162,39 +155,30 @@ def _cap_width(card: np.ndarray) -> np.ndarray:
 
 
 def _tighten_to_card(card: np.ndarray) -> np.ndarray:
-    """Recadre au plus près de la carte. La détection se cale parfois sur la
-    pochette/le toploader ou inclut une marge de tapis, ce qui laisse un bord
-    autour de la carte et décale TOUTES les ROI relatives (nom ET numéro, qui
-    lisaient alors le fond). Le warp étant déjà redressé, la carte est un grand
-    rectangle clair ~vertical au centre : on prend sa boîte englobante. Conservateur
-    -> on ne recadre que si on trouve une zone nettement plus petite et au ratio
-    plausible d'une carte ; sinon image inchangée (zéro régression sur les photos
-    déjà bien cadrées)."""
-    h, w = card.shape[:2]
-    if h == 0 or w == 0:
+    """Tightens the crop to the card boundaries if a clear inner rectangle is found."""
+    height, width = card.shape[:2]
+    if height == 0 or width == 0:
         return card
     gray = cv2.cvtColor(card, cv2.COLOR_BGR2GRAY)
 
     _, mask = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, np.ones((25, 25), np.uint8))
-    cnts = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
-    if not cnts:
+    contours = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
+    if not contours:
         return card
-    x, y, bw, bh = cv2.boundingRect(max(cnts, key=cv2.contourArea))
-    area_ratio = (bw * bh) / float(w * h)
-    aspect = bw / float(bh) if bh else 0.0
-
+    box_x, box_y, box_w, box_h = cv2.boundingRect(max(contours, key=cv2.contourArea))
+    area_ratio = (box_w * box_h) / float(width * height)
+    aspect = box_w / float(box_h) if box_h else 0.0
 
     if not (0.45 < area_ratio < 0.93) or not (0.55 < aspect < 0.95):
         return card
-    pad = int(0.012 * max(w, h))
-    x0, y0 = max(0, x - pad), max(0, y - pad)
-    x1, y1 = min(w, x + bw + pad), min(h, y + bh + pad)
-    return card[y0:y1, x0:x1]
+    padding = int(0.012 * max(width, height))
+    start_x, start_y = max(0, box_x - padding), max(0, box_y - padding)
+    end_x, end_y = min(width, box_x + box_w + padding), min(height, box_y + box_h + padding)
+    return card[start_y:end_y, start_x:end_x]
 
 
 def _normalize(card_bgr: np.ndarray) -> np.ndarray:
-
     gray = cv2.cvtColor(card_bgr, cv2.COLOR_BGR2GRAY)
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     equalized = clahe.apply(gray)
@@ -202,17 +186,20 @@ def _normalize(card_bgr: np.ndarray) -> np.ndarray:
 
 
 def _crop(card: np.ndarray, band: tuple) -> np.ndarray:
-    h, w = card.shape[:2]
-    fx, fy, fw, fh = band
-    x, y = int(fx * w), int(fy * h)
-    return card[y : y + int(fh * h), x : x + int(fw * w)]
+    height, width = card.shape[:2]
+    frac_x, frac_y, frac_w, frac_h = band
+    start_x, start_y = int(frac_x * width), int(frac_y * height)
+    return card[
+        start_y : start_y + int(frac_h * height),
+        start_x : start_x + int(frac_w * width),
+    ]
 
 
 def _roi(key: str, band: tuple, crop: np.ndarray, text: str, conf: float) -> dict:
-    fx, fy, fw, fh = band
+    frac_x, frac_y, frac_w, frac_h = band
     return {
         "key": key,
-        "box": {"x": fx, "y": fy, "width": fw, "height": fh},
+        "box": {"x": frac_x, "y": frac_y, "width": frac_w, "height": frac_h},
         "image": _encode_png(crop),
         "text": text,
         "conf": round(float(conf), 1),
@@ -220,7 +207,7 @@ def _roi(key: str, band: tuple, crop: np.ndarray, text: str, conf: float) -> dic
 
 
 def _read_name_roi(card: np.ndarray):
-    """OCR de la bande du nom. Renvoie (crop, texte, conf) ; crop=None si vide."""
+    """OCRs the card name band. Returns (crop, text, conf); crop is None if empty."""
     crop = _crop(card, NAME_BAND)
     if not crop.size:
         return None, "", 0.0
@@ -264,10 +251,10 @@ DETECT_MAX_W = 900
 
 
 def _to_card(img: np.ndarray) -> tuple[np.ndarray, bool]:
-    """Carte redressée en portrait + indicateur de détection. Si aucune carte
-    isolée n'est trouvée, on redresse au moins l'image en portrait."""
-    h, w = img.shape[:2]
-    scale = DETECT_MAX_W / w if w > DETECT_MAX_W else 1.0
+    """Warped card in portrait orientation + detection flag. If no isolated card
+    is detected, the entire image is rotated to portrait orientation."""
+    height, width = img.shape[:2]
+    scale = DETECT_MAX_W / width if width > DETECT_MAX_W else 1.0
     small = (
         cv2.resize(img, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
         if scale < 1.0
@@ -280,7 +267,7 @@ def _to_card(img: np.ndarray) -> tuple[np.ndarray, bool]:
             box = box / scale
         return _warp_card(img, box), True
 
-    upright = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE) if w > h else img
+    upright = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE) if width > height else img
     return _cap_width(upright), False
 
 
@@ -288,8 +275,7 @@ OSD_MIN_CONF = 1.5
 
 
 def _orient_upright(card: np.ndarray) -> np.ndarray:
-    """Redresse une carte à l'envers/de travers via Tesseract OSD. On ne tourne
-    que si OSD est confiant, sinon on laisse tel quel."""
+    """Rotates an upside-down card upright using Tesseract OSD if confidence is high."""
     if pytesseract is None or not HAS_OCR:
         return card
     try:
@@ -299,7 +285,6 @@ def _orient_upright(card: np.ndarray) -> np.ndarray:
 
     if float(osd.get("orientation_conf", 0.0)) < OSD_MIN_CONF:
         return card
-
 
     rotate = int(osd.get("rotate", 0)) % 360
     if rotate == 90:
@@ -311,19 +296,13 @@ def _orient_upright(card: np.ndarray) -> np.ndarray:
     return card
 
 
-
 NAME_OK_CONF = 55.0
-
 
 FLIP_MIN_CONF = 45.0
 FLIP_MARGIN = 8.0
 
 
 def _build_result(card: np.ndarray, detected: bool) -> dict:
-
-
-
-
     name = _read_name_roi(card)
     if name[2] < NAME_OK_CONF:
         flipped = cv2.rotate(card, cv2.ROTATE_180)
@@ -350,19 +329,16 @@ def preprocess(image_b64: str) -> dict:
 
 
 def _sharpness(card: np.ndarray) -> float:
-    """Netteté du haut de la carte (zone nom) via variance du Laplacien :
-    discrimine les frames floues/bougées d'une rafale sans rien OCRiser."""
+    """Calculates sharpness of top card zone via Laplacian variance to reject blurry burst frames."""
     gray = cv2.cvtColor(card, cv2.COLOR_BGR2GRAY)
     top = gray[: int(0.20 * gray.shape[0])]
     return float(cv2.Laplacian(top, cv2.CV_64F).var())
 
 
 def _prepare_frame(image_b64: str):
-    """Étape légère (pas d'OCR) : redresse la frame et la note. Sert à choisir
-    la meilleure frame d'une rafale avant l'unique passe OCR."""
+    """Pre-scores a burst frame without running full OCR."""
     try:
         card, detected = _to_card(_decode(image_b64))
-
         score = _sharpness(card) + (1e6 if detected else 0.0)
         return {"card": card, "detected": detected, "score": score}
     except Exception:
@@ -373,9 +349,7 @@ _POOL = ThreadPoolExecutor(max_workers=min(8, (os.cpu_count() or 2)))
 
 
 def preprocess_many(images_b64: list[str]) -> dict:
-    """Rafale : on prépare les frames (léger, en parallèle), on garde la plus
-    nette avec carte détectée, et on ne fait l'OCR (coûteux) QUE sur celle-là.
-    Plus rapide et plus cohérent qu'OCRiser puis fusionner toutes les frames."""
+    """Processes a burst of frames, picks the sharpest frame with detected card, and runs OCR once."""
     if not images_b64:
         raise ValueError("Aucune image fournie.")
     if len(images_b64) == 1:
@@ -385,7 +359,7 @@ def preprocess_many(images_b64: list[str]) -> dict:
         return result
 
     prepared = list(_POOL.map(_prepare_frame, images_b64))
-    valid = [(i, p) for i, p in enumerate(prepared) if p is not None]
+    valid = [(index, prep) for index, prep in enumerate(prepared) if prep is not None]
     if not valid:
         raise ValueError("Toutes les frames ont échoué au prétraitement.")
 
@@ -394,3 +368,4 @@ def preprocess_many(images_b64: list[str]) -> dict:
     result["best_index"] = best_index
     result["frame_count"] = len(images_b64)
     return result
+

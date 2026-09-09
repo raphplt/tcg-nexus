@@ -45,6 +45,7 @@ export class PokemonCardController {
     return this.pokemonCardService.create(createPokemonCardDto);
   }
 
+  // Capped in the service: the catalogue is browsed through "paginated".
   @Get()
   findAll() {
     return this.pokemonCardService.findAll();

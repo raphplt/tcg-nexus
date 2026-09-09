@@ -3,6 +3,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { ThrottlerGuard } from "@nestjs/throttler";
 import cookieParser from "cookie-parser";
 import { AppModule } from "../../src/app.module";
+import { applyGlobalRequestContract } from "../../src/common/global-request-contract";
 import { ExternalTournamentSyncService } from "../../src/tournament/services/external-tournament-sync.service";
 
 const passThroughGuard = { canActivate: () => true };
@@ -41,6 +42,11 @@ export async function createE2eApp(
   const moduleFixture = await moduleBuilder.compile();
   const app = moduleFixture.createNestApplication();
   app.use(cookieParser());
+  // Same validation pipe and error envelope as main.ts: an e2e suite that skips
+  // them accepts payloads production rejects. The "api" global prefix is left
+  // out on purpose — no application code reads it, and requiring it here would
+  // only add noise to every request path.
+  applyGlobalRequestContract(app);
   await app.init();
 
   return { app, moduleFixture };

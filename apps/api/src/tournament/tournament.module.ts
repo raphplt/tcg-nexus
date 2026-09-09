@@ -1,5 +1,8 @@
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
+import { AuditModule } from "../audit/audit.module";
+import { Deck } from "../deck/entities/deck.entity";
+import { MatchResultProposal } from "../match/entities/match-result-proposal.entity";
 import { Match } from "../match/entities/match.entity";
 import { MatchModule } from "../match/match.module";
 import { Player } from "../player/entities/player.entity";
@@ -9,6 +12,7 @@ import { User } from "../user/entities/user.entity";
 import {
   RegistrationPayment,
   Tournament,
+  TournamentDeckSnapshot,
   TournamentNotification,
   TournamentOrganizer,
   TournamentPricing,
@@ -23,13 +27,21 @@ import {
 } from "./guards";
 import { PublicTournamentDataInterceptor } from "./interceptors/public-tournament-data.interceptor";
 import { BracketService } from "./services/bracket.service";
+import { ExternalTournamentSyncService } from "./services/external-tournament-sync.service";
 import { SeedingService } from "./services/seeding.service";
+import { Card } from "../card/entities/card.entity";
+import { DeckFormat } from "../deck-format/entities/deck-format.entity";
+import { RankedMatchHistory } from "../ranking/entities/ranked-match-history.entity";
+import { TournamentDeckSnapshotRevision } from "./entities/tournament-deck-snapshot-revision.entity";
+import { DeckLegalityService } from "./services/deck-legality.service";
+import { TournamentDeckSnapshotService } from "./services/tournament-deck-snapshot.service";
+import { TournamentIncidentService } from "./services/tournament-incident.service";
 import { TournamentOrchestrationService } from "./services/tournament-orchestration.service";
+import { TournamentRoundClockService } from "./services/tournament-round-clock.service";
 import { TournamentStateService } from "./services/tournament-state.service";
+import { SwissPairingModule } from "./swiss-pairing.module";
 import { TournamentController } from "./tournament.controller";
 import { TournamentService } from "./tournament.service";
-import { ExternalTournamentSyncService } from "./services/external-tournament-sync.service";
-import { SwissPairingModule } from "./swiss-pairing.module";
 
 @Module({
   imports: [
@@ -41,14 +53,22 @@ import { SwissPairingModule } from "./swiss-pairing.module";
       TournamentOrganizer,
       TournamentNotification,
       RegistrationPayment,
+      TournamentDeckSnapshot,
+      TournamentDeckSnapshotRevision,
       Player,
       User,
       Match,
+      MatchResultProposal,
       Ranking,
+      Deck,
+      DeckFormat,
+      Card,
+      RankedMatchHistory,
     ]),
     RankingModule,
     MatchModule,
     SwissPairingModule,
+    AuditModule,
   ],
   controllers: [TournamentController],
   providers: [
@@ -57,6 +77,10 @@ import { SwissPairingModule } from "./swiss-pairing.module";
     SeedingService,
     TournamentOrchestrationService,
     TournamentStateService,
+    DeckLegalityService,
+    TournamentDeckSnapshotService,
+    TournamentRoundClockService,
+    TournamentIncidentService,
     TournamentOrganizerGuard,
     TournamentParticipantGuard,
     TournamentOwnerGuard,
@@ -70,6 +94,9 @@ import { SwissPairingModule } from "./swiss-pairing.module";
     SeedingService,
     TournamentOrchestrationService,
     TournamentStateService,
+    TournamentDeckSnapshotService,
+    TournamentRoundClockService,
+    TournamentIncidentService,
   ],
 })
 export class TournamentModule {}

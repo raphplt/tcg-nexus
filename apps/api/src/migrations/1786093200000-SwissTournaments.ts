@@ -1,4 +1,5 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
+import { schemaAlreadyHas } from "../common/migration-guard";
 
 /**
  * Columns required to orchestrate the Swiss system.
@@ -15,6 +16,17 @@ export class SwissTournaments1786093200000 implements MigrationInterface {
   name = "SwissTournaments1786093200000";
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // The initial schema baseline already contains this change; the
+    // probe also lets a legacy database re-run the chain safely.
+    if (
+      await schemaAlreadyHas(
+        queryRunner,
+        `SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'match' AND column_name = 'isBye'`,
+      )
+    ) {
+      return;
+    }
+
     await queryRunner.query(`
       ALTER TABLE "match"
       ADD COLUMN IF NOT EXISTS "isBye" boolean NOT NULL DEFAULT false

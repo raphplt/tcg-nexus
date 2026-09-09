@@ -1,6 +1,9 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { SealedProductService } from "../sealed-product/sealed-product.service";
 import { DemoService } from "./demo.service";
+import { DemoRefreshService } from "./demo-refresh.service";
+import { TournamentType } from "../tournament/entities/tournament.entity";
+import { SeedingMethod } from "../tournament/services/seeding.service";
 import { SeedController } from "./seed.controller";
 import { SeedService } from "./seed.service";
 
@@ -26,6 +29,7 @@ describe("SeedController", () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [SeedController],
       providers: [
+        { provide: DemoRefreshService, useValue: { refresh: jest.fn() } },
         {
           provide: SeedService,
           useValue: mockService,
@@ -74,15 +78,15 @@ describe("SeedController", () => {
       controller.seedCompleteTournament(
         "Cup",
         "8",
-        "SWISS" as any,
-        "RANDOM" as any,
+        TournamentType.SWISS_SYSTEM,
+        SeedingMethod.RANDOM,
       ),
     ).resolves.toEqual({ id: 10 });
     expect(mockService.seedCompleteTournament).toHaveBeenCalledWith(
       "Cup",
       8,
-      "SWISS",
-      "RANDOM",
+      TournamentType.SWISS_SYSTEM,
+      SeedingMethod.RANDOM,
     );
   });
 

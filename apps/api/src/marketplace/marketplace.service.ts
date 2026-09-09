@@ -17,11 +17,14 @@ import {
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { UserRole } from "src/common/enums/user";
-import { FindOptionsWhere, MoreThan, Repository } from "typeorm";
+import { FindOptionsWhere, MoreThan, Repository, DataSource } from "typeorm";
+import { CollectionItem } from "../collection-item/entities/collection-item.entity";
+
 import { Card } from "../card/entities/card.entity";
 import { Currency } from "../common/enums/currency";
 import { Languages } from "../common/enums/languages";
 import { ListingStatus } from "../common/enums/listing-status";
+import { InventoryLedgerService } from "./inventory-ledger.service";
 import { ProductKind } from "../common/enums/product-kind";
 import {
   normalizeSortOrder,
@@ -91,12 +94,81 @@ export class MarketplaceService {
     private readonly orderItemRepository: Repository<OrderItem>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(CollectionItem)
+    private readonly collectionItemRepository: Repository<CollectionItem>,
+    private readonly dataSource: DataSource,
     private readonly orderService: OrderService,
+    private readonly inventoryLedger: InventoryLedgerService,
   ) {}
 
   private readonly logger = new Logger(MarketplaceService.name);
 
   async create(createListingDto: CreateListingDto, user: User) {
+    let inventoryItem: CollectionItem | null = null;
+    let isInventoryBacked = false;
+
+    if (createListingDto.inventoryItemId) {
+      inventoryItem = await this.collectionItemRepository.findOne({
+        where: { id: createListingDto.inventoryItemId },
+        relations: [
+          "collection",
+          "collection.user",
+          "pokemonCard",
+          "sealedProduct",
+          "cardState",
+        ],
+      });
+
+      if (!inventoryItem) {
+        throw new NotFoundException("Item d'inventaire introuvable");
+      }
+
+      if (inventoryItem.collection?.user?.id !== user.id) {
+        throw new ForbiddenException(
+          "Vous ne pouvez vendre que des items de votre propre collection",
+        );
+      }
+
+      const listQty = createListingDto.quantityAvailable ?? 1;
+      if ((inventoryItem.quantityAvailable ?? 0) < listQty) {
+        throw new BadRequestException(
+          `Quantité disponible insuffisante dans votre collection (${inventoryItem.quantityAvailable ?? 0} disponible(s), ${listQty} demandé(s))`,
+        );
+      }
+
+      isInventoryBacked = true;
+
+      // Prefill fields from inventory if missing
+      if (
+        inventoryItem.productKind === ProductKind.CARD &&
+        inventoryItem.pokemonCard
+      ) {
+        createListingDto.productKind = ProductKind.CARD;
+        createListingDto.pokemonCardId =
+          createListingDto.pokemonCardId || inventoryItem.pokemonCard.id;
+        if (inventoryItem.cardState && !createListingDto.cardState) {
+          createListingDto.cardState = inventoryItem.cardState.code as any;
+        }
+      } else if (
+        inventoryItem.productKind === ProductKind.SEALED &&
+        inventoryItem.sealedProduct
+      ) {
+        createListingDto.productKind = ProductKind.SEALED;
+        createListingDto.sealedProductId =
+          createListingDto.sealedProductId || inventoryItem.sealedProduct.id;
+        if (
+          inventoryItem.sealedCondition &&
+          !createListingDto.sealedCondition
+        ) {
+          createListingDto.sealedCondition = inventoryItem.sealedCondition;
+        }
+      }
+
+      if (inventoryItem.language && !createListingDto.language) {
+        createListingDto.language = inventoryItem.language as Languages;
+      }
+    }
+
     const productKind = createListingDto.productKind ?? ProductKind.CARD;
 
     if (productKind === ProductKind.CARD) {
@@ -122,28 +194,53 @@ export class MarketplaceService {
       pokemonCardId,
       sealedProductId,
       productKind: _kind,
+      inventoryItemId: _invId,
       ...rest
     } = createListingDto;
 
-    const listing = this.listingRepository.create({
-      ...rest,
-      productKind,
-      // Platform-enforced shipping cost and handling delay (never set directly by seller)
-      shippingCost: getShippingCost(productKind),
-      handlingTimeDays: SHIPPING_POLICY.handlingTimeDays,
-      seller: user,
-      pokemonCard: pokemonCardId ? ({ id: pokemonCardId } as Card) : null,
-      sealedProduct:
-        productKind === ProductKind.SEALED && sealedProductId
-          ? ({ id: sealedProductId } as SealedProduct)
-          : null,
+    return this.dataSource.transaction(async (manager) => {
+      const listing = manager.create(Listing, {
+        ...rest,
+        productKind,
+        isInventoryBacked,
+        inventoryItem:
+          isInventoryBacked && inventoryItem ? inventoryItem : null,
+        shippingCost: getShippingCost(productKind),
+        handlingTimeDays: SHIPPING_POLICY.handlingTimeDays,
+        seller: user,
+        pokemonCard: pokemonCardId ? ({ id: pokemonCardId } as Card) : null,
+        sealedProduct:
+          productKind === ProductKind.SEALED && sealedProductId
+            ? ({ id: sealedProductId } as SealedProduct)
+            : null,
+      });
+
+      const savedListing = await manager.save(Listing, listing);
+
+      // Reserving through the ledger keeps the listing's held copies explicit
+      // and refuses the creation when the collection cannot back the offer.
+      savedListing.inventoryItem = listing.inventoryItem ?? null;
+      await this.inventoryLedger.syncListingReservation(
+        manager,
+        savedListing,
+        { quantityAvailable: 0, status: ListingStatus.INACTIVE },
+        {
+          quantityAvailable: savedListing.quantityAvailable,
+          status: savedListing.status,
+        },
+        "created",
+      );
+
+      const listingWithRelations = await manager.findOne(Listing, {
+        where: { id: savedListing.id },
+        relations: ["seller", "pokemonCard", "sealedProduct"],
+      });
+      if (listingWithRelations) {
+        await this.recordPriceHistory(listingWithRelations);
+      }
+
+      return savedListing;
     });
-    const savedListing = await this.listingRepository.save(listing);
-
-    const listingWithRelations = await this.findOne(savedListing.id);
-    await this.recordPriceHistory(listingWithRelations);
-
-    return savedListing;
   }
 
   async findAll(
@@ -250,50 +347,103 @@ export class MarketplaceService {
     updateListingDto: UpdateListingDto,
     user: User,
   ): Promise<Listing> {
-    const listing = await this.listingRepository.findOne({
-      where: { id },
-      relations: ["seller"],
-    });
-    if (!listing) throw new NotFoundException("Annonce introuvable");
-    if (listing.seller.id !== user.id && user.role !== UserRole.ADMIN) {
-      this.logger.warn(
-        `Refus update listing: user=${user.id} role=${user.role} targetListing=${id} seller=${listing.seller.id}`,
+    const saved = await this.dataSource.transaction(async (manager) => {
+      const locked = await manager.findOne(Listing, {
+        where: { id },
+        lock: { mode: "pessimistic_write" },
+      });
+      if (!locked) throw new NotFoundException("Annonce introuvable");
+      const listing = await manager.findOneOrFail(Listing, {
+        where: { id },
+        relations: ["seller", "inventoryItem"],
+      });
+      if (listing.seller.id !== user.id && user.role !== UserRole.ADMIN) {
+        this.logger.warn(
+          `Refus update listing: user=${user.id} role=${user.role} targetListing=${id} seller=${listing.seller.id}`,
+        );
+        throw new ForbiddenException(
+          "Vous ne pouvez pas modifier cette annonce",
+        );
+      }
+
+      const previousOffer = {
+        quantityAvailable: listing.quantityAvailable,
+        status: listing.status,
+      };
+      const previousPrice = Number(listing.price);
+      const previousCurrency = listing.currency;
+
+      Object.assign(listing, updateListingDto);
+
+      // One delta per transition: deactivation, reactivation and quantity edits
+      // reserve or release exactly the difference, never the whole offer twice.
+      await this.inventoryLedger.syncListingReservation(
+        manager,
+        listing,
+        previousOffer,
+        {
+          quantityAvailable: listing.quantityAvailable,
+          status: listing.status,
+        },
+        `offer:${previousOffer.status}:${previousOffer.quantityAvailable}->${listing.status}:${listing.quantityAvailable}`,
       );
-      throw new ForbiddenException("Vous ne pouvez pas modifier cette annonce");
-    }
-    const previousPrice = Number(listing.price);
-    const previousCurrency = listing.currency;
 
-    Object.assign(listing, updateListingDto);
-    const saved = await this.listingRepository.save(listing);
+      const persisted = await manager.save(Listing, listing);
+      return {
+        listing: persisted,
+        priceChanged:
+          Number(persisted.price) !== previousPrice ||
+          persisted.currency !== previousCurrency,
+      };
+    });
 
-    const priceChanged =
-      Number(saved.price) !== previousPrice ||
-      saved.currency !== previousCurrency;
-
-    if (priceChanged) {
-      const withRelations = await this.findOne(saved.id);
+    if (saved.priceChanged) {
+      const withRelations = await this.findOne(saved.listing.id);
       await this.recordPriceHistory(withRelations);
     }
 
-    return saved;
+    return saved.listing;
   }
 
   async delete(id: number, user: User): Promise<void> {
-    const listing = await this.listingRepository.findOne({
-      where: { id },
-      relations: ["seller"],
+    await this.dataSource.transaction(async (manager) => {
+      const locked = await manager.findOne(Listing, {
+        where: { id },
+        lock: { mode: "pessimistic_write" },
+      });
+      if (!locked) throw new NotFoundException("Annonce introuvable");
+      const listing = await manager.findOneOrFail(Listing, {
+        where: { id },
+        relations: ["seller", "inventoryItem"],
+      });
+      if (listing.seller.id !== user.id && user.role !== UserRole.ADMIN) {
+        this.logger.warn(
+          `Refus delete listing: user=${user.id} role=${user.role} targetListing=${id} seller=${listing.seller.id}`,
+        );
+        throw new ForbiddenException(
+          "Vous ne pouvez pas supprimer cette annonce",
+        );
+      }
+
+      // An already inactive listing has released its offer: deleting it here
+      // computes a zero delta instead of returning the same copies again.
+      await this.inventoryLedger.syncListingReservation(
+        manager,
+        listing,
+        {
+          quantityAvailable: listing.quantityAvailable,
+          status: listing.status,
+        },
+        {
+          quantityAvailable: listing.quantityAvailable,
+          status: listing.status,
+          deleted: true,
+        },
+        "deleted",
+      );
+
+      await manager.softRemove(Listing, listing);
     });
-    if (!listing) throw new NotFoundException("Annonce introuvable");
-    if (listing.seller.id !== user.id && user.role !== UserRole.ADMIN) {
-      this.logger.warn(
-        `Refus delete listing: user=${user.id} role=${user.role} targetListing=${id} seller=${listing.seller.id}`,
-      );
-      throw new ForbiddenException(
-        "Vous ne pouvez pas supprimer cette annonce",
-      );
-    }
-    await this.listingRepository.softRemove(listing);
   }
 
   async findBySellerId(

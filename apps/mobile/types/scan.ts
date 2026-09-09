@@ -39,14 +39,26 @@ export interface CardSearchResult {
   pokemonDetails?: CardDetails;
 }
 
+/** Inventory returned by collection endpoints, including sealed products. */
 export interface CollectionItem {
   id: number | null;
   quantity: number;
   added_at?: string;
+  productKind?: "card" | "sealed";
+  sealedProduct?: {
+    id: string;
+    name?: string;
+    image?: string;
+    pokemonSet?: CardSetSummary | null;
+  } | null;
+  sealedCondition?: "sealed" | "box_damaged" | "opened_resealed" | null;
+  cardState?: { name: string } | null;
   pokemonCard?: CardSearchResult | null;
 }
 
+/** Collection metadata, including the owner used to gate editing controls. */
 export interface UserCollection {
+  user?: { id: number };
   id: string;
   name: string;
   description?: string;

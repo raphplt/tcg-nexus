@@ -4,11 +4,19 @@ import {
   DEFAULT_LOCALE,
   type SupportedLocale,
 } from "src/translation/supported-locales";
-import { applyCardSearch, applyRarityFilter } from "src/card/card-search";
 import {
+  applyCardSearch,
+  applyRarityFilter,
+  sealedProductNameMatchesSql,
+  localizedSealedNameSql,
+} from "src/card/card-search";
+import {
+  BadRequestException,
   ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
+  forwardRef,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Card } from "src/card/entities/card.entity";
@@ -16,10 +24,15 @@ import {
   CardState,
   CardStateCode,
 } from "src/card-state/entities/card-state.entity";
+import { ListingStatus } from "src/common/enums/listing-status";
 import { ProductKind } from "src/common/enums/product-kind";
 import { UserRole } from "src/common/enums/user";
+import { Listing } from "src/marketplace/entities/listing.entity";
+import { MarketplaceService } from "src/marketplace/marketplace.service";
 import { PokemonSet } from "src/pokemon-set/entities/pokemon-set.entity";
-import { Repository } from "typeorm";
+import { ListDuplicateDto } from "./dto/list-duplicate.dto";
+
+import { Brackets, Repository } from "typeorm";
 import { normalizeSortOrder } from "../helpers/pagination";
 import { CollectionItem } from "../collection-item/entities/collection-item.entity";
 import { User } from "../user/entities/user.entity";
@@ -40,6 +53,10 @@ export class CollectionService {
     private cardStateRepository: Repository<CardState>,
     @InjectRepository(PokemonSet)
     private pokemonSetRepository: Repository<PokemonSet>,
+    @InjectRepository(Listing)
+    private readonly listingRepository: Repository<Listing>,
+    @Inject(forwardRef(() => MarketplaceService))
+    private readonly marketplaceService: MarketplaceService,
     private readonly cardService: CardService,
     private readonly localization: CatalogLocalizationService,
   ) {}
@@ -72,7 +89,7 @@ export class CollectionService {
     return collection.user?.id === viewer.id || viewer.role === UserRole.ADMIN;
   }
 
-  // 404 et pas 403 : un 403 confirmerait l'existence de la collection
+  // NOTE: A 404 avoids disclosing the existence of a private collection.
   private assertCanViewCollection(collection: Collection, viewer?: User): void {
     if (!this.canViewCollection(collection, viewer)) {
       throw new NotFoundException(
@@ -190,7 +207,10 @@ export class CollectionService {
    * @param createCollectionDto Collection creation parameters.
    * @returns Created Collection entity.
    */
-  async create(createCollectionDto: CreateCollectionDto): Promise<Collection> {
+  async create(
+    createCollectionDto: CreateCollectionDto,
+    userId: number,
+  ): Promise<Collection> {
     let masterSet: PokemonSet | undefined;
 
     if (createCollectionDto.masterSetId) {
@@ -209,7 +229,7 @@ export class CollectionService {
       // Prevent duplicate collection creation for the same user and master set
       const existing = await this.collectionRepository.findOne({
         where: {
-          user: { id: Number(createCollectionDto.userId) },
+          user: { id: userId },
           masterSet: { id: set.id },
         },
       });
@@ -237,7 +257,7 @@ export class CollectionService {
         : createCollectionDto.description,
       isPublic: createCollectionDto.isPublic || false,
     });
-    collection.user = { id: Number(createCollectionDto.userId) } as User;
+    collection.user = { id: userId } as User;
     if (masterSet) {
       collection.masterSet = masterSet;
     }
@@ -258,6 +278,12 @@ export class CollectionService {
     userId: number,
   ): Promise<CollectionItem> {
     const collection = await this.getOwnedCollection(collectionId, userId);
+
+    // An empty criterion is dropped by TypeORM and would match the first card
+    // of the table instead of failing.
+    if (!pokemonCardId) {
+      throw new BadRequestException("Identifiant de carte manquant");
+    }
 
     const card = await this.cardRepository.findOne({
       where: { id: pokemonCardId },
@@ -513,6 +539,7 @@ export class CollectionService {
           "item.collection.id = :collectionId",
           { collectionId },
         )
+        .leftJoinAndSelect("item.cardState", "cardState")
         .where("set.id = :masterSetId", { masterSetId });
 
       if (search) {
@@ -529,7 +556,7 @@ export class CollectionService {
         applyRarityFilter(queryBuilder, rarity);
       }
       if (cardState) {
-        queryBuilder.andWhere("item.cardState.code = :cardState", {
+        queryBuilder.andWhere("cardState.code = :cardState", {
           cardState,
         });
       }
@@ -548,6 +575,8 @@ export class CollectionService {
         return {
           id: item?.id ?? null,
           quantity: item?.quantity ?? 0,
+          productKind: ProductKind.CARD,
+          cardState: item?.cardState ?? null,
           added_at: item?.added_at ?? null,
           // `tcgDexId` allows `CatalogLocalizationInterceptor` to attach localized name, image, rarity, and category
           pokemonCard: {
@@ -580,6 +609,9 @@ export class CollectionService {
     const queryBuilder = this.collectionItemRepository
       .createQueryBuilder("item")
       .leftJoinAndSelect("item.pokemonCard", "pokemonCard")
+      .leftJoinAndSelect("item.sealedProduct", "sealedProduct")
+      .leftJoinAndSelect("sealedProduct.pokemonSet", "sealedSet")
+      .leftJoinAndSelect("sealedSet.serie", "sealedSerie")
       .leftJoinAndSelect("item.cardState", "cardState")
       .leftJoinAndSelect("pokemonCard.set", "set")
       .leftJoinAndSelect("set.serie", "serie")
@@ -593,15 +625,30 @@ export class CollectionService {
     }
 
     if (search) {
-      applyCardSearch(queryBuilder, search, { alias: "pokemonCard" });
+      queryBuilder.andWhere(
+        new Brackets((where) => {
+          applyCardSearch(where, search, { alias: "pokemonCard" });
+          where.orWhere(
+            sealedProductNameMatchesSql("sealedProduct", "sealedSearch"),
+            {
+              sealedSearch: `%${search.toLowerCase()}%`,
+            },
+          );
+        }),
+      );
     }
 
     if (setId) {
-      queryBuilder.andWhere("set.id = :setId", { setId });
+      queryBuilder.andWhere("(set.id = :setId OR sealedSet.id = :setId)", {
+        setId,
+      });
     }
 
     if (serieId) {
-      queryBuilder.andWhere("serie.id = :serieId", { serieId });
+      queryBuilder.andWhere(
+        "(serie.id = :serieId OR sealedSerie.id = :serieId)",
+        { serieId },
+      );
     }
 
     if (rarity) {
@@ -635,7 +682,7 @@ export class CollectionService {
       );
       queryBuilder.orderBy(
         sortField === "pokemonCard.name"
-          ? "sortTranslation.name"
+          ? `COALESCE(sortTranslation.name, ${localizedSealedNameSql("sealedProduct")})`
           : "sortTranslation.rarity",
         normalizeSortOrder(sortOrder),
       );
@@ -678,5 +725,200 @@ export class CollectionService {
 
     // Rarities are localized labels: delegate to CardService which handles locale resolution and fallbacks
     return this.cardService.getSetRarities(collection.masterSet.id, locale);
+  }
+
+  /**
+   * Bulk adds all missing set cards of a collection to the user's Wishlist (COL-05).
+   *
+   * @param collectionId Target collection ID.
+   * @param userId Requesting user ID.
+   * @returns Added card count.
+   */
+  async wishlistMissingCards(
+    collectionId: string,
+    userId: number,
+  ): Promise<{ addedCount: number }> {
+    const collection = await this.getOwnedCollection(collectionId, userId);
+    if (!collection.masterSet) {
+      throw new BadRequestException(
+        "Cette opération nécessite une collection liée à une extension (Master Set)",
+      );
+    }
+
+    const setCards = await this.cardRepository.find({
+      where: { set: { id: collection.masterSet.id } },
+    });
+
+    const ownedCardIds = new Set(
+      collection.items
+        ?.filter(
+          (i) =>
+            i.productKind === ProductKind.CARD &&
+            i.pokemonCard &&
+            i.quantity > 0,
+        )
+        .map((i) => i.pokemonCard!.id) || [],
+    );
+
+    const missingCards = setCards.filter((c) => !ownedCardIds.has(c.id));
+    if (missingCards.length === 0) {
+      return { addedCount: 0 };
+    }
+
+    let wishlist = await this.collectionRepository.findOne({
+      where: { user: { id: userId }, name: "Wishlist" },
+      relations: ["items", "items.pokemonCard"],
+    });
+
+    if (!wishlist) {
+      wishlist = await this.collectionRepository.save(
+        this.collectionRepository.create({
+          name: "Wishlist",
+          description: "Default wishlist",
+          user: { id: userId } as User,
+          isPublic: false,
+        }),
+      );
+      wishlist.items = [];
+    }
+
+    const wishlistCardIds = new Set(
+      wishlist.items
+        ?.filter((i) => i.pokemonCard)
+        .map((i) => i.pokemonCard!.id) || [],
+    );
+
+    const defaultCardState =
+      (await this.cardStateRepository.findOne({
+        where: { code: CardStateCode.NM },
+      })) || (await this.cardStateRepository.find())[0];
+
+    let addedCount = 0;
+    for (const card of missingCards) {
+      if (wishlistCardIds.has(card.id)) continue;
+
+      const item = this.collectionItemRepository.create({
+        collection: wishlist,
+        productKind: ProductKind.CARD,
+        pokemonCard: card,
+        cardState: defaultCardState,
+        quantity: 1,
+        quantityAvailable: 1,
+        quantityReserved: 0,
+        quantitySold: 0,
+      });
+      await this.collectionItemRepository.save(item);
+      wishlistCardIds.add(card.id);
+      addedCount++;
+    }
+
+    return { addedCount };
+  }
+
+  /**
+   * Retrieves active marketplace offers for a missing card in a collection (COL-05).
+   *
+   * @param collectionId Target collection ID.
+   * @param cardId Target card ID.
+   * @param viewer Requesting user.
+   * @returns Array of active listings.
+   */
+  async getMissingCardOffers(
+    collectionId: string,
+    cardId: string,
+    viewer?: User,
+  ): Promise<any[]> {
+    await this.getViewableCollection(collectionId, viewer);
+
+    const listings = await this.listingRepository.find({
+      where: {
+        pokemonCard: { id: cardId },
+        status: ListingStatus.ACTIVE,
+      },
+      relations: ["seller", "cardState", "pokemonCard"],
+      order: { price: "ASC" },
+      take: 10,
+    });
+
+    return listings
+      .filter((l) => l.quantityAvailable > 0)
+      .map((l) => ({
+        id: l.id,
+        price: Number(l.price),
+        currency: l.currency,
+        quantityAvailable: l.quantityAvailable,
+        sellerId: l.seller.id,
+        sellerName:
+          `${l.seller.firstName || ""} ${l.seller.lastName || ""}`.trim() ||
+          `Vendeur #${l.seller.id}`,
+
+        shippingCost: Number(l.shippingCost),
+        cardState: l.cardState || null,
+        language: l.language || null,
+      }));
+  }
+
+  /**
+   * Lists a duplicate copy of an owned card for sale on the marketplace (COL-05 / INT-02).
+   *
+   * Validates that the user does not accidentally list their last retained copy.
+   *
+   * @param collectionId Target collection ID.
+   * @param itemId Target item ID.
+   * @param user Requesting owner.
+   * @param dto Price and quantity parameters.
+   * @returns Created Listing entity.
+   */
+  async listDuplicate(
+    collectionId: string,
+    itemId: number,
+    user: User,
+    dto: ListDuplicateDto,
+  ): Promise<Listing> {
+    const item = await this.collectionItemRepository.findOne({
+      where: {
+        id: itemId,
+        collection: { id: collectionId },
+      },
+      relations: ["collection", "collection.user", "pokemonCard", "cardState"],
+    });
+
+    if (!item) {
+      throw new NotFoundException("Item introuvable dans cette collection");
+    }
+
+    if (item.collection.user?.id !== user.id) {
+      throw new ForbiddenException(
+        "Vous ne pouvez vendre que des cartes de vos propres collections",
+      );
+    }
+
+    if (item.quantity <= 1) {
+      throw new BadRequestException(
+        "Cette carte n'est pas un double (quantité totale = 1). Vous ne pouvez mettre en vente que vos doubles.",
+      );
+    }
+
+    if ((item.quantityAvailable ?? 0) < dto.quantity) {
+      throw new BadRequestException(
+        `Quantité disponible insuffisante (${item.quantityAvailable ?? 0} disponible, ${dto.quantity} demandé)`,
+      );
+    }
+
+    return this.marketplaceService.create(
+      {
+        productKind: item.productKind,
+        pokemonCardId: item.pokemonCard?.id,
+        sealedProductId: item.sealedProduct?.id,
+        cardState: item.cardState?.code as any,
+        sealedCondition: item.sealedCondition ?? undefined,
+        price: dto.price,
+        currency: dto.currency,
+        quantityAvailable: dto.quantity,
+        description: dto.description,
+        inventoryItemId: item.id,
+      },
+      user,
+    );
   }
 }

@@ -34,5 +34,25 @@
   "order.shipped": {
     "title": "Order shipped",
     "body": "Your order has been shipped."
+  },
+  "order.refund_created": {
+    "title": "Refund processed",
+    "body": "A refund of {amount} has been processed for order #{orderId}."
+  },
+  "order.return_requested": {
+    "title": "Return requested",
+    "body": "A return has been requested for item in order #{orderId}."
+  },
+  "order.item_delivered": {
+    "title": "Delivery confirmed",
+    "body": "Receipt confirmed for item in order #{orderId}."
+  },
+  "order.item_claim_created": {
+    "title": "Claim opened",
+    "body": "A claim has been opened for item in order #{orderId}."
+  },
+  "payment.compensation_required": {
+    "title": "Refund owed to you",
+    "body": "A payment of {amount} for order #{orderId} was captured after it was cancelled and is being refunded."
   }
 }

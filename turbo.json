@@ -28,5 +28,6 @@
       "cache": false,
       "persistent": true
     }
-  }
+  },
+  "globalDependencies": ["biome.json", "packages/typescript-config/**"]
 }

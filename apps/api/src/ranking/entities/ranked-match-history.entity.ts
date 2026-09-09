@@ -52,6 +52,19 @@ export class RankedMatchHistory {
   @Column({ type: "boolean", default: false })
   isDraw: boolean;
 
+  /**
+   * Set when a correction reversed the rating this row applied.
+   *
+   * A reversed row keeps its history for the players' rating graph, and stops
+   * counting as "already rated" so the corrected outcome can be rated again.
+   */
+  @Column({ type: "timestamp with time zone", nullable: true })
+  reversedAt?: Date | null;
+
+  /** Why the rating was reversed, for the players and the operator. */
+  @Column({ type: "text", nullable: true })
+  reversalReason?: string | null;
+
   @CreateDateColumn()
   createdAt: Date;
 }

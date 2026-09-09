@@ -15,7 +15,13 @@ import {
   PaymentStatus,
   PaymentTransaction,
 } from "./entities/payment-transaction.entity";
+import { AuditService } from "../audit/audit.service";
+import { OutboxService } from "../outbox/outbox.service";
+import { SupportTicket } from "../support-ticket/entities/support-ticket.entity";
+import { RefundOperation } from "./entities/refund-operation.entity";
 import { OrderService } from "./order.service";
+import { InventoryLedgerService } from "./inventory-ledger.service";
+import { RefundFinanceService } from "./refund-finance.service";
 import { StripeService } from "./stripe.service";
 
 describe("OrderService", () => {
@@ -26,6 +32,8 @@ describe("OrderService", () => {
   let stripeService: any;
   let userCartService: any;
   let eventEmitter: any;
+  let auditService: any;
+  let outboxService: any;
   let manager: any;
 
   const buyer = { id: 1, firstName: "Ada", lastName: "L" } as User;
@@ -50,6 +58,7 @@ describe("OrderService", () => {
   beforeEach(async () => {
     manager = {
       findOne: jest.fn(),
+      findOneOrFail: jest.fn(),
       create: jest.fn((_cls, data) => ({ ...data })),
       save: jest.fn(async (_cls, entity) => ({ id: 100, ...entity })),
       decrement: jest.fn(),
@@ -74,6 +83,7 @@ describe("OrderService", () => {
       create: jest.fn((data) => data),
       save: jest.fn(async (p) => p),
       findOne: jest.fn(),
+      find: jest.fn().mockResolvedValue([]),
     };
 
     stripeService = {
@@ -90,16 +100,34 @@ describe("OrderService", () => {
     };
 
     eventEmitter = { emit: jest.fn() };
+    auditService = { record: jest.fn().mockResolvedValue({ id: "audit-1" }) };
+    outboxService = { record: jest.fn().mockResolvedValue({ id: "outbox-1" }) };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         OrderService,
+        {
+          provide: RefundFinanceService,
+          useValue: { reconcilePaymentRefunds: jest.fn() },
+        },
+        {
+          provide: InventoryLedgerService,
+          useValue: {
+            syncListingReservation: jest.fn().mockResolvedValue(0),
+            commitSale: jest.fn().mockResolvedValue(undefined),
+            restockReturn: jest.fn().mockResolvedValue(true),
+            reverseRestock: jest.fn().mockResolvedValue(true),
+            applyMovement: jest.fn().mockResolvedValue(null),
+          },
+        },
         { provide: getRepositoryToken(Order), useValue: orderRepo },
         { provide: getRepositoryToken(OrderItem), useValue: orderItemRepo },
         {
           provide: getRepositoryToken(PaymentTransaction),
           useValue: paymentRepo,
         },
+        { provide: getRepositoryToken(SupportTicket), useValue: {} },
+        { provide: getRepositoryToken(RefundOperation), useValue: {} },
         { provide: getRepositoryToken(Listing), useValue: {} },
         { provide: StripeService, useValue: stripeService },
         { provide: UserCartService, useValue: userCartService },
@@ -114,6 +142,8 @@ describe("OrderService", () => {
           },
         },
         { provide: EventEmitter2, useValue: eventEmitter },
+        { provide: AuditService, useValue: auditService },
+        { provide: OutboxService, useValue: outboxService },
       ],
     }).compile();
 
@@ -197,6 +227,7 @@ describe("OrderService", () => {
       await service.startCheckout(dto, buyer);
 
       expect(manager.save.mock.calls[0][1].totalAmount).toBe(50);
+      expect(manager.save.mock.calls[0][1].orderItems[0].unitPrice).toBe(25);
     });
 
     it("charges a seller's shipping once, at their highest declared rate", async () => {
@@ -342,6 +373,209 @@ describe("OrderService", () => {
         "quantityAvailable",
         2,
       );
+    });
+
+    it("is idempotent when retried with the same attemptKey on active pending order", async () => {
+      const activePendingOrder = {
+        id: 777,
+        status: OrderStatus.PENDING,
+        totalAmount: 42,
+        shippingAmount: 5,
+        currency: Currency.EUR,
+        reservationExpiresAt: new Date(Date.now() + 600000),
+        checkoutAttemptKey: "attempt-123",
+      };
+
+      orderRepo.findOne.mockResolvedValueOnce(activePendingOrder);
+      paymentRepo.findOne.mockResolvedValueOnce({
+        transactionId: "pi_existing",
+      });
+      stripeService.retrievePaymentIntent.mockResolvedValueOnce({
+        id: "pi_existing",
+        client_secret: "secret_existing",
+      });
+
+      const result = await service.startCheckout(
+        { ...dto, attemptKey: "attempt-123" },
+        buyer,
+      );
+
+      expect(result).toEqual({
+        orderId: 777,
+        clientSecret: "secret_existing",
+        amount: 42,
+        shippingAmount: 5,
+        currency: Currency.EUR,
+      });
+      // Did NOT create a new order or decrement stock again
+      expect(manager.save).not.toHaveBeenCalled();
+      expect(manager.decrement).not.toHaveBeenCalled();
+    });
+
+    it("resumes pending checkout session if cart is empty but active reservation exists", async () => {
+      userCartService.findCartByUserId.mockResolvedValue({ cartItems: [] });
+
+      const activeOrder = {
+        id: 888,
+        status: OrderStatus.PENDING,
+        totalAmount: 30,
+        shippingAmount: 3,
+        currency: Currency.EUR,
+        reservationExpiresAt: new Date(Date.now() + 600000),
+        orderItems: [],
+      };
+
+      orderRepo.findOne.mockResolvedValueOnce(activeOrder);
+      paymentRepo.findOne.mockResolvedValueOnce({ transactionId: "pi_888" });
+      stripeService.retrievePaymentIntent.mockResolvedValueOnce({
+        client_secret: "secret_888",
+      });
+
+      const result = await service.startCheckout(dto, buyer);
+
+      expect(result).toEqual({
+        orderId: 888,
+        clientSecret: "secret_888",
+        amount: 30,
+        shippingAmount: 3,
+        currency: Currency.EUR,
+      });
+    });
+  });
+
+  describe("findPendingCheckoutSession", () => {
+    it("returns formatted session and items when active pending order exists", async () => {
+      const pendingOrder = {
+        id: 999,
+        status: OrderStatus.PENDING,
+        totalAmount: 55,
+        shippingAmount: 5,
+        currency: Currency.EUR,
+        shippingAddress: "42 rue de la Paix",
+        reservationExpiresAt: new Date(Date.now() + 500000),
+        orderItems: [
+          {
+            id: 1,
+            productName: "Charizard",
+            productImage: "https://img.com/charizard.png",
+            productCondition: "NM",
+            productSetName: "Base Set",
+            productKind: "card",
+            quantity: 1,
+            unitPrice: 50,
+          },
+        ],
+      };
+
+      orderRepo.findOne.mockResolvedValueOnce(pendingOrder);
+      paymentRepo.findOne.mockResolvedValueOnce({ transactionId: "pi_999" });
+      stripeService.retrievePaymentIntent.mockResolvedValueOnce({
+        client_secret: "secret_999",
+      });
+
+      const session = await service.findPendingCheckoutSession(buyer.id);
+
+      expect(session).toEqual({
+        orderId: 999,
+        clientSecret: "secret_999",
+        amount: 55,
+        shippingAmount: 5,
+        currency: Currency.EUR,
+        shippingAddress: "42 rue de la Paix",
+        reservationExpiresAt: pendingOrder.reservationExpiresAt,
+        items: [
+          {
+            id: 1,
+            productName: "Charizard",
+            productImage: "https://img.com/charizard.png",
+            productCondition: "NM",
+            productSetName: "Base Set",
+            productKind: "card",
+            quantity: 1,
+            unitPrice: 50,
+          },
+        ],
+      });
+    });
+
+    it("returns null when no active pending order exists", async () => {
+      orderRepo.findOne.mockResolvedValueOnce(null);
+      const session = await service.findPendingCheckoutSession(buyer.id);
+      expect(session).toBeNull();
+    });
+  });
+
+  describe("cancelPendingOrderByBuyer", () => {
+    /** Serves the authorization read, the row lock and the relation load. */
+    const withOrder = (order: Record<string, unknown>) => {
+      orderRepo.findOne.mockResolvedValue(order);
+      manager.findOne.mockResolvedValue(order);
+      manager.findOneOrFail.mockResolvedValue(order);
+    };
+
+    it("cancels a pending order, releases its stock once and audits it", async () => {
+      const pendingOrder = {
+        id: 555,
+        status: OrderStatus.PENDING,
+        buyer,
+        orderItems: [{ listing: { id: 10 }, quantity: 2 }],
+        stockReleased: false,
+      };
+      withOrder(pendingOrder);
+
+      const result = await service.cancelPendingOrderByBuyer(555, buyer);
+
+      expect(result).toEqual({ success: true, orderId: 555 });
+      expect(pendingOrder.status).toBe(OrderStatus.CANCELLED);
+      expect(manager.increment).toHaveBeenCalledWith(
+        Listing,
+        { id: 10 },
+        "quantityAvailable",
+        2,
+      );
+      expect(auditService.record).toHaveBeenCalledWith(
+        expect.objectContaining({
+          targetType: "order",
+          targetId: "555",
+          action: "order.cancelled",
+          reason: "Cancelled by buyer before payment",
+        }),
+        manager,
+      );
+    });
+
+    it("returns success without releasing stock again when already cancelled", async () => {
+      const cancelledOrder = {
+        id: 555,
+        status: OrderStatus.CANCELLED,
+        buyer,
+        orderItems: [{ listing: { id: 10 }, quantity: 2 }],
+        stockReleased: true,
+      };
+      withOrder(cancelledOrder);
+
+      const result = await service.cancelPendingOrderByBuyer(555, buyer);
+
+      expect(result).toEqual({ success: true, orderId: 555 });
+      expect(manager.increment).not.toHaveBeenCalled();
+      expect(auditService.record).not.toHaveBeenCalled();
+    });
+
+    it("refuses cancellation if caller is not the owner", async () => {
+      const otherBuyer = { id: 99, role: "user" } as User;
+      withOrder({ id: 555, status: OrderStatus.PENDING, buyer: { id: 1 } });
+
+      await expect(
+        service.cancelPendingOrderByBuyer(555, otherBuyer),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it("refuses cancellation if order is not pending", async () => {
+      withOrder({ id: 555, status: OrderStatus.PAID, buyer });
+
+      await expect(
+        service.cancelPendingOrderByBuyer(555, buyer),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
@@ -518,17 +752,39 @@ describe("OrderService", () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    it("restores stock when an order is refunded", async () => {
-      manager.findOne.mockResolvedValue(orderIn(OrderStatus.PAID));
-
+    it.each([
+      OrderStatus.PAID,
+      OrderStatus.SHIPPED,
+      OrderStatus.DELIVERED,
+    ])("does not restock refunded merchandise from %s without an inspected return", async (status) => {
+      const order = orderIn(status);
+      manager.findOne.mockResolvedValue(order);
       await service.transitionOrder(100, OrderStatus.REFUNDED);
+      expect(manager.increment).not.toHaveBeenCalled();
+      expect(order.stockReleased).toBe(false);
+    });
 
+    it("releases an unpaid reservation exactly once on cancellation", async () => {
+      const order = orderIn(OrderStatus.PENDING);
+      manager.findOne.mockResolvedValue(order);
+      await service.transitionOrder(100, OrderStatus.CANCELLED);
+      await service.transitionOrder(100, OrderStatus.CANCELLED, {
+        allowNoop: true,
+      });
+      expect(manager.increment).toHaveBeenCalledTimes(1);
       expect(manager.increment).toHaveBeenCalledWith(
         Listing,
         { id: 10 },
         "quantityAvailable",
         2,
       );
+      expect(order.stockReleased).toBe(true);
+    });
+
+    it("does not release a paid order's potentially shipped lines on cancellation", async () => {
+      manager.findOne.mockResolvedValue(orderIn(OrderStatus.PAID));
+      await service.transitionOrder(100, OrderStatus.CANCELLED);
+      expect(manager.increment).not.toHaveBeenCalled();
     });
 
     it("never restores stock twice", async () => {

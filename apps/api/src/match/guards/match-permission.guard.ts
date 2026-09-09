@@ -108,7 +108,12 @@ export class MatchPermissionGuard implements CanActivate {
     const isPlayerB = match.playerB?.user?.id === user.id;
 
     if (isPlayerA || isPlayerB) {
-      return action === "report-score" || action === "read";
+      return (
+        action === "report-score" ||
+        action === "propose-result" ||
+        action === "respond-result" ||
+        action === "read"
+      );
     }
 
     throw new ForbiddenException(
@@ -118,6 +123,10 @@ export class MatchPermissionGuard implements CanActivate {
 
   private getActionFromRequest(request: Request): string {
     const path = (request.route?.path as string) || request.url;
+    if (path?.includes("propose-result")) return "propose-result";
+    if (path?.includes("respond-result")) return "respond-result";
+    if (path?.includes("resolve-dispute")) return "resolve-dispute";
+    if (path?.includes("proposals")) return "read";
     if (path?.includes("report-score")) return "report-score";
     if (path?.includes("reset")) return "reset";
     if (path?.includes("start")) return "start";

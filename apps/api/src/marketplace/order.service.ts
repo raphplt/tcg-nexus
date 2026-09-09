@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   HttpStatus,
   Injectable,
@@ -8,20 +9,34 @@ import {
 } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { InjectRepository } from "@nestjs/typeorm";
-import { DataSource, EntityManager, LessThan, Repository } from "typeorm";
+import {
+  DataSource,
+  EntityManager,
+  IsNull,
+  LessThan,
+  MoreThan,
+  Repository,
+} from "typeorm";
 import { Currency } from "../common/enums/currency";
 import {
   FULFILLMENT_TRANSITIONS,
   FulfillmentStatus,
 } from "../common/enums/fulfillment-status";
 import { ProductKind } from "../common/enums/product-kind";
+import { UserRole } from "../common/enums/user";
 import { PaginatedResult, PaginationHelper } from "../helpers/pagination";
 import { DEFAULT_LOCALE } from "../translation/supported-locales";
 import { User } from "../user/entities/user.entity";
 import { CartItem } from "../user_cart/entities/cart-item.entity";
 import { UserCartService } from "../user_cart/user_cart.service";
+import { AuditService } from "../audit/audit.service";
+
+import { orderStatusEvent } from "../common/events/domain-events";
+import { OutboxService } from "../outbox/outbox.service";
+import { financeFingerprint } from "./finance/finance.utils";
 import { CardPopularityService } from "./card-popularity.service";
 import { AdminOrderQueryDto } from "./dto/admin-order-query.dto";
+import { PendingCheckoutSessionDto } from "./dto/pending-checkout-session.dto";
 import { StartCheckoutDto } from "./dto/start-checkout.dto";
 import { UpdateFulfillmentDto } from "./dto/update-fulfillment.dto";
 import { CardEventType } from "./entities/card-event.entity";
@@ -37,8 +52,15 @@ import {
   PaymentStatus,
   PaymentTransaction,
 } from "./entities/payment-transaction.entity";
+import { SupportTicketStatusType } from "../common/enums/supportTicketType";
+import { SupportTicket } from "../support-ticket/entities/support-ticket.entity";
+import { CreateClaimDto } from "./dto/create-claim.dto";
+import { RefundOperation } from "./entities/refund-operation.entity";
+import { RefundStatus } from "../common/enums/refund-status";
 import { round2 } from "./price.helper";
 import { SHIPPING_POLICY } from "./shipping-policy";
+import { InventoryLedgerService } from "./inventory-ledger.service";
+import { RefundFinanceService } from "./refund-finance.service";
 import { StripeService } from "./stripe.service";
 
 const RESERVATION_TTL_MINUTES = 20;
@@ -61,6 +83,9 @@ export interface CheckoutResult {
   currency: Currency;
 }
 
+import { SellerSettlementService } from "./seller-settlement.service";
+import { Optional } from "@nestjs/common";
+
 @Injectable()
 export class OrderService {
   private readonly logger = new Logger(OrderService.name);
@@ -72,11 +97,21 @@ export class OrderService {
     private readonly orderItemRepository: Repository<OrderItem>,
     @InjectRepository(PaymentTransaction)
     private readonly paymentTransactionRepository: Repository<PaymentTransaction>,
+    @InjectRepository(SupportTicket)
+    private readonly supportTicketRepository: Repository<SupportTicket>,
+    @InjectRepository(RefundOperation)
+    private readonly refundOperationRepository: Repository<RefundOperation>,
     private readonly stripeService: StripeService,
     private readonly userCartService: UserCartService,
     private readonly cardPopularityService: CardPopularityService,
     private readonly dataSource: DataSource,
     private readonly eventEmitter: EventEmitter2,
+    private readonly auditService: AuditService,
+    private readonly outboxService: OutboxService,
+    private readonly refundFinance: RefundFinanceService,
+    private readonly inventoryLedger: InventoryLedgerService,
+    @Optional()
+    private readonly sellerSettlementService?: SellerSettlementService,
   ) {}
 
   async startCheckout(
@@ -85,8 +120,77 @@ export class OrderService {
   ): Promise<CheckoutResult> {
     const cart = await this.userCartService.findCartByUserId(user.id);
     const cartItems = cart?.cartItems ?? [];
+    const fingerprint = this.checkoutFingerprint(
+      cartItems,
+      dto.shippingAddress.trim(),
+    );
+
+    if (dto.attemptKey) {
+      const existingAttempt = await this.orderRepository.findOne({
+        where: {
+          buyer: { id: user.id },
+          checkoutAttemptKey: dto.attemptKey,
+        },
+        relations: ORDER_RELATIONS,
+      });
+
+      if (existingAttempt) {
+        // A key identifies one checkout: describing a different one under it is
+        // a new intent, not a retry, and resuming it would charge the wrong cart.
+        if (
+          existingAttempt.checkoutFingerprint &&
+          cartItems.length > 0 &&
+          existingAttempt.checkoutFingerprint !== fingerprint
+        ) {
+          throw new ConflictException(
+            "Cette tentative de paiement correspond à un panier différent",
+          );
+        }
+
+        if (
+          existingAttempt.status === OrderStatus.PENDING &&
+          existingAttempt.reservationExpiresAt &&
+          new Date(existingAttempt.reservationExpiresAt) > new Date()
+        ) {
+          // Recovers a checkout interrupted between order creation and provider
+          // setup: the intent is created under the order's own idempotency key.
+          const clientSecret = await this.ensureCheckoutIntent(
+            existingAttempt,
+            user,
+          );
+
+          return {
+            orderId: existingAttempt.id,
+            clientSecret,
+            amount: Number(existingAttempt.totalAmount),
+            shippingAmount: Number(existingAttempt.shippingAmount),
+            currency: existingAttempt.currency,
+          };
+        }
+
+        if (existingAttempt.status === OrderStatus.PAID) {
+          return {
+            orderId: existingAttempt.id,
+            clientSecret: null,
+            amount: Number(existingAttempt.totalAmount),
+            shippingAmount: Number(existingAttempt.shippingAmount),
+            currency: existingAttempt.currency,
+          };
+        }
+      }
+    }
 
     if (cartItems.length === 0) {
+      const activePending = await this.findPendingCheckoutSession(user.id);
+      if (activePending) {
+        return {
+          orderId: activePending.orderId,
+          clientSecret: activePending.clientSecret,
+          amount: activePending.amount,
+          shippingAmount: activePending.shippingAmount,
+          currency: activePending.currency,
+        };
+      }
       throw new BadRequestException("Votre panier est vide");
     }
 
@@ -111,37 +215,18 @@ export class OrderService {
       currency,
       dto.shippingAddress.trim(),
       user,
+      dto.attemptKey,
+      fingerprint,
     );
 
     try {
-      const paymentIntent = await this.stripeService.createPaymentIntent(
-        Number(order.totalAmount),
-        currency,
-        {
-          orderId: String(order.id),
-          userId: String(user.id),
-        },
-        // Keyed on the order: a retried checkout reuses the same intent
-        // instead of creating a second chargeable one.
-        `order-${order.id}`,
-      );
-
-      await this.paymentTransactionRepository.save(
-        this.paymentTransactionRepository.create({
-          order,
-          method: PaymentMethod.CREDIT_CARD,
-          status: PaymentStatus.INITIATED,
-          transactionId: paymentIntent.id,
-          amount: Number(order.totalAmount),
-          currency,
-        }),
-      );
+      const clientSecret = await this.ensureCheckoutIntent(order, user);
 
       await this.userCartService.clearCart(user.id);
 
       return {
         orderId: order.id,
-        clientSecret: paymentIntent.client_secret,
+        clientSecret,
         amount: Number(order.totalAmount),
         shippingAmount: Number(order.shippingAmount),
         currency,
@@ -155,12 +240,207 @@ export class OrderService {
     }
   }
 
-  // Pessimistic locking to prevent race conditions on last remaining stock items
+  /**
+   * Identifies the checkout an attempt key was used for.
+   *
+   * Two requests describing the same listings, quantities and destination are
+   * the same checkout; anything else is a different one.
+   */
+  private checkoutFingerprint(
+    cartItems: CartItem[],
+    shippingAddress: string,
+  ): string {
+    return financeFingerprint({
+      shippingAddress,
+      lines: cartItems
+        .map((item) => ({
+          listingId: item.listing?.id ?? null,
+          quantity: item.quantity,
+        }))
+        .sort((a, b) => Number(a.listingId) - Number(b.listingId)),
+    });
+  }
+
+  /**
+   * Returns a usable client secret for a pending order, creating the provider
+   * intent when a previous attempt was interrupted before recording one.
+   *
+   * The provider call is keyed on the order, so a recovered attempt reuses the
+   * same intent instead of creating a second chargeable one.
+   */
+  private async ensureCheckoutIntent(
+    order: Order,
+    user: User,
+  ): Promise<string | null> {
+    const payment = await this.paymentTransactionRepository.findOne({
+      where: { order: { id: order.id } },
+      order: { createdAt: "DESC" },
+    });
+
+    if (payment?.transactionId) {
+      try {
+        const intent = await this.stripeService.retrievePaymentIntent(
+          payment.transactionId,
+        );
+        return intent.client_secret;
+      } catch (err) {
+        this.logger.warn(
+          `Could not retrieve Stripe intent for order ${order.id}: ${(err as Error).message}`,
+        );
+        return null;
+      }
+    }
+
+    const paymentIntent = await this.stripeService.createPaymentIntent(
+      Number(order.totalAmount),
+      order.currency,
+      { orderId: String(order.id), userId: String(user.id) },
+      // Keyed on the order: a retried checkout reuses the same intent
+      // instead of creating a second chargeable one.
+      `order-${order.id}`,
+    );
+
+    await this.paymentTransactionRepository.save(
+      this.paymentTransactionRepository.create({
+        order,
+        method: PaymentMethod.CREDIT_CARD,
+        status: PaymentStatus.INITIATED,
+        transactionId: paymentIntent.id,
+        amount: Number(order.totalAmount),
+        currency: order.currency,
+      }),
+    );
+
+    return paymentIntent.client_secret;
+  }
+
+  /**
+   * Settles the provider side of an order that will never be paid.
+   *
+   * An intent still awaiting payment is cancelled so the buyer cannot be
+   * charged for released stock. One that already succeeded is money captured
+   * against a cancelled reservation: it is recorded as owing compensation
+   * instead of being silently kept.
+   *
+   * @returns Outcome per payment, for the caller's audit trail.
+   */
+  async reconcileCancelledPayment(orderId: number): Promise<{
+    cancelled: number;
+    compensationRequired: number;
+  }> {
+    const payments = await this.paymentTransactionRepository.find({
+      where: { order: { id: orderId } },
+      relations: ["order", "order.buyer"],
+    });
+    let cancelled = 0;
+    let compensationRequired = 0;
+
+    for (const payment of payments) {
+      if (!payment.transactionId) continue;
+      if (
+        payment.status === PaymentStatus.COMPLETED ||
+        payment.status === PaymentStatus.REFUNDED
+      ) {
+        continue;
+      }
+
+      let intentStatus: string | null = null;
+      try {
+        const intent = await this.stripeService.retrievePaymentIntent(
+          payment.transactionId,
+        );
+        intentStatus = intent.status;
+      } catch (err) {
+        this.logger.warn(
+          `Could not read intent ${payment.transactionId} for order ${orderId}: ${(err as Error).message}`,
+        );
+        continue;
+      }
+
+      if (intentStatus === "succeeded") {
+        await this.flagPaymentForCompensation(
+          payment,
+          `Payment captured after order ${orderId} was cancelled`,
+        );
+        compensationRequired++;
+        continue;
+      }
+      if (intentStatus === "canceled") {
+        payment.status = PaymentStatus.FAILED;
+        await this.paymentTransactionRepository.save(payment);
+        continue;
+      }
+
+      try {
+        await this.stripeService.cancelPaymentIntent(payment.transactionId);
+        payment.status = PaymentStatus.FAILED;
+        await this.paymentTransactionRepository.save(payment);
+        cancelled++;
+      } catch (err) {
+        // A racing capture makes the intent uncancelable; the next sweep or the
+        // payment webhook resolves it through the compensation path.
+        this.logger.warn(
+          `Could not cancel intent ${payment.transactionId} for order ${orderId}: ${(err as Error).message}`,
+        );
+      }
+    }
+
+    return { cancelled, compensationRequired };
+  }
+
+  /** Records that captured money is owed back, once per payment. */
+  private async flagPaymentForCompensation(
+    payment: PaymentTransaction,
+    reason: string,
+  ): Promise<void> {
+    if (payment.compensationRequiredAt || payment.compensatedAt) return;
+
+    payment.status = PaymentStatus.COMPLETED;
+    payment.compensationRequiredAt = new Date();
+    payment.compensationReason = reason;
+    await this.paymentTransactionRepository.save(payment);
+
+    await this.auditService.record({
+      actorId: payment.order?.buyer?.id ?? null,
+      actorRole: "system",
+      targetType: "payment_transaction",
+      targetId: String(payment.id),
+      action: "payment.compensation_required",
+      reason,
+      afterState: {
+        orderId: payment.order?.id ?? null,
+        paymentIntentId: payment.transactionId,
+        amount: Number(payment.amount),
+        currency: payment.currency,
+      },
+    });
+
+    await this.outboxService.record({
+      eventType: "payment.compensation_required",
+      aggregateType: "payment_transaction",
+      aggregateId: String(payment.id),
+      payload: {
+        paymentId: payment.id,
+        orderId: payment.order?.id ?? null,
+        buyerUserId: payment.order?.buyer?.id ?? null,
+        amount: Number(payment.amount),
+        currency: payment.currency,
+        reason,
+      },
+    });
+
+    this.logger.warn(
+      `Payment ${payment.id} requires compensation: ${reason}`,
+    );
+  }
+
   private async reserveStockAndCreateOrder(
     cartItems: CartItem[],
     currency: Currency,
     shippingAddress: string,
     user: User,
+    attemptKey?: string,
+    checkoutFingerprint?: string,
   ): Promise<Order> {
     return this.dataSource.transaction(async (manager) => {
       let itemsAmount = 0;
@@ -218,15 +498,24 @@ export class OrderService {
         shippingAddress,
         reservationExpiresAt,
         stockReleased: false,
-        orderItems: cartItems.map((item) =>
-          manager.create(OrderItem, {
+        checkoutAttemptKey: attemptKey ?? null,
+        checkoutFingerprint: checkoutFingerprint ?? null,
+        orderItems: cartItems.map((item) => {
+          const listing = freshListings.get(item.listing.id);
+          if (!listing) {
+            throw new BadRequestException(
+              `L'annonce ${item.listing.id} n'est plus disponible`,
+            );
+          }
+          return manager.create(OrderItem, {
             ...this.buildOrderItemSnapshot(item),
+            // NOTE: Line amounts must use the same locked price as the order total.
+            unitPrice: listing.price,
             shippingCost: shippingByCartItem.get(item.id) ?? 0,
             handlingTimeDays:
-              freshListings.get(item.listing.id)?.handlingTimeDays ??
-              SHIPPING_POLICY.handlingTimeDays,
-          }),
-        ),
+              listing.handlingTimeDays ?? SHIPPING_POLICY.handlingTimeDays,
+          });
+        }),
       });
 
       const savedOrder = await manager.save(Order, order);
@@ -239,6 +528,38 @@ export class OrderService {
           item.quantity,
         );
       }
+
+      await this.auditService.record(
+        {
+          actorId: user.id,
+          actorRole: user.role ?? "user",
+          targetType: "order",
+          targetId: String(savedOrder.id),
+          action: "order.checkout_started",
+          reason: "Checkout initiated and stock reserved",
+          afterState: {
+            totalAmount: savedOrder.totalAmount,
+            status: savedOrder.status,
+            reservationExpiresAt: savedOrder.reservationExpiresAt,
+          },
+        },
+        manager,
+      );
+
+      await this.outboxService.record(
+        {
+          eventType: "order.created",
+          aggregateType: "order",
+          aggregateId: String(savedOrder.id),
+          payload: {
+            orderId: savedOrder.id,
+            buyerId: user.id,
+            totalAmount: Number(savedOrder.totalAmount),
+            currency,
+          },
+        },
+        manager,
+      );
 
       return savedOrder;
     });
@@ -308,6 +629,8 @@ export class OrderService {
       productSetName: isSealed
         ? (listing.sealedProduct?.pokemonSet?.name ?? null)
         : (listing.pokemonCard?.set?.name ?? null),
+      listingPhotoUrls: listing.photoUrls ?? null,
+      listingDefects: listing.defects ?? null,
       fulfillmentStatus: FulfillmentStatus.TO_SHIP,
     };
   }
@@ -325,6 +648,167 @@ export class OrderService {
       locales[0]?.name;
 
     return listing.pokemonCard?.name ?? sealedName ?? "Produit inconnu";
+  }
+
+  /**
+   * Retrieves active pending checkout session for the authenticated buyer, if any.
+   *
+   * @param userId - Buyer user identifier.
+   * @returns Active pending checkout session details or null.
+   */
+  async findPendingCheckoutSession(
+    userId: number,
+  ): Promise<PendingCheckoutSessionDto | null> {
+    const pendingOrder = await this.orderRepository.findOne({
+      where: {
+        buyer: { id: userId },
+        status: OrderStatus.PENDING,
+        reservationExpiresAt: MoreThan(new Date()),
+      },
+      relations: ORDER_RELATIONS,
+      order: { createdAt: "DESC" },
+    });
+
+    if (!pendingOrder) {
+      return null;
+    }
+
+    const payment = await this.paymentTransactionRepository.findOne({
+      where: { order: { id: pendingOrder.id } },
+      order: { createdAt: "DESC" },
+    });
+
+    let clientSecret: string | null = null;
+    if (payment?.transactionId) {
+      try {
+        const intent = await this.stripeService.retrievePaymentIntent(
+          payment.transactionId,
+        );
+        clientSecret = intent.client_secret;
+      } catch (err) {
+        this.logger.warn(
+          `Could not retrieve Stripe intent for pending order ${pendingOrder.id}: ${(err as Error).message}`,
+        );
+      }
+    }
+
+    return {
+      orderId: pendingOrder.id,
+      clientSecret,
+      amount: Number(pendingOrder.totalAmount),
+      shippingAmount: Number(pendingOrder.shippingAmount),
+      currency: pendingOrder.currency,
+      shippingAddress: pendingOrder.shippingAddress,
+      reservationExpiresAt: pendingOrder.reservationExpiresAt,
+      items: (pendingOrder.orderItems ?? []).map((item) => ({
+        id: item.id,
+        productName: item.productName,
+        productImage: item.productImage,
+        productCondition: item.productCondition,
+        productSetName: item.productSetName,
+        productKind: item.productKind,
+        quantity: item.quantity,
+        unitPrice: Number(item.unitPrice),
+      })),
+    };
+  }
+
+  /**
+   * Cancels an in-progress pending order by the buyer, releasing stock reservation immediately.
+   *
+   * @param orderId - Order identifier.
+   * @param user - Authenticated user attempting cancellation.
+   * @returns Cancellation confirmation.
+   * @throws NotFoundException If the order does not exist.
+   * @throws ForbiddenException If the order does not belong to the user and user is not admin.
+   * @throws BadRequestException If the order is not in PENDING status.
+   */
+  async cancelPendingOrderByBuyer(
+    orderId: number,
+    user: User,
+  ): Promise<{ success: boolean; orderId: number }> {
+    const existing = await this.orderRepository.findOne({
+      where: { id: orderId },
+      relations: ["buyer"],
+    });
+
+    if (!existing) {
+      throw new NotFoundException(`Order ${orderId} not found`);
+    }
+
+    const isOwner = existing.buyer?.id === user.id;
+    const isAdmin =
+      user.role === UserRole.ADMIN || user.role === UserRole.MODERATOR;
+
+    if (!isOwner && !isAdmin) {
+      throw new ForbiddenException(
+        "Vous n'êtes pas autorisé à annuler cette commande",
+      );
+    }
+
+    const cancelled = await this.dataSource.transaction(async (manager) => {
+      // The status is read under the row lock that also releases the stock, so
+      // two concurrent cancellations cannot both return the same copies.
+      const locked = await manager.findOne(Order, {
+        where: { id: orderId },
+        lock: { mode: "pessimistic_write" },
+      });
+      if (!locked) {
+        throw new NotFoundException(`Order ${orderId} not found`);
+      }
+
+      if (locked.status === OrderStatus.CANCELLED) {
+        return false; // Already cancelled by a concurrent request or a sweep.
+      }
+      if (locked.status !== OrderStatus.PENDING) {
+        throw new BadRequestException(
+          "Seule une commande en attente de paiement peut être annulée",
+        );
+      }
+
+      const order = await manager.findOneOrFail(Order, {
+        where: { id: orderId },
+        relations: ["buyer", "orderItems", "orderItems.listing"],
+      });
+      order.status = OrderStatus.CANCELLED;
+      order.reservationExpiresAt = null;
+      await this.releaseStock(order, manager);
+      await manager.save(Order, order);
+
+      await this.auditService.record(
+        {
+          actorId: user.id,
+          actorRole: user.role ?? "user",
+          targetType: "order",
+          targetId: String(order.id),
+          action: "order.cancelled",
+          reason: "Cancelled by buyer before payment",
+          beforeState: { status: OrderStatus.PENDING },
+          afterState: { status: OrderStatus.CANCELLED, stockReleased: true },
+        },
+        manager,
+      );
+
+      await this.outboxService.record(
+        {
+          eventType: "order.cancelled",
+          aggregateType: "order",
+          aggregateId: String(order.id),
+          payload: { orderId: order.id, buyerId: user.id },
+        },
+        manager,
+      );
+
+      return true;
+    });
+
+    if (cancelled) {
+      // Settling the provider outside the transaction keeps a slow or failing
+      // network from holding the stock release open.
+      await this.reconcileCancelledPayment(orderId);
+    }
+
+    return { success: true, orderId };
   }
 
   async confirmOrderPayment(orderId: number, user: User): Promise<Order> {
@@ -383,6 +867,7 @@ export class OrderService {
       metadata?: Record<string, string> | null;
     },
   ): Promise<void> {
+    let lateCapture: number | null = null;
     const paidOrder = await this.dataSource.transaction(async (manager) => {
       // Pessimistic lock without relations: TypeORM refuses locks on joined queries.
       const payment = await manager.findOne(PaymentTransaction, {
@@ -399,7 +884,13 @@ export class OrderService {
 
       const paymentWithOrder = await manager.findOne(PaymentTransaction, {
         where: { id: payment.id },
-        relations: ["order", "order.buyer", "order.orderItems"],
+        relations: [
+          "order",
+          "order.buyer",
+          "order.orderItems",
+          "order.orderItems.listing",
+          "order.orderItems.listing.inventoryItem",
+        ],
       });
       const order = paymentWithOrder?.order;
 
@@ -418,6 +909,15 @@ export class OrderService {
       }
 
       if (order.status !== OrderStatus.PENDING) {
+        // Money captured against a reservation that no longer exists: the buyer
+        // is owed it back, and the cancelled order is not resurrected.
+        if (
+          order.status === OrderStatus.CANCELLED &&
+          !payment.compensationRequiredAt &&
+          !payment.compensatedAt
+        ) {
+          lateCapture = payment.id;
+        }
         return null; // Already processed by the concurrent caller
       }
 
@@ -425,8 +925,71 @@ export class OrderService {
       order.reservationExpiresAt = null;
       await manager.save(order);
 
+      // Transition physical inventory from reserved to sold for inventory-backed
+      // listings. The ledger records it once per order line, so a replayed
+      // payment confirmation cannot sell the same copy twice.
+      for (const item of order.orderItems || []) {
+        if (item.listing) {
+          await this.inventoryLedger.commitSale(
+            manager,
+            item.listing,
+            item,
+            item.quantity,
+          );
+        }
+      }
+
+      if (this.sellerSettlementService) {
+        await this.sellerSettlementService.createAllocationsForOrder(
+          order,
+          manager,
+        );
+      }
+
+      await this.auditService.record(
+        {
+          actorId: order.buyer?.id ?? null,
+          actorRole: "buyer",
+          targetType: "order",
+          targetId: String(order.id),
+          action: "order.paid",
+          reason: `Payment confirmed via PaymentIntent ${paymentIntentId}`,
+          beforeState: { status: OrderStatus.PENDING },
+          afterState: { status: OrderStatus.PAID },
+        },
+        manager,
+      );
+
+      await this.outboxService.record(
+        {
+          eventType: "order.paid",
+          aggregateType: "order",
+          aggregateId: String(order.id),
+          payload: {
+            orderId: order.id,
+            buyerId: order.buyer?.id ?? null,
+            amount: order.totalAmount,
+            currency: order.currency,
+          },
+        },
+        manager,
+      );
+
       return order;
     });
+
+    if (lateCapture) {
+      const payment = await this.paymentTransactionRepository.findOne({
+        where: { id: lateCapture },
+        relations: ["order", "order.buyer"],
+      });
+      if (payment) {
+        await this.flagPaymentForCompensation(
+          payment,
+          `Payment succeeded after order ${payment.order?.id} was cancelled`,
+        );
+      }
+    }
 
     // Side effects run outside the transaction, and only for the winner.
     if (paidOrder) {
@@ -575,37 +1138,23 @@ export class OrderService {
     await this.cancelOrder(payment.order.id, "payment failed");
   }
 
-  async handlePaymentRefunded(paymentIntentId: string): Promise<void> {
-    const payment = await this.paymentTransactionRepository.findOne({
-      where: { transactionId: paymentIntentId },
-      relations: ["order"],
-    });
-
-    if (!payment?.order) {
-      this.logger.warn(
-        `No order attached to refunded PaymentIntent ${paymentIntentId}`,
-      );
-      return;
-    }
-
-    if (payment.status !== PaymentStatus.REFUNDED) {
-      payment.status = PaymentStatus.REFUNDED;
-      await this.paymentTransactionRepository.save(payment);
-    }
-
-    await this.transitionOrder(payment.order.id, OrderStatus.REFUNDED, {
-      allowNoop: true,
-    });
+  /** Reconciles individual provider refunds; cumulative webhook amounts are not a full-refund signal. */
+  async handlePaymentRefunded(
+    paymentIntentId: string,
+    _latestRefundId?: string,
+    _refundAmount?: number,
+  ): Promise<void> {
+    await this.refundFinance.reconcilePaymentRefunds(paymentIntentId);
   }
 
   async transitionOrder(
     orderId: number,
     nextStatus: OrderStatus,
-    options: { allowNoop?: boolean } = {},
+    options: { allowNoop?: boolean; onlyFrom?: OrderStatus[] } = {},
   ): Promise<Order> {
     return this.dataSource.transaction(async (manager) => {
-      // verrou sans relations : Postgres refuse FOR UPDATE sur le côté nullable
-      // d'un LEFT JOIN, les relations sont rechargées une fois la ligne verrouillée
+      // Lock without relations: Postgres rejects FOR UPDATE on the nullable side
+      // of a LEFT JOIN; relations are reloaded once the row lock is acquired.
       const locked = await manager.findOne(Order, {
         where: { id: orderId },
         lock: { mode: "pessimistic_write" },
@@ -622,6 +1171,12 @@ export class OrderService {
 
       if (!order) {
         throw new NotFoundException(`Commande ${orderId} introuvable`);
+      }
+
+      // A recovery sweep only acts on the state it observed; anything else was
+      // resolved by the buyer, the provider or another operator meanwhile.
+      if (options.onlyFrom && !options.onlyFrom.includes(order.status)) {
+        return order;
       }
 
       if (order.status === nextStatus) {
@@ -645,14 +1200,42 @@ export class OrderService {
         order.reservationExpiresAt = null;
       }
 
+      // NOTE: A refund moves money, not physical inventory. Returned goods
+      // require an explicit inspected disposition before they can be resold.
+      // Paid orders can already contain individually shipped lines even while
+      // their aggregate status remains Paid; only unpaid reservations release here.
       if (
-        nextStatus === OrderStatus.CANCELLED ||
-        nextStatus === OrderStatus.REFUNDED
+        nextStatus === OrderStatus.CANCELLED &&
+        previousStatus === OrderStatus.PENDING
       ) {
         await this.releaseStock(order, manager);
       }
 
       const saved = await manager.save(Order, order);
+
+      await this.auditService.record(
+        {
+          actorId: order.buyer?.id ?? null,
+          actorRole: "system",
+          targetType: "order",
+          targetId: String(order.id),
+          action: `order.status_${nextStatus.toLowerCase()}`,
+          reason: `Transitioned from ${previousStatus} to ${nextStatus}`,
+          beforeState: { status: previousStatus },
+          afterState: { status: nextStatus },
+        },
+        manager,
+      );
+
+      await this.outboxService.record(
+        {
+          eventType: orderStatusEvent(nextStatus),
+          aggregateType: "order",
+          aggregateId: String(order.id),
+          payload: { orderId: order.id, previousStatus, nextStatus },
+        },
+        manager,
+      );
 
       if (
         previousStatus !== OrderStatus.SHIPPED &&
@@ -703,24 +1286,63 @@ export class OrderService {
     }
   }
 
-  async expireStaleReservations(): Promise<number> {
-    const staleOrders = await this.orderRepository.find({
-      where: {
-        status: OrderStatus.PENDING,
-        reservationExpiresAt: LessThan(new Date()),
-      },
+  /**
+   * Cancels reservations that expired, through the locked order state machine.
+   *
+   * Candidates are re-read and locked by {@link transitionOrder}, so a sweep
+   * racing a payment or a buyer cancellation cannot release stock twice or
+   * cancel an order that has just been paid. Each cancelled order also settles
+   * its provider intent.
+   *
+   * @param olderThanMinutes - Optional age threshold applied to orders whose
+   * reservation carries no expiry date.
+   * @returns Orders actually cancelled by this sweep.
+   */
+  async expireStaleReservations(olderThanMinutes?: number): Promise<number> {
+    const now = new Date();
+    const candidates = await this.orderRepository.find({
+      where: [
+        {
+          status: OrderStatus.PENDING,
+          reservationExpiresAt: LessThan(now),
+        },
+        ...(olderThanMinutes
+          ? [
+              {
+                status: OrderStatus.PENDING,
+                reservationExpiresAt: IsNull(),
+                createdAt: LessThan(
+                  new Date(now.getTime() - olderThanMinutes * 60 * 1000),
+                ),
+              },
+            ]
+          : []),
+      ],
       select: { id: true },
     });
 
-    for (const { id } of staleOrders) {
-      await this.cancelOrder(id, "reservation expired");
+    let expired = 0;
+    for (const { id } of candidates) {
+      try {
+        const order = await this.transitionOrder(id, OrderStatus.CANCELLED, {
+          allowNoop: true,
+          onlyFrom: [OrderStatus.PENDING],
+        });
+        if (order.status !== OrderStatus.CANCELLED) continue;
+        expired++;
+        await this.reconcileCancelledPayment(id);
+      } catch (err) {
+        this.logger.error(
+          `Failed to expire reservation of order ${id}: ${(err as Error).message}`,
+        );
+      }
     }
 
-    if (staleOrders.length > 0) {
-      this.logger.log(`Released ${staleOrders.length} expired reservation(s)`);
+    if (expired > 0) {
+      this.logger.log(`Released ${expired} expired reservation(s)`);
     }
 
-    return staleOrders.length;
+    return expired;
   }
 
   async findOrdersByBuyerId(buyerId: number): Promise<Order[]> {
@@ -922,6 +1544,179 @@ export class OrderService {
         `Could not sync order ${orderId} to ${target}: ${(err as Error).message}`,
       );
     }
+  }
+
+  /**
+   * Confirms delivery of an order item by the buyer (MKT-05).
+   *
+   * @param orderId - Order identifier.
+   * @param itemId - OrderItem identifier.
+   * @param buyer - Authenticated buyer confirming receipt.
+   * @returns Updated OrderItem.
+   * @throws NotFoundException If the item does not exist.
+   * @throws ForbiddenException If the caller is not the buyer or admin.
+   * @throws BadRequestException If the item is not currently shipped.
+   */
+  async confirmItemReceipt(
+    orderId: number,
+    itemId: number,
+    buyer: User,
+  ): Promise<OrderItem> {
+    const orderItem = await this.orderItemRepository.findOne({
+      where: { id: itemId, order: { id: orderId } },
+      relations: ["order", "order.buyer", "seller"],
+    });
+
+    if (!orderItem) {
+      throw new NotFoundException(
+        `Article ${itemId} introuvable pour la commande ${orderId}`,
+      );
+    }
+
+    const isBuyer = orderItem.order.buyer?.id === buyer.id;
+    const isAdmin =
+      buyer.role === UserRole.ADMIN || buyer.role === UserRole.MODERATOR;
+
+    if (!isBuyer && !isAdmin) {
+      throw new ForbiddenException(
+        "Vous ne pouvez confirmer la réception que pour vos propres commandes",
+      );
+    }
+
+    if (
+      orderItem.fulfillmentStatus !== FulfillmentStatus.SHIPPED &&
+      orderItem.fulfillmentStatus !== FulfillmentStatus.DELIVERED
+    ) {
+      throw new BadRequestException(
+        "Seul un article expédié peut être confirmé comme reçu",
+      );
+    }
+
+    orderItem.fulfillmentStatus = FulfillmentStatus.DELIVERED;
+    orderItem.deliveredAt = orderItem.deliveredAt || new Date();
+    // Distinct from a seller's delivery declaration: only this confirmation
+    // makes the copies eligible for a collection receipt (INT-03).
+    orderItem.receiptConfirmedAt = orderItem.receiptConfirmedAt || new Date();
+    const saved = await this.orderItemRepository.save(orderItem);
+
+    if (this.sellerSettlementService) {
+      await this.sellerSettlementService.onItemDelivered(saved);
+    }
+
+    await this.syncOrderStatusFromFulfillment(orderId);
+
+    await this.auditService.record({
+      actorId: buyer.id,
+      actorRole: buyer.role ?? "buyer",
+      targetType: "order_item",
+      targetId: String(orderItem.id),
+      action: "order.item_delivered",
+      reason: "Receipt confirmed by buyer",
+      afterState: { fulfillmentStatus: FulfillmentStatus.DELIVERED },
+    });
+
+    await this.outboxService.record({
+      eventType: "order.item_delivered",
+      aggregateType: "order_item",
+      aggregateId: String(orderItem.id),
+      payload: {
+        orderId,
+        orderItemId: orderItem.id,
+        sellerUserId: orderItem.seller?.id ?? null,
+        buyerId: buyer.id,
+        deliveredAt: orderItem.deliveredAt,
+      },
+    });
+
+    return saved;
+  }
+
+  /**
+   * Opens an item-specific claim and attaches a support ticket (MKT-04).
+   *
+   * @param orderId - Order identifier.
+   * @param itemId - OrderItem identifier.
+   * @param dto - Claim category and details.
+   * @param buyer - Authenticated buyer.
+   * @returns Created SupportTicket.
+   */
+  async createItemClaim(
+    orderId: number,
+    itemId: number,
+    dto: CreateClaimDto,
+    buyer: User,
+  ): Promise<SupportTicket> {
+    const orderItem = await this.orderItemRepository.findOne({
+      where: { id: itemId, order: { id: orderId } },
+      relations: ["order", "order.buyer", "seller"],
+    });
+
+    if (!orderItem) {
+      throw new NotFoundException(
+        `Article ${itemId} introuvable pour la commande ${orderId}`,
+      );
+    }
+
+    const isBuyer = orderItem.order.buyer?.id === buyer.id;
+    const isAdmin =
+      buyer.role === UserRole.ADMIN || buyer.role === UserRole.MODERATOR;
+
+    if (!isBuyer && !isAdmin) {
+      throw new ForbiddenException(
+        "Vous ne pouvez ouvrir une réclamation que pour vos propres commandes",
+      );
+    }
+
+    const ticket = this.supportTicketRepository.create({
+      user: buyer,
+      order: orderItem.order,
+      orderItem,
+      subject: dto.subject,
+      message: dto.message,
+      claimCategory: dto.claimCategory,
+      status: SupportTicketStatusType.opened,
+    });
+
+    const saved = await this.supportTicketRepository.save(ticket);
+
+    // Freeze the seller's proceeds for the duration of the claim (MKT-04/MKT-06).
+    if (this.sellerSettlementService && orderItem.seller?.id) {
+      await this.sellerSettlementService.onClaimOpened(
+        orderId,
+        orderItem.seller.id,
+        saved.id,
+      );
+    }
+
+    await this.auditService.record({
+      actorId: buyer.id,
+      actorRole: buyer.role ?? "buyer",
+      targetType: "support_ticket",
+      targetId: String(saved.id),
+      action: "claim.opened",
+      reason: dto.subject,
+      afterState: {
+        orderId,
+        orderItemId: itemId,
+        claimCategory: dto.claimCategory,
+      },
+    });
+
+    await this.outboxService.record({
+      eventType: "order.item_claim_created",
+      aggregateType: "support_ticket",
+      aggregateId: String(saved.id),
+      payload: {
+        ticketId: saved.id,
+        orderId,
+        orderItemId: itemId,
+        claimCategory: dto.claimCategory,
+        buyerId: buyer.id,
+        sellerUserId: orderItem.seller?.id ?? null,
+      },
+    });
+
+    return saved;
   }
 
   async getSellerRevenue(sellerId: number): Promise<{

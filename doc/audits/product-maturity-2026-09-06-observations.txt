@@ -1,0 +1,13 @@
+Audited commit: 3e2fbf18
+Database: disposable PostgreSQL; payment provider mocked
+These observations confirm defects, not successful acceptance criteria.
+
+AUDIT: unrelated authenticated user reads all three refund/return endpoints (200)
+AUDIT: two FAIL calls after COMPLETE inflate available balance from 17.50 to 77.50; paid-out remains 30
+AUDIT: same purchase imported into another collection with allowDuplicates=false
+AUDIT: undo CSV add deletes pre-existing physical item (1 + 2 -> 3 -> deleted)
+AUDIT: restock -> damaged -> restock adds the same returned copy twice (available 1 -> 3)
+AUDIT: deck offer query fails because cardState is a column, not a relation
+AUDIT: invalid refund line rejected only AFTER provider refund call
+AUDIT: partial refund event of 1 on a 50 order marks entire order REFUNDED
+AUDIT: fresh migration fails: relation "listing" does not exist

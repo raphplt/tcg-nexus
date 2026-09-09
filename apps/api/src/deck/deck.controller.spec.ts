@@ -2,10 +2,12 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
 import { Test, TestingModule } from "@nestjs/testing";
 import { DeckController } from "./deck.controller";
 import { DeckService } from "./deck.service";
+import { DeckInventoryService } from "./deck-inventory.service";
 
 describe("DeckController", () => {
   let controller: DeckController;
   let service: jest.Mocked<DeckService>;
+  let inventoryService: { compareDeckWithInventory: jest.Mock };
 
   const mockDeckService = () => ({
     createDeck: jest.fn(),
@@ -24,12 +26,19 @@ describe("DeckController", () => {
 
   beforeEach(async () => {
     const deckService = mockDeckService();
+    inventoryService = {
+      compareDeckWithInventory: jest.fn(),
+    };
     const module: TestingModule = await Test.createTestingModule({
       controllers: [DeckController],
       providers: [
         {
           provide: DeckService,
           useValue: deckService,
+        },
+        {
+          provide: DeckInventoryService,
+          useValue: inventoryService,
         },
         {
           provide: EventEmitter2,

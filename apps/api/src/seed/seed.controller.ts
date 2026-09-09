@@ -7,6 +7,7 @@ import { UserRole } from "src/common/enums/user";
 import { SealedProductService } from "src/sealed-product/sealed-product.service";
 import { TournamentType } from "src/tournament/entities/tournament.entity";
 import { SeedingMethod } from "src/tournament/services/seeding.service";
+import { DemoRefreshService } from "./demo-refresh.service";
 import { DemoService } from "./demo.service";
 import { SeedUserDto } from "./dto/seed-user.dto";
 import { SeedService } from "./seed.service";
@@ -20,6 +21,7 @@ export class SeedController {
   constructor(
     private readonly seedService: SeedService,
     private readonly sealedProductService: SealedProductService,
+    private readonly demoRefreshService: DemoRefreshService,
     private readonly demoService: DemoService,
   ) {}
 
@@ -27,6 +29,17 @@ export class SeedController {
   @Post("importCatalog")
   importCatalog() {
     return this.seedService.importPokemon();
+  }
+
+  /**
+   * Réaligne le jeu de données de démo sur le script de présentation.
+   *
+   * Idempotent et non destructif : recalcule les dates relatives, remet les
+   * compteurs aux valeurs annoncées et nettoie le décor.
+   */
+  @Post("demo/refresh")
+  refreshDemoDataset() {
+    return this.demoRefreshService.refresh();
   }
 
   @Post("all")

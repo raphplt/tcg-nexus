@@ -39,6 +39,21 @@ import {
   TournamentVisibilityGuard,
 } from "./guards";
 import { PublicTournamentDataInterceptor } from "./interceptors/public-tournament-data.interceptor";
+import { RankingService } from "../ranking/ranking.service";
+import {
+  OverrideDeckLegalityDto,
+  SubmitTournamentDeckDto,
+} from "./dto/tournament-deck-snapshot.dto";
+import {
+  DropPlayerDto,
+  RoundControlAction,
+  RoundControlDto,
+  ScoreCorrectionApplyDto,
+  ScoreCorrectionPreviewDto,
+} from "./dto/tournament-incident.dto";
+import { TournamentDeckSnapshotService } from "./services/tournament-deck-snapshot.service";
+import { TournamentIncidentService } from "./services/tournament-incident.service";
+import { TournamentRoundClockService } from "./services/tournament-round-clock.service";
 import { TournamentService } from "./tournament.service";
 
 @ApiTags("tournaments")
@@ -46,7 +61,13 @@ import { TournamentService } from "./tournament.service";
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller("tournaments")
 export class TournamentController {
-  constructor(private readonly tournamentService: TournamentService) {}
+  constructor(
+    private readonly tournamentService: TournamentService,
+    private readonly rankingService: RankingService,
+    private readonly snapshotService: TournamentDeckSnapshotService,
+    private readonly clockService: TournamentRoundClockService,
+    private readonly incidentService: TournamentIncidentService,
+  ) {}
 
   @Post()
   @Roles(UserRole.ADMIN, UserRole.MODERATOR, "pro")
@@ -432,5 +453,167 @@ export class TournamentController {
   )
   async checkInAllPlayers(@Param("id", ParseIntPipe) id: number) {
     return this.tournamentService.checkInAllPlayers(id);
+  }
+
+  // --- TRN-02: Deck Snapshot & Policy ---
+
+  @Post(":id/deck-snapshot")
+  @HttpCode(HttpStatus.OK)
+  async submitDeckSnapshot(
+    @Param("id", ParseIntPipe) id: number,
+    @CurrentUser() user: User,
+    @Body() dto: SubmitTournamentDeckDto,
+  ) {
+    return this.snapshotService.submitDeckSnapshot(id, user.id, dto);
+  }
+
+  @Get(":id/my-deck-snapshot")
+  async getMyDeckSnapshot(
+    @Param("id", ParseIntPipe) id: number,
+    @CurrentUser() user: User,
+  ) {
+    return this.snapshotService.getMyDeckSnapshot(id, user.id);
+  }
+
+  @Get(":id/deck-snapshots")
+  @UseGuards(TournamentVisibilityGuard)
+  async getTournamentDeckSnapshots(
+    @Param("id", ParseIntPipe) id: number,
+    @CurrentUser() user: User,
+  ) {
+    return this.snapshotService.getTournamentDeckSnapshots(id, user);
+  }
+
+  /**
+   * Records an organizer decision on a submitted list's legality (TRN-02).
+   */
+  @Post(":id/deck-snapshots/:snapshotId/legality")
+  @HttpCode(HttpStatus.OK)
+  async overrideDeckLegality(
+    @Param("id", ParseIntPipe) id: number,
+    @Param("snapshotId", ParseIntPipe) snapshotId: number,
+    @CurrentUser() user: User,
+    @Body() dto: OverrideDeckLegalityDto,
+  ) {
+    return this.snapshotService.overrideLegality(id, snapshotId, user, {
+      legalityStatus: dto.legalityStatus,
+      reason: dto.reason,
+    });
+  }
+
+  /**
+   * Lists every submission recorded for a deck snapshot (TRN-02).
+   */
+  @Get(":id/deck-snapshots/:snapshotId/revisions")
+  @UseGuards(TournamentVisibilityGuard)
+  async getDeckSnapshotRevisions(
+    @Param("id", ParseIntPipe) _id: number,
+    @Param("snapshotId", ParseIntPipe) snapshotId: number,
+  ) {
+    return this.snapshotService.getRevisions(snapshotId);
+  }
+
+  // --- TRN-03: Round Clock & Controls ---
+
+  @Post(":id/round-clock")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(TournamentOrganizerGuard)
+  @TournamentOrganizerRoles(
+    OrganizerRole.OWNER,
+    OrganizerRole.ADMIN,
+    OrganizerRole.MODERATOR,
+  )
+  async controlRoundClock(
+    @Param("id", ParseIntPipe) id: number,
+    @CurrentUser() user: User,
+    @Body() dto: RoundControlDto,
+  ) {
+    switch (dto.action) {
+      case RoundControlAction.START:
+        return this.clockService.startRoundClock(
+          id,
+          undefined,
+          dto.durationMinutes,
+          user,
+        );
+      case RoundControlAction.PAUSE:
+        return this.clockService.pauseRoundClock(id, dto.reason, user);
+      case RoundControlAction.RESUME:
+        return this.clockService.resumeRoundClock(id, user);
+      case RoundControlAction.EXTEND:
+        return this.clockService.extendRoundClock(
+          id,
+          dto.extensionMinutes ?? 5,
+          dto.reason,
+          user,
+        );
+    }
+  }
+
+  @Public()
+  @Get(":id/round-clock")
+  @UseGuards(TournamentVisibilityGuard)
+  async getRoundClockStatus(@Param("id", ParseIntPipe) id: number) {
+    return this.clockService.getRoundClockStatus(id);
+  }
+
+  // --- TRN-04: Explainable Standings ---
+
+  @Public()
+  @Get(":id/standings")
+  @UseGuards(TournamentVisibilityGuard)
+  async getExplainableStandings(@Param("id", ParseIntPipe) id: number) {
+    return this.rankingService.getExplainableStandings(id);
+  }
+
+  // --- TRN-05: Player Dashboard & Incidents ---
+
+  @Get(":id/player-dashboard")
+  async getPlayerDashboard(
+    @Param("id", ParseIntPipe) id: number,
+    @CurrentUser() user: User,
+  ) {
+    return this.incidentService.getPlayerDashboard(id, user.id);
+  }
+
+  @Post(":id/drop-player")
+  @HttpCode(HttpStatus.OK)
+  async dropPlayer(
+    @Param("id", ParseIntPipe) id: number,
+    @CurrentUser() user: User,
+    @Body() dto: DropPlayerDto,
+  ) {
+    return this.incidentService.dropPlayer(id, user, dto);
+  }
+
+  @Post(":id/score-correction/preview")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(TournamentOrganizerGuard)
+  @TournamentOrganizerRoles(
+    OrganizerRole.OWNER,
+    OrganizerRole.ADMIN,
+    OrganizerRole.MODERATOR,
+  )
+  async previewScoreCorrection(
+    @Param("id", ParseIntPipe) id: number,
+    @Body() dto: ScoreCorrectionPreviewDto,
+  ) {
+    return this.incidentService.previewScoreCorrection(id, dto);
+  }
+
+  @Post(":id/score-correction/apply")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(TournamentOrganizerGuard)
+  @TournamentOrganizerRoles(
+    OrganizerRole.OWNER,
+    OrganizerRole.ADMIN,
+    OrganizerRole.MODERATOR,
+  )
+  async applyScoreCorrection(
+    @Param("id", ParseIntPipe) id: number,
+    @CurrentUser() user: User,
+    @Body() dto: ScoreCorrectionApplyDto,
+  ) {
+    return this.incidentService.applyScoreCorrection(id, user, dto);
   }
 }

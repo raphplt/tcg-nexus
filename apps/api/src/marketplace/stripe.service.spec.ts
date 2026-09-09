@@ -9,6 +9,13 @@ jest.mock("stripe", () => {
       create: jest.fn().mockResolvedValue({ id: "pi" }),
       retrieve: jest.fn().mockResolvedValue({ id: "pi", status: "succeeded" }),
     },
+    refunds: {
+      list: jest.fn(),
+      retrieve: jest.fn(),
+      create: jest
+        .fn()
+        .mockResolvedValue({ id: "re_123", status: "succeeded" }),
+    },
     webhooks: { constructEvent: jest.fn().mockReturnValue({ id: "evt" }) },
   }));
 });
@@ -71,5 +78,69 @@ describe("StripeService", () => {
       "whsec",
     );
     expect(result).toEqual({ id: "evt" });
+  });
+
+  it("should create refund via Stripe refunds API", async () => {
+    (configService.get as jest.Mock).mockReturnValueOnce("sk_test");
+    const service = new StripeService(configService);
+    const result = await service.createRefund(
+      "pi_123",
+      1500,
+      "requested_by_customer",
+      "idem_ref_1",
+    );
+    const stripeInstance = (Stripe as unknown as jest.Mock).mock.results.slice(
+      -1,
+    )[0].value;
+    expect(stripeInstance.refunds.create).toHaveBeenCalledWith(
+      {
+        payment_intent: "pi_123",
+        amount: 1500,
+        reason: "requested_by_customer",
+      },
+      { idempotencyKey: "idem_ref_1" },
+    );
+    expect(result).toEqual({ id: "re_123", status: "succeeded" });
+  });
+  it("persists the operation identity alongside the stable provider key", async () => {
+    (configService.get as jest.Mock).mockReturnValueOnce("sk_test");
+    const service = new StripeService(configService);
+    await service.createRefund(
+      "pi_123",
+      29,
+      "requested_by_customer",
+      "refund-operation",
+      "operation",
+    );
+    const client = (Stripe as unknown as jest.Mock).mock.results.at(-1)!.value;
+    expect(client.refunds.create).toHaveBeenCalledWith(
+      {
+        payment_intent: "pi_123",
+        amount: 29,
+        reason: "requested_by_customer",
+        metadata: { operationId: "operation" },
+      },
+      { idempotencyKey: "refund-operation" },
+    );
+  });
+
+  it("consumes the provider paginator past the first page to recover an ambiguous operation", async () => {
+    (configService.get as jest.Mock).mockReturnValueOnce("sk_test");
+    const service = new StripeService(configService);
+    const client = (Stripe as unknown as jest.Mock).mock.results.at(-1)!.value;
+    client.refunds.list.mockImplementation(async function* () {
+      for (let index = 0; index < 101; index++)
+        yield {
+          id: `re_${index}`,
+          metadata: { operationId: `operation_${index}` },
+        };
+    });
+    expect(
+      await service.findRefundForOperation("pi_123", "operation_100"),
+    ).toEqual({ id: "re_100", metadata: { operationId: "operation_100" } });
+    expect(client.refunds.list).toHaveBeenCalledWith({
+      payment_intent: "pi_123",
+      limit: 100,
+    });
   });
 });

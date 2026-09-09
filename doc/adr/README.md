@@ -21,6 +21,8 @@ Chaque ADR suit la structure standard inspirée de Michael Nygard :
 | [ADR-004](./004-typeorm-synchronize.md) | Désactivation de `synchronize` TypeORM en production et passage aux migrations | Accepté |
 | [ADR-005](./005-reversement-vendeurs.md) | Encaissement plateforme sans reversement automatisé aux vendeurs | Accepté |
 
+| [ADR-006](./006-refund-inventory-separation.md) | Separate refunds from inventory returns | Accepted corrective slice |
+
 ## Convention
 
 - Numéroter à la création (ADR-001, ADR-002, etc.).

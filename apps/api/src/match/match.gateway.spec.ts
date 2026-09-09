@@ -11,6 +11,7 @@ import { MatchOnlineService } from "./online/match-online.service";
 
 describe("MatchGateway", () => {
   let gateway: MatchGateway;
+  let module: TestingModule;
 
   const mockUserRepo = {
     findOne: jest.fn(),
@@ -45,7 +46,7 @@ describe("MatchGateway", () => {
   beforeEach(async () => {
     jest.clearAllMocks();
 
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       providers: [
         MatchGateway,
         { provide: getRepositoryToken(User), useValue: mockUserRepo },
@@ -65,6 +66,11 @@ describe("MatchGateway", () => {
       }),
       emit: jest.fn(),
     } as any;
+  });
+
+  afterEach(async () => {
+    await module.close();
+    jest.useRealTimers();
   });
 
   it("should be defined", () => {
@@ -213,7 +219,8 @@ describe("MatchGateway", () => {
       });
     });
 
-    it("should handle leave_match", async () => {
+    it("clears the disconnect grace callback when the gateway shuts down", async () => {
+      jest.useFakeTimers();
       const client: any = {
         id: "sock-1",
         data: { user: { id: 1 }, currentMatchId: 10 },
@@ -223,6 +230,9 @@ describe("MatchGateway", () => {
       const result = await gateway.handleLeaveMatch({ matchId: 10 }, client);
       expect(result).toEqual({ status: "left" });
       expect(client.leave).toHaveBeenCalledWith("match:10");
+      expect(jest.getTimerCount()).toBeGreaterThan(0);
+      gateway.onModuleDestroy();
+      expect(jest.getTimerCount()).toBe(0);
     });
 
     it("should dispatch match action and broadcast state", async () => {

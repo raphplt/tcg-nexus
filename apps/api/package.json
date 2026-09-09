@@ -18,6 +18,8 @@
     "demo:reset-tournament": "ts-node -r tsconfig-paths/register ./src/scripts/demo-reset-tournament.ts",
     "import:catalog": "ts-node -r tsconfig-paths/register ./src/scripts/import-catalog.ts",
     "seed:prod": "SEED_AUTO_CONFIRM=true node -r tsconfig-paths/register dist/scripts/importData.js",
+    "refresh:demo": "ts-node -r tsconfig-paths/register ./src/scripts/refresh-demo.ts",
+    "refresh:demo:prod": "node -r tsconfig-paths/register dist/scripts/refresh-demo.js",
     "migrate:rename-card": "ts-node -r tsconfig-paths/register ./src/scripts/migrate-rename-card-table.ts",
     "migrate:fix-image-cdn": "ts-node -r tsconfig-paths/register ./src/scripts/migrate-fix-image-cdn.ts",
     "migrate:card-images-cdn": "ts-node -r tsconfig-paths/register ./src/scripts/migrate-card-images-cdn.ts",
@@ -42,6 +44,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "test:e2e:postgres": "bash ../../scripts/run-e2e-postgres.sh",
     "test:e2e:tournament": "bash ../../scripts/run-e2e-postgres.sh test/tournament.e2e-spec.ts test/tournament-concurrency.e2e-spec.ts",
+    "test:e2e:migrations": "bash ../../scripts/run-e2e-postgres.sh test/migrations.e2e-spec.ts",
     "docker:build": "docker build -t tcg-nexus-api .",
     "docker:run": "docker run -p 3001:3001 tcg-nexus-api",
     "docker:up": "docker-compose -f ../../docker-compose.deploy.yml up",
@@ -57,7 +60,9 @@
     "migration:run": "NODE_OPTIONS='-r tsconfig-paths/register' typeorm-ts-node-commonjs -d src/data-source.ts migration:run",
     "migration:revert": "NODE_OPTIONS='-r tsconfig-paths/register' typeorm-ts-node-commonjs -d src/data-source.ts migration:revert",
     "migration:show": "NODE_OPTIONS='-r tsconfig-paths/register' typeorm-ts-node-commonjs -d src/data-source.ts migration:show",
-    "migration:baseline": "NODE_OPTIONS='-r tsconfig-paths/register' ts-node ./src/scripts/baseline-migrations.ts"
+    "schema:drift": "NODE_OPTIONS='-r tsconfig-paths/register' ts-node ./src/scripts/check-schema-drift.ts",
+    "migration:baseline": "NODE_OPTIONS='-r tsconfig-paths/register' ts-node ./src/scripts/baseline-migrations.ts",
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1078.0",

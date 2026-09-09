@@ -1,4 +1,5 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
+import { schemaAlreadyHas } from "../common/migration-guard";
 
 /**
  * Aligns sealed products on the model already used by cards and sets.
@@ -21,6 +22,17 @@ export class SealedProductTranslations1786078800000
   name = "SealedProductTranslations1786078800000";
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // The initial schema baseline already contains this change; the
+    // probe also lets a legacy database re-run the chain safely.
+    if (
+      await schemaAlreadyHas(
+        queryRunner,
+        `SELECT 1 FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = 'sealed_product_locale'`,
+      )
+    ) {
+      return;
+    }
+
     // The table predates the migration history: it was created by TypeORM's
     // synchronize, so it may or may not already exist.
     await queryRunner.query(`

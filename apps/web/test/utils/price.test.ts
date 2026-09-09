@@ -41,6 +41,21 @@ describe("price utilities", () => {
       expect(result).toContain("Remboursable");
       expect(result).toContain("Deck included");
     });
+    it("does not include early bird if early bird is greater than or equal to base price", () => {
+      const pricing: any = {
+        basePrice: "20",
+        earlyBirdPrice: "25",
+        type: "STANDARD",
+      };
+      const result = formatPricing(pricing);
+      expect(result).toContain("20");
+      expect(result).not.toContain("early:");
+    });
+
+    it("handles non-numeric base price and empty pricing", () => {
+      expect(formatPricing({ basePrice: "invalid" } as any)).toBe("Non défini");
+      expect(formatPricing({} as any)).toBe("Non défini");
+    });
   });
 
   describe("formatPrice", () => {
@@ -95,6 +110,37 @@ describe("price utilities", () => {
           holofoil: { marketPrice: 25 },
         } as any),
       ).toBe(25);
+
+      expect(
+        getTcgPlayerPrice({
+          reverseHolofoil: { midPrice: 15 },
+        } as any),
+      ).toBe(15);
+
+      expect(
+        getTcgPlayerPrice({
+          "1stEditionHolofoil": { lowPrice: 40 },
+        } as any),
+      ).toBe(40);
+
+      expect(
+        getTcgPlayerPrice({
+          "1stEditionNormal": { marketPrice: 5 },
+        } as any),
+      ).toBe(5);
+    });
+
+    it("returns null if all variants are empty or lack prices", () => {
+      expect(
+        getTcgPlayerPrice({
+          normal: {
+            marketPrice: null as any,
+            midPrice: null as any,
+            lowPrice: null as any,
+          },
+        } as any),
+      ).toBeNull();
+      expect(getTcgPlayerPrice({} as any)).toBeNull();
     });
   });
 
@@ -113,6 +159,15 @@ describe("price utilities", () => {
       ).toBe(14.2);
     });
 
+    it("falls back through avg1, avg7, avg30, avg, low when trend is null", () => {
+      expect(getCardMarketPrice({ avg1: 11 } as any)).toBe(11);
+      expect(getCardMarketPrice({ avg7: 12 } as any)).toBe(12);
+      expect(getCardMarketPrice({ avg30: 13 } as any)).toBe(13);
+      expect(getCardMarketPrice({ avg: 14 } as any)).toBe(14);
+      expect(getCardMarketPrice({ low: 5 } as any)).toBe(5);
+      expect(getCardMarketPrice({} as any)).toBeNull();
+    });
+
     it("extracts holo prices when preferHolo is true", () => {
       expect(
         getCardMarketPrice(
@@ -123,6 +178,16 @@ describe("price utilities", () => {
           true,
         ),
       ).toBe(35.0);
+
+      // Falls back to regular fields if holo fields are missing
+      expect(
+        getCardMarketPrice(
+          {
+            trend: 10.0,
+          } as any,
+          true,
+        ),
+      ).toBe(10.0);
     });
   });
 
@@ -144,6 +209,29 @@ describe("price utilities", () => {
       expect(ref).toEqual({ price: 18.5, currency: "EUR" });
     });
 
+    it("falls back to TCGPlayer for EUR/GBP/CHF if CardMarket is missing", () => {
+      const gbpRef = getMarketReferencePrice(
+        {
+          tcgplayer: { normal: { marketPrice: 22 } },
+        } as any,
+        "GBP",
+      );
+      expect(gbpRef).toEqual({ price: 22, currency: "USD" });
+
+      const chfRef = getMarketReferencePrice(
+        {
+          tcgplayer: { normal: { marketPrice: 25 } },
+        } as any,
+        "CHF",
+      );
+      expect(chfRef).toEqual({ price: 25, currency: "USD" });
+
+      const defaultRef = getMarketReferencePrice({
+        tcgplayer: { normal: { marketPrice: 30 } },
+      } as any);
+      expect(defaultRef).toEqual({ price: 30, currency: "USD" });
+    });
+
     it("prefers TCGPlayer for USD preferred currency", () => {
       const ref = getMarketReferencePrice(
         {
@@ -154,6 +242,22 @@ describe("price utilities", () => {
       );
 
       expect(ref).toEqual({ price: 20, currency: "USD" });
+    });
+
+    it("falls back to CardMarket for non-EUR currencies when TCGPlayer is missing", () => {
+      const ref = getMarketReferencePrice(
+        {
+          cardmarket: { trend: 14.5 },
+        } as any,
+        "USD",
+      );
+
+      expect(ref).toEqual({ price: 14.5, currency: "EUR" });
+    });
+
+    it("returns null if neither source has price", () => {
+      expect(getMarketReferencePrice({} as any, "EUR")).toBeNull();
+      expect(getMarketReferencePrice({} as any, "USD")).toBeNull();
     });
   });
 });

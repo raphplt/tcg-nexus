@@ -9,6 +9,8 @@ import { CollectionItem } from "../collection-item/entities/collection-item.enti
 import { PokemonSet } from "../pokemon-set/entities/pokemon-set.entity";
 import { CollectionService } from "./collection.service";
 import { Collection } from "./entities/collection.entity";
+import { Listing } from "../marketplace/entities/listing.entity";
+import { MarketplaceService } from "../marketplace/marketplace.service";
 
 describe("CollectionService", () => {
   let service: CollectionService;
@@ -105,6 +107,14 @@ describe("CollectionService", () => {
           provide: CatalogLocalizationService,
           useValue: mockLocalization,
         },
+        {
+          provide: getRepositoryToken(Listing),
+          useValue: { find: jest.fn() },
+        },
+        {
+          provide: MarketplaceService,
+          useValue: { create: jest.fn() },
+        },
       ],
     }).compile();
 
@@ -140,11 +150,11 @@ describe("CollectionService", () => {
   });
 
   it("should create collection with user relation", async () => {
-    const dto = { name: "Col", description: "desc", userId: 3 };
+    const dto = { name: "Col", description: "desc" };
     mockCollectionRepo.create.mockReturnValue({ ...dto });
     mockCollectionRepo.save.mockResolvedValue({ id: "new", ...dto });
 
-    const result = await service.create(dto as any);
+    const result = await service.create(dto as any, 3);
     expect(result.id).toBe("new");
     expect(mockCollectionRepo.save).toHaveBeenCalled();
   });
@@ -162,7 +172,7 @@ describe("CollectionService", () => {
     mockCollectionRepo.create.mockImplementation((dto: any) => dto);
     mockCollectionRepo.save.mockImplementation(async (entity: any) => entity);
 
-    await service.create({ masterSetId: "sv08", userId: 3 } as any);
+    await service.create({ masterSetId: "sv08" } as any, 3);
 
     expect(mockCollectionRepo.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -178,7 +188,7 @@ describe("CollectionService", () => {
     mockCollectionRepo.create.mockImplementation((dto: any) => dto);
     mockCollectionRepo.save.mockImplementation(async (entity: any) => entity);
 
-    await service.create({ masterSetId: "sv08", userId: 3 } as any);
+    await service.create({ masterSetId: "sv08" } as any, 3);
 
     expect(mockCollectionRepo.create).toHaveBeenCalledWith(
       expect.objectContaining({ name: "Master Set — sv08" }),
@@ -284,7 +294,10 @@ describe("CollectionService", () => {
       "DESC",
     );
     // Names live in card_translation: sorting joins it on the default locale.
-    expect(qb.orderBy).toHaveBeenCalledWith("sortTranslation.name", "DESC");
+    expect(qb.orderBy).toHaveBeenCalledWith(
+      expect.stringContaining("COALESCE(sortTranslation.name"),
+      "DESC",
+    );
   });
 
   it("should exclude sealed products from a card-only collection query", async () => {

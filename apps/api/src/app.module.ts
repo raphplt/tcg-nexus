@@ -15,6 +15,7 @@ import { AiModule } from "./ai/ai.module";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { ArticleModule } from "./article/article.module";
+import { AuditModule } from "./audit/audit.module";
 import { AuthModule } from "./auth/auth.module";
 import { JwtAuthGuard } from "./auth/guards/jwt-auth.guard";
 import { RolesGuard } from "./auth/guards/roles.guard";
@@ -41,6 +42,7 @@ import { MarketplaceModule } from "./marketplace/marketplace.module";
 import { MatchModule } from "./match/match.module";
 import { MiniGameModule } from "./mini-game/mini-game.module";
 import { NotificationModule } from "./notification/notification.module";
+import { OutboxModule } from "./outbox/outbox.module";
 import { PlayerModule } from "./player/player.module";
 import { PokemonCardModule } from "./pokemon-card/pokemon-card.module";
 import { PokemonSeriesModule } from "./pokemon-series/pokemon-series.module";
@@ -57,6 +59,7 @@ import { TournamentModule } from "./tournament/tournament.module";
 import { UserModule } from "./user/user.module";
 import { UserCartModule } from "./user_cart/user_cart.module";
 import { UserFollowModule } from "./user-follow/user-follow.module";
+import { AdminOpsModule } from "./admin-ops/admin-ops.module";
 
 @Module({
   imports: [
@@ -143,6 +146,9 @@ import { UserFollowModule } from "./user-follow/user-follow.module";
     MiniGameModule,
     CatalogLocalizationModule,
     HealthModule,
+    AuditModule,
+    OutboxModule,
+    AdminOpsModule,
   ],
   controllers: [AppController],
   providers: [

@@ -18,6 +18,66 @@ export enum FulfillmentStatus {
   CANCELLED = "cancelled",
 }
 
+export enum RefundStatus {
+  PENDING = "pending",
+  SUCCEEDED = "succeeded",
+  FAILED = "failed",
+}
+
+export enum ReturnStatus {
+  REQUESTED = "requested",
+  ACCEPTED = "accepted",
+  RECEIVED = "received",
+  REJECTED = "rejected",
+}
+
+export enum InventoryDisposition {
+  PENDING_INSPECTION = "pending_inspection",
+  RESTOCK = "restock",
+  DAMAGED = "damaged",
+  DISCARDED = "discarded",
+}
+
+export enum ClaimCategory {
+  DAMAGED_ITEM = "damaged_item",
+  MISSING_ITEM = "missing_item",
+  WRONG_ITEM = "wrong_item",
+  NON_DELIVERY = "non_delivery",
+  GENERAL = "general",
+}
+
+export interface RefundLine {
+  id: number;
+  orderItemId: number;
+  quantity: number;
+  amount: number;
+  createdAt: string;
+}
+
+export interface RefundOperation {
+  id: number;
+  orderId: number;
+  stripeRefundId: string | null;
+  amount: number;
+  currency: string;
+  reason: string;
+  status: RefundStatus;
+  createdAt: string;
+  lines?: RefundLine[];
+}
+
+export interface ReturnItem {
+  id: number;
+  orderItemId: number;
+  quantity: number;
+  status: ReturnStatus;
+  disposition: InventoryDisposition;
+  reason: string;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface OrderItem {
   id: number;
   listing?: Listing | null;
@@ -40,6 +100,7 @@ export interface OrderItem {
   trackingNumber: string | null;
   shippedAt: string | null;
   deliveredAt: string | null;
+  returnItems?: ReturnItem[];
 }
 
 export interface Order {
@@ -53,6 +114,7 @@ export interface Order {
   createdAt: string;
   updatedAt: string;
   orderItems: OrderItem[];
+  refundOperations?: RefundOperation[];
 }
 
 export interface SellerSale extends OrderItem {

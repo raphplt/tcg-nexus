@@ -6,6 +6,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Post,
   Put,
   Query,
@@ -21,8 +22,19 @@ import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { Public } from "../auth/decorators/public.decorator";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { User } from "../user/entities/user.entity";
+import { CollectionBulkService } from "./collection-bulk.service";
+import { CollectionCompletionService } from "./collection-completion.service";
+import { CollectionValuationService } from "./collection-valuation.service";
 import { CollectionService } from "./collection.service";
+import {
+  BulkDeleteDto,
+  BulkMoveDto,
+  ImportCsvDto,
+  UndoOperationDto,
+} from "./dto/collection-bulk.dto";
+import { CollectionCardDto } from "./dto/collection-card.dto";
 import { CreateCollectionDto } from "./dto/create-collection.dto";
+import { ListDuplicateDto } from "./dto/list-duplicate.dto";
 import { UpdateCollectionDto } from "./dto/update-collection.dto";
 import { Collection } from "./entities/collection.entity";
 
@@ -31,7 +43,12 @@ import { Collection } from "./entities/collection.entity";
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class CollectionController {
-  constructor(private readonly collectionService: CollectionService) {}
+  constructor(
+    private readonly collectionService: CollectionService,
+    private readonly completionService: CollectionCompletionService,
+    private readonly valuationService: CollectionValuationService,
+    private readonly bulkService: CollectionBulkService,
+  ) {}
 
   @Get()
   @Public()
@@ -174,8 +191,7 @@ export class CollectionController {
     @Body() createCollectionDto: CreateCollectionDto,
     @CurrentUser() user: User,
   ): Promise<Collection> {
-    createCollectionDto.userId = user.id;
-    return this.collectionService.create(createCollectionDto);
+    return this.collectionService.create(createCollectionDto, user.id);
   }
 
   @Post(":id/items")
@@ -183,12 +199,12 @@ export class CollectionController {
   @ApiResponse({ status: 201, description: "Carte ajoutee a la collection" })
   async addItem(
     @Param("id") id: string,
-    @Body("pokemonCardId") pokemonCardId: string,
+    @Body() body: CollectionCardDto,
     @CurrentUser() user: User,
   ) {
     return this.collectionService.addCardToCollection(
       id,
-      pokemonCardId,
+      body.pokemonCardId,
       user.id,
     );
   }
@@ -200,12 +216,12 @@ export class CollectionController {
   @ApiResponse({ status: 200, description: "Carte décrémentée ou retirée" })
   async removeItemByCardId(
     @Param("id") id: string,
-    @Body("pokemonCardId") pokemonCardId: string,
+    @Body() body: CollectionCardDto,
     @CurrentUser() user: User,
   ) {
     return this.collectionService.removeCardFromCollection(
       id,
-      pokemonCardId,
+      body.pokemonCardId,
       user.id,
     );
   }
@@ -264,5 +280,102 @@ export class CollectionController {
   ): Promise<{ message: string }> {
     await this.collectionService.delete(id, user.id);
     return { message: "Collection supprimée avec succès" };
+  }
+
+  @Get(":id/completion")
+  @Public()
+  @ApiOperation({ summary: "Calculer la complétion d'une collection" })
+  async getCompletion(
+    @Param("id") id: string,
+    @Query("policy") policy?: "base" | "master",
+    @CurrentUser() user?: User,
+  ) {
+    return this.completionService.calculateCompletion(id, policy, user);
+  }
+
+  @Get(":id/valuation")
+  @Public()
+  @ApiOperation({ summary: "Estimer la valeur marchande d'une collection" })
+  async getValuation(
+    @Param("id") id: string,
+    @Query("currency") currency?: string,
+    @CurrentUser() user?: User,
+  ) {
+    return this.valuationService.calculateValuation(id, currency, user);
+  }
+
+  @Get(":id/export/csv")
+  @Public()
+  @ApiOperation({ summary: "Exporter l'inventaire en format CSV" })
+  async exportCsv(@Param("id") id: string, @CurrentUser() user?: User) {
+    return this.bulkService.exportCsv(id, user);
+  }
+
+  @Post(":id/import/csv")
+  @ApiOperation({ summary: "Importer un inventaire CSV" })
+  async importCsv(
+    @Param("id") id: string,
+    @Body() dto: ImportCsvDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.bulkService.importCsv(id, user, dto);
+  }
+
+  @Post(":id/items/bulk-move")
+  @ApiOperation({
+    summary: "Déplacer des items en masse vers une autre collection",
+  })
+  async bulkMove(@Body() dto: BulkMoveDto, @CurrentUser() user: User) {
+    return this.bulkService.bulkMove(user, dto);
+  }
+
+  @Post(":id/items/bulk-delete")
+  @ApiOperation({ summary: "Supprimer des items en masse" })
+  async bulkDelete(@Body() dto: BulkDeleteDto, @CurrentUser() user: User) {
+    return this.bulkService.bulkDelete(user, dto);
+  }
+
+  @Post(":id/items/undo-operation")
+  @ApiOperation({ summary: "Annuler une opération d'inventaire par son ID" })
+  async undoOperation(
+    @Body() dto: UndoOperationDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.bulkService.undoOperation(user, dto);
+  }
+
+  @Post(":id/wishlist-missing")
+  @ApiOperation({
+    summary: "Ajouter toutes les cartes manquantes à la Wishlist",
+  })
+  async wishlistMissingCards(
+    @Param("id") id: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.collectionService.wishlistMissingCards(id, user.id);
+  }
+
+  @Get(":id/cards/:cardId/offers")
+  @Public()
+  @ApiOperation({
+    summary: "Consulter les offres marketplace pour une carte manquante",
+  })
+  async getMissingCardOffers(
+    @Param("id") id: string,
+    @Param("cardId") cardId: string,
+    @CurrentUser() user?: User,
+  ) {
+    return this.collectionService.getMissingCardOffers(id, cardId, user);
+  }
+
+  @Post(":id/items/:itemId/list-duplicate")
+  @ApiOperation({ summary: "Mettre en vente un double sur le marketplace" })
+  async listDuplicate(
+    @Param("id") id: string,
+    @Param("itemId", ParseIntPipe) itemId: number,
+    @Body() dto: ListDuplicateDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.collectionService.listDuplicate(id, itemId, user, dto);
   }
 }

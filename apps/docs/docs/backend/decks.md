@@ -44,3 +44,7 @@ Distincte des decks dont on est l'auteur : permet de sauvegarder en bibliothèqu
 
 - Formats : `/deck-format` (CRUD basique, rôles admin/modérateur).
 - Cartes d’un deck : `/deck-card` (CRUD) pour ajouter/mettre à jour les cartes liées à un deck.
+
+## Inventory requirements visibility
+
+`GET /deck/:id/inventory-requirements` requires authentication. A private deck is visible only to its owner; another authenticated user receives 404. Any authenticated user may compare a public deck with their own inventory. Missing-card offers include the listing condition as a scalar field, not a database relation.

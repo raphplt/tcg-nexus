@@ -5,6 +5,7 @@ import { MatchService } from "./match.service";
 describe("MatchController", () => {
   let controller: MatchController;
   let service: jest.Mocked<MatchService>;
+  let matchResultService: any;
 
   beforeEach(() => {
     service = {
@@ -21,7 +22,14 @@ describe("MatchController", () => {
       getPlayHub: jest.fn(),
     } as unknown as jest.Mocked<MatchService>;
 
-    controller = new MatchController(service);
+    matchResultService = {
+      proposeResult: jest.fn(),
+      respondResult: jest.fn(),
+      resolveDispute: jest.fn(),
+      getMatchProposals: jest.fn(),
+    };
+
+    controller = new MatchController(service, matchResultService);
   });
 
   it("should delegate match creation", async () => {

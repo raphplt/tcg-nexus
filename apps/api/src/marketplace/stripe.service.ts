@@ -96,6 +96,20 @@ export class StripeService implements OnModuleInit {
   }
 
   /**
+   * Cancels a payment intent that will never be captured.
+   *
+   * @param paymentIntentId - Stripe payment intent identifier.
+   * @returns The cancelled payment intent.
+   * @throws ServiceUnavailableException If Stripe is not configured.
+   */
+  async cancelPaymentIntent(
+    paymentIntentId: string,
+  ): Promise<Stripe.PaymentIntent> {
+    this.ensureInitialized();
+    return this.stripe!.paymentIntents.cancel(paymentIntentId);
+  }
+
+  /**
    * Validates and parses a Stripe webhook event.
    *
    * @param signature - Stripe webhook signature header.
@@ -118,6 +132,125 @@ export class StripeService implements OnModuleInit {
       payload,
       signature,
       webhookSecret,
+    );
+  }
+
+  /**
+   * Issues a full or partial refund via Stripe.
+   *
+   * @param paymentIntentId - Stripe payment intent identifier.
+   * @param amountCents - Optional refund amount in cents. If omitted, Stripe issues a full refund.
+   * @param reason - Optional refund reason code.
+   * @param idempotencyKey - Stable idempotency key to prevent duplicate refunds upon retries.
+   * @param operationId - Durable local identity used to recover an ambiguous provider response.
+   * @returns The created Stripe refund object.
+   * @throws ServiceUnavailableException If Stripe is not configured.
+   */
+  async createRefund(
+    paymentIntentId: string,
+    amountCents?: number,
+    reason?: Stripe.RefundCreateParams.Reason,
+    idempotencyKey?: string,
+    operationId?: string,
+  ): Promise<Stripe.Refund> {
+    this.ensureInitialized();
+    return this.stripe!.refunds.create(
+      {
+        payment_intent: paymentIntentId,
+        amount: amountCents === undefined ? undefined : Math.round(amountCents),
+        reason,
+        ...(operationId ? { metadata: { operationId } } : {}),
+      },
+      idempotencyKey ? { idempotencyKey } : undefined,
+    );
+  }
+  /** Reads the authoritative outcome of one refund. */
+  async retrieveRefund(refundId: string): Promise<Stripe.Refund> {
+    this.ensureInitialized();
+    return this.stripe!.refunds.retrieve(refundId);
+  }
+
+  /** Reads every page; embedded charge refunds are only a partial history. */
+  async listRefunds(paymentIntentId: string): Promise<Stripe.Refund[]> {
+    this.ensureInitialized();
+    const refunds: Stripe.Refund[] = [];
+    for await (const refund of this.stripe!.refunds.list({
+      payment_intent: paymentIntentId,
+      limit: 100,
+    })) {
+      refunds.push(refund);
+    }
+    return refunds;
+  }
+
+  /** Finds a committed remote refund even if its response never reached the application. */
+  async findRefundForOperation(
+    paymentIntentId: string,
+    operationId: string,
+  ): Promise<Stripe.Refund | undefined> {
+    return (await this.listRefunds(paymentIntentId)).find(
+      (refund) => refund.metadata?.operationId === operationId,
+    );
+  }
+
+  /**
+   * Disburses a reserved payout to a connected account.
+   *
+   * @param destinationAccountId - Connected account receiving the funds.
+   * @param amountMinorUnits - Amount in the currency's minor units.
+   * @param currency - ISO currency code.
+   * @param idempotencyKey - Stable key so a retried disbursement is not paid twice.
+   * @param payoutId - Durable local identity used to recover an ambiguous response.
+   * @returns The created Stripe transfer.
+   * @throws ServiceUnavailableException If Stripe is not configured.
+   */
+  async createTransfer(
+    destinationAccountId: string,
+    amountMinorUnits: number,
+    currency: string,
+    idempotencyKey: string,
+    payoutId: string,
+  ): Promise<Stripe.Transfer> {
+    this.ensureInitialized();
+    return this.stripe!.transfers.create(
+      {
+        destination: destinationAccountId,
+        amount: Math.round(amountMinorUnits),
+        currency: currency.toLowerCase(),
+        metadata: { payoutId },
+      },
+      { idempotencyKey },
+    );
+  }
+
+  /** Reads the authoritative state of one disbursement. */
+  async retrieveTransfer(transferId: string): Promise<Stripe.Transfer> {
+    this.ensureInitialized();
+    return this.stripe!.transfers.retrieve(transferId);
+  }
+
+  /** Reads every page of the disbursements sent to one connected account. */
+  async listTransfers(
+    destinationAccountId: string,
+  ): Promise<Stripe.Transfer[]> {
+    this.ensureInitialized();
+    const transfers: Stripe.Transfer[] = [];
+    for await (const transfer of this.stripe!.transfers.list({
+      destination: destinationAccountId,
+      limit: 100,
+    })) {
+      transfers.push(transfer);
+    }
+    return transfers;
+  }
+
+  /** Finds a committed disbursement even if its response never reached the application. */
+  async findTransferForPayout(
+    destinationAccountId: string,
+    payoutId: string,
+  ): Promise<Stripe.Transfer | undefined> {
+    return (await this.listTransfers(destinationAccountId)).find(
+      (transfer) => transfer.metadata?.payoutId === payoutId,
     );
   }
 }

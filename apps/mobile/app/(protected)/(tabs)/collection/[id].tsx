@@ -32,6 +32,7 @@ import { getApiErrorMessage } from "@/utils/apiError";
 import { AddCardModal } from "@/components/AddCardModal";
 import { CardDetailModal } from "@/components/CardDetailModal";
 import { SelectionModal } from "@/components/SelectionModal";
+import { useAuth } from "@/contexts/AuthProvider";
 import { getCardImage } from "@/utils/images";
 
 const cardStates = [
@@ -89,11 +90,14 @@ const dedupeItems = (items: CollectionItem[]): CollectionItem[] => {
   return next;
 };
 
+/** Displays card and sealed inventory with editing restricted to the collection owner. */
 export default function CollectionDetailsScreen() {
   const params = useLocalSearchParams<{ id: string | string[] }>();
   const collectionId = Array.isArray(params.id) ? params.id[0] : params.id;
 
+  const { user } = useAuth();
   const [collection, setCollection] = useState<UserCollection | null>(null);
+  const canEdit = Boolean(user && collection?.user?.id === user.id);
   const isMasterSet = useMemo(() => {
     return collection?.masterSet != null;
   }, [collection?.masterSet]);
@@ -476,7 +480,7 @@ export default function CollectionDetailsScreen() {
   };
 
   const handleDecrementItem = async (item: CollectionItem) => {
-    if (!collectionId || !item.pokemonCard?.id) {
+    if (!canEdit || !collectionId || !item.pokemonCard?.id) {
       return;
     }
 
@@ -550,7 +554,7 @@ export default function CollectionDetailsScreen() {
   };
 
   const handleIncrementItem = async (item: CollectionItem) => {
-    if (!collectionId || !item.pokemonCard?.id) {
+    if (!canEdit || !collectionId || !item.pokemonCard?.id) {
       return;
     }
 
@@ -596,6 +600,12 @@ export default function CollectionDetailsScreen() {
 
   const renderCardCell = ({ item }: { item: CollectionItem }) => {
     const card = item.pokemonCard;
+    const sealed = item.productKind === "sealed" ? item.sealedProduct : null;
+    const sealedImage = sealed?.image
+      ? /^https?:\/\//i.test(sealed.image)
+        ? sealed.image
+        : `${process.env.EXPO_PUBLIC_SEALED_CDN_URL || "https://cdn.tcg-nexus.org"}/${sealed.image.replace(/^\/+/, "")}`
+      : undefined;
     const isQtyZero = Number(item.quantity || 0) === 0;
 
     return (
@@ -613,43 +623,73 @@ export default function CollectionDetailsScreen() {
               isQtyZero && { opacity: 0.4 },
             ]}
           >
-            <Image
-              source={{ uri: getCardImage(card?.image, "low") }}
-              style={styles.cardImage}
-            />
+            {sealed && !sealedImage ? (
+              <View
+                style={[
+                  styles.cardImage,
+                  { alignItems: "center", justifyContent: "center" },
+                ]}
+              >
+                <Ionicons name="cube-outline" size={64} color="#475569" />
+              </View>
+            ) : (
+              <Image
+                source={{
+                  uri: sealedImage || getCardImage(card?.image, "low"),
+                }}
+                style={styles.cardImage}
+              />
+            )}
             <Text numberOfLines={1} style={styles.cardName}>
-              {card?.name || "Carte inconnue"}
+              {sealed?.name || card?.name || "Item inconnu"}
             </Text>
             <Text numberOfLines={1} style={styles.cardMeta}>
-              {card?.set?.name || "Set inconnu"}
+              {sealed?.pokemonSet?.name || card?.set?.name || "Set inconnu"}
             </Text>
           </Pressable>
 
+          <Text style={styles.cardMeta}>
+            {sealed
+              ? item.sealedCondition
+                ? {
+                    sealed: "Scellé d’usine",
+                    box_damaged: "Boîte abîmée",
+                    opened_resealed: "Ouvert puis rescellé",
+                  }[item.sealedCondition]
+                : "État inconnu"
+              : item.cardState?.name || "État inconnu"}
+          </Text>
           <View style={styles.cardQtyRow}>
-            <Pressable
-              disabled={
-                (item.id ? isDeletingItemId === item.id : false) || isQtyZero
-              }
-              onPress={() => void handleDecrementItem(item)}
-              style={({ pressed }) => [
-                styles.cardQtyButton,
-                pressed && styles.cardQtyButtonPressed,
-                isQtyZero && { opacity: 0.3 },
-              ]}
-            >
-              <Ionicons name="remove" size={12} color="#0b0b0b" />
-            </Pressable>
+            {canEdit && !sealed && (
+              <Pressable
+                accessibilityLabel="Retirer un exemplaire"
+                disabled={
+                  (item.id ? isDeletingItemId === item.id : false) || isQtyZero
+                }
+                onPress={() => void handleDecrementItem(item)}
+                style={({ pressed }) => [
+                  styles.cardQtyButton,
+                  pressed && styles.cardQtyButtonPressed,
+                  isQtyZero && { opacity: 0.3 },
+                ]}
+              >
+                <Ionicons name="remove" size={12} color="#0b0b0b" />
+              </Pressable>
+            )}
             <Text style={styles.cardQtyText}>{item.quantity}</Text>
-            <Pressable
-              disabled={item.id ? isDeletingItemId === item.id : false}
-              onPress={() => void handleIncrementItem(item)}
-              style={({ pressed }) => [
-                styles.cardQtyButton,
-                pressed && styles.cardQtyButtonPressed,
-              ]}
-            >
-              <Ionicons name="add" size={12} color="#0b0b0b" />
-            </Pressable>
+            {canEdit && !sealed && (
+              <Pressable
+                accessibilityLabel="Ajouter un exemplaire"
+                disabled={item.id ? isDeletingItemId === item.id : false}
+                onPress={() => void handleIncrementItem(item)}
+                style={({ pressed }) => [
+                  styles.cardQtyButton,
+                  pressed && styles.cardQtyButtonPressed,
+                ]}
+              >
+                <Ionicons name="add" size={12} color="#0b0b0b" />
+              </Pressable>
+            )}
           </View>
         </View>
       </View>
@@ -682,7 +722,7 @@ export default function CollectionDetailsScreen() {
         </Pressable>
       </View>
 
-      {!isMasterSet && (
+      {canEdit && !isMasterSet && (
         <>
           <Pressable
             onPress={openManualAddModal}
@@ -878,7 +918,7 @@ export default function CollectionDetailsScreen() {
         </View>
       )}
 
-      {!isMasterSet && (
+      {canEdit && !isMasterSet && (
         <View style={styles.selectRow}>
           <Pressable onPress={handleSelectSortBy} style={styles.selectInput}>
             <Text style={styles.selectInputText}>
@@ -925,7 +965,7 @@ export default function CollectionDetailsScreen() {
                 ? "Aucune carte ne correspond à vos filtres de recherche."
                 : "Ajoute des cartes en scannant ou via la recherche."}
             </Text>
-            {!isMasterSet && (
+            {canEdit && !isMasterSet && (
               <View style={styles.emptyActionsRow}>
                 <Pressable
                   onPress={() => router.push("/scan")}

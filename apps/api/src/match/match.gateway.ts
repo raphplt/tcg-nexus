@@ -3,6 +3,7 @@ import {
   Injectable,
   Logger,
   OnModuleInit,
+  OnModuleDestroy,
   UnauthorizedException,
   UsePipes,
   ValidationPipe,
@@ -63,7 +64,11 @@ type AuthenticatedSocket = Socket & {
 )
 @Injectable()
 export class MatchGateway
-  implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
+  implements
+    OnGatewayConnection,
+    OnGatewayDisconnect,
+    OnModuleInit,
+    OnModuleDestroy
 {
   @WebSocketServer()
   server: Server;
@@ -102,6 +107,22 @@ export class MatchGateway
     private readonly casualMatchService: CasualMatchService,
     private readonly matchmakingService: MatchmakingService,
   ) {}
+
+  /** Clears disconnect and inactivity callbacks before their dependencies shut down. */
+  onModuleDestroy(): void {
+    for (const timers of [
+      this.graceTimers,
+      this.inactivityTimers,
+      this.casualInactivityTimers,
+    ]) {
+      for (const timer of timers.values()) clearTimeout(timer);
+      timers.clear();
+    }
+    this.matchSockets.clear();
+    this.casualSockets.clear();
+    this.userSockets.clear();
+    this.rateLimitBuckets.clear();
+  }
 
   onModuleInit() {
     this.matchmakingService.registerMatchFoundHandler((result) =>

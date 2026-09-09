@@ -19,6 +19,8 @@ import {
   RegistrationStatus,
   TournamentRegistration,
 } from "../tournament/entities/tournament-registration.entity";
+import { DeckVisibilityPolicy } from "../common/enums/deck-visibility-policy";
+import { MatchResultStatus } from "../common/enums/match-result-status";
 import {
   BracketSide,
   Match,
@@ -132,6 +134,10 @@ describe("MatchService", () => {
     grandFinalReset: true,
     isFinished: false,
     players: [], // Add missing property
+    roundDurationMinutes: 50,
+    isRoundPaused: false,
+    deckVisibilityPolicy: DeckVisibilityPolicy.PUBLIC_ON_START,
+    deckSnapshots: [],
     createdAt: new Date(),
     updatedAt: new Date(),
     notifications: [],
@@ -147,6 +153,8 @@ describe("MatchService", () => {
     round: 1,
     phase: MatchPhase.QUALIFICATION,
     status: MatchStatus.SCHEDULED,
+    resultStatus: MatchResultStatus.UNREPORTED,
+    proposals: [],
     isBye: false,
     bracketSide: null,
     bracketPosition: null,

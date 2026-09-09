@@ -3,19 +3,48 @@
 import { useTranslations } from "next-intl";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { ArrowLeft, Loader2, MapPin, Store, Truck } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeft,
+  CheckCircle,
+  ExternalLink,
+  FolderPlus,
+  Loader2,
+  MapPin,
+  RotateCcw,
+  Sparkles,
+  Star,
+  Store,
+  Truck,
+} from "lucide-react";
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { useParams, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
+import { ReceiptToCollectionModal } from "./_components/ReceiptToCollectionModal";
+import { SellerReviewModal } from "./_components/SellerReviewModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import { paymentService } from "@/services/payment.service";
 import { useCartStore } from "@/store/cart.store";
 import { useCurrencyStore } from "@/store/currency.store";
-import { Order, OrderItem, OrderStatus } from "@/types/order";
+import {
+  ClaimCategory,
+  FulfillmentStatus,
+  Order,
+  OrderItem,
+  OrderStatus,
+} from "@/types/order";
 import {
   getFulfillmentColor,
   getFulfillmentKey,
@@ -25,6 +54,7 @@ import {
   getOrderStatusKey,
 } from "@/utils/order";
 import { formatHandlingTime } from "@/utils/shipping";
+import { getCarrierTrackingUrl } from "@/utils/tracking";
 
 function groupBySeller(items: OrderItem[]): Map<string, OrderItem[]> {
   const groups = new Map<string, OrderItem[]>();
@@ -61,33 +91,86 @@ function OrderDetailsContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [confirmingItemId, setConfirmingItemId] = useState<number | null>(null);
+  const [claimDialogOpen, setClaimDialogOpen] = useState(false);
+  const [selectedClaimItem, setSelectedClaimItem] = useState<OrderItem | null>(
+    null,
+  );
+  const [claimCategory, setClaimCategory] = useState<ClaimCategory>(
+    ClaimCategory.DAMAGED_ITEM,
+  );
+  const [claimDescription, setClaimDescription] = useState("");
+  const [submittingClaim, setSubmittingClaim] = useState(false);
+  const [claimSuccessMessage, setClaimSuccessMessage] = useState<string | null>(
+    null,
+  );
+  const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
+  const [reviewItem, setReviewItem] = useState<OrderItem | null>(null);
+
   const cameBackFromStripe = !!searchParams.get("payment_intent");
   const redirectFailed =
     !!searchParams.get("redirect_status") &&
     searchParams.get("redirect_status") !== "succeeded";
 
-  useEffect(() => {
-    const load = async () => {
-      const orderId = Number(id);
+  const loadOrder = async () => {
+    const orderId = Number(id);
 
-      if (cameBackFromStripe && !redirectFailed) {
-        try {
-          await paymentService.confirmOrder(orderId);
-          await fetchCart();
-        } catch {}
-      }
-
+    if (cameBackFromStripe && !redirectFailed) {
       try {
-        setOrder(await paymentService.getOrderById(orderId));
-      } catch {
-        setError(t("notFound"));
-      } finally {
-        setIsLoading(false);
-      }
-    };
+        await paymentService.confirmOrder(orderId);
+        await fetchCart();
+      } catch {}
+    }
 
-    load();
-  }, [id, cameBackFromStripe, redirectFailed, fetchCart]);
+    try {
+      const data = await paymentService.getOrderById(orderId);
+      setOrder(data);
+    } catch {
+      setError(t("notFound"));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadOrder();
+  }, [id, cameBackFromStripe, redirectFailed]);
+
+  const handleConfirmReceipt = async (itemId: number) => {
+    if (!order) return;
+    setConfirmingItemId(itemId);
+    try {
+      await paymentService.confirmItemReceipt(order.id, itemId);
+      await loadOrder();
+    } catch {
+      alert(t("confirmReceiptError"));
+    } finally {
+      setConfirmingItemId(null);
+    }
+  };
+
+  const handleSubmitClaim = async () => {
+    if (!order || !selectedClaimItem || !claimDescription.trim()) return;
+    setSubmittingClaim(true);
+    try {
+      await paymentService.createItemClaim(order.id, selectedClaimItem.id, {
+        claimCategory,
+        subject: `Réclamation commande #${order.id} - ${selectedClaimItem.productName}`,
+        message: claimDescription.trim(),
+      });
+      setClaimSuccessMessage(t("claimSubmitted"));
+      setTimeout(() => {
+        setClaimSuccessMessage(null);
+        setClaimDialogOpen(false);
+        setSelectedClaimItem(null);
+        setClaimDescription("");
+      }, 1500);
+    } catch {
+      alert("Erreur lors de la soumission de la réclamation");
+    } finally {
+      setSubmittingClaim(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -115,16 +198,21 @@ function OrderDetailsContent() {
   }
 
   const sellerGroups = groupBySeller(order.orderItems);
+  const totalRefunded =
+    order.refundOperations?.reduce((sum, op) => sum + Number(op.amount), 0) ??
+    0;
+  const hasDeliveredItems = (order.orderItems || []).some(
+    (it) => it.fulfillmentStatus === FulfillmentStatus.DELIVERED,
+  );
 
   return (
-    <div className="container mx-auto max-w-4xl py-10 space-y-6">
-      <Link
-        href="/orders"
-        className="inline-flex items-center text-sm text-muted-foreground hover:text-primary"
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        {t("backToOrders")}
-      </Link>
+    <div className="container mx-auto max-w-3xl py-10 space-y-6">
+      <Button variant="ghost" size="sm" asChild className="gap-2">
+        <Link href="/orders">
+          <ArrowLeft className="h-4 w-4" />
+          {t("backToOrders")}
+        </Link>
+      </Button>
 
       <Card>
         <CardHeader className="border-b">
@@ -150,9 +238,60 @@ function OrderDetailsContent() {
         </CardHeader>
 
         <CardContent className="pt-6 space-y-6">
+          {hasDeliveredItems && (
+            <div className="rounded-md border border-primary/30 bg-primary/5 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <FolderPlus className="h-5 w-5 text-primary shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold">
+                    Articles reçus prêts pour votre collection
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Intégrez directement vos cartes livrées dans votre
+                    collection avec leur provenance certifiée.
+                  </p>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => setIsReceiptModalOpen(true)}
+                className="gap-1.5 shrink-0"
+              >
+                <Sparkles className="h-4 w-4" />
+                Ajouter à ma collection
+              </Button>
+            </div>
+          )}
+
           {order.status === OrderStatus.PENDING && (
             <div className="rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-sm">
               {t("paymentPending")}
+            </div>
+          )}
+
+          {totalRefunded > 0 && (
+            <div className="rounded-md border border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/20 p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-sm flex items-center gap-1.5 text-amber-800 dark:text-amber-300">
+                  <RotateCcw className="h-4 w-4" />
+                  {t("refunds")}
+                </span>
+                <span className="font-bold text-sm text-amber-800 dark:text-amber-300">
+                  {t("refundedAmount")}:{" "}
+                  {formatExact(totalRefunded, order.currency)}
+                </span>
+              </div>
+              {order.refundOperations?.map((op) => (
+                <div
+                  key={op.id}
+                  className="text-xs text-muted-foreground flex justify-between border-t pt-1.5 border-amber-200/50"
+                >
+                  <span>{op.reason || "Remboursement"}</span>
+                  <span className="font-medium">
+                    {formatExact(op.amount, op.currency)}
+                  </span>
+                </div>
+              ))}
             </div>
           )}
 
@@ -187,9 +326,16 @@ function OrderDetailsContent() {
                 <div className="rounded-md border divide-y">
                   {items.map((item) => {
                     const productUrl = getOrderItemUrl(item);
+                    const trackingUrl = getCarrierTrackingUrl(
+                      item.carrier,
+                      item.trackingNumber,
+                    );
 
                     return (
-                      <div key={item.id} className="flex gap-4 p-4">
+                      <div
+                        key={item.id}
+                        className="flex flex-col sm:flex-row gap-4 p-4"
+                      >
                         <div className="relative h-24 w-16 shrink-0">
                           <Image
                             src={getOrderItemImage(item)}
@@ -243,7 +389,21 @@ function OrderDetailsContent() {
                             {item.trackingNumber && (
                               <span className="flex items-center gap-1 text-xs text-muted-foreground">
                                 <Truck className="h-3 w-3" />
-                                {item.carrier} · suivi {item.trackingNumber}
+                                {trackingUrl ? (
+                                  <a
+                                    href={trackingUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="underline hover:text-foreground inline-flex items-center gap-1 font-medium"
+                                  >
+                                    {item.carrier} · {item.trackingNumber}
+                                    <ExternalLink className="h-3 w-3" />
+                                  </a>
+                                ) : (
+                                  <span>
+                                    {item.carrier} · suivi {item.trackingNumber}
+                                  </span>
+                                )}
                               </span>
                             )}
                             {item.shippedAt ? (
@@ -263,9 +423,111 @@ function OrderDetailsContent() {
                               </span>
                             )}
                           </div>
+
+                          {(item as any).listingPhotoUrls &&
+                            (item as any).listingPhotoUrls.length > 0 && (
+                              <div className="pt-2 space-y-1">
+                                <p className="text-xs font-medium text-muted-foreground">
+                                  Photos certifiées du vendeur :
+                                </p>
+                                <div className="flex gap-2 overflow-x-auto py-1">
+                                  {(item as any).listingPhotoUrls.map(
+                                    (url: string, idx: number) => (
+                                      <a
+                                        key={idx}
+                                        href={url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="relative h-12 w-12 shrink-0 rounded border overflow-hidden hover:opacity-80 transition-opacity"
+                                      >
+                                        <Image
+                                          src={url}
+                                          alt={`Photo ${idx + 1}`}
+                                          fill
+                                          className="object-cover"
+                                        />
+                                      </a>
+                                    ),
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                          {(item as any).listingDefects &&
+                            (item as any).listingDefects.length > 0 && (
+                              <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                                <span className="text-xs font-medium text-muted-foreground">
+                                  Défauts déclarés :
+                                </span>
+                                {(item as any).listingDefects.map(
+                                  (defect: string, idx: number) => (
+                                    <Badge
+                                      key={idx}
+                                      variant="outline"
+                                      className="text-xs border-amber-300 text-amber-800 dark:text-amber-300"
+                                    >
+                                      {defect}
+                                    </Badge>
+                                  ),
+                                )}
+                              </div>
+                            )}
+
+                          <div className="flex flex-wrap items-center gap-2 pt-2">
+                            {item.fulfillmentStatus ===
+                              FulfillmentStatus.SHIPPED && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs border-green-300 text-green-700 hover:bg-green-50 dark:text-green-400"
+                                onClick={() => handleConfirmReceipt(item.id)}
+                                disabled={confirmingItemId === item.id}
+                              >
+                                {confirmingItemId === item.id ? (
+                                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                ) : (
+                                  <CheckCircle className="h-3 w-3 mr-1 text-green-600" />
+                                )}
+                                {t("confirmReceipt")}
+                              </Button>
+                            )}
+
+                            {item.fulfillmentStatus ===
+                              FulfillmentStatus.DELIVERED && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs border-amber-300 text-amber-700 hover:bg-amber-50 dark:text-amber-400"
+                                onClick={() => setReviewItem(item)}
+                              >
+                                <Star className="h-3 w-3 mr-1 fill-amber-400 text-amber-400" />
+                                Évaluer le vendeur
+                              </Button>
+                            )}
+
+                            {(item.fulfillmentStatus ===
+                              FulfillmentStatus.SHIPPED ||
+                              item.fulfillmentStatus ===
+                                FulfillmentStatus.DELIVERED) && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 text-xs text-muted-foreground hover:text-foreground"
+                                onClick={() => {
+                                  setSelectedClaimItem(item);
+                                  setClaimCategory(ClaimCategory.DAMAGED_ITEM);
+                                  setClaimDescription("");
+                                  setClaimDialogOpen(true);
+                                }}
+                              >
+                                <AlertCircle className="h-3 w-3 mr-1" />
+                                {t("openClaim")}
+                              </Button>
+                            )}
+                          </div>
                         </div>
 
-                        <div className="text-right shrink-0">
+                        <div className="text-left sm:text-right shrink-0 pt-2 sm:pt-0">
                           <p className="font-medium">
                             {formatExact(
                               item.unitPrice * item.quantity,
@@ -312,6 +574,101 @@ function OrderDetailsContent() {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={claimDialogOpen} onOpenChange={setClaimDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>{t("openClaim")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            {claimSuccessMessage ? (
+              <div className="rounded-md bg-green-500/10 border border-green-500/30 p-3 text-sm text-green-700 dark:text-green-300">
+                {claimSuccessMessage}
+              </div>
+            ) : (
+              <>
+                <div className="text-sm font-medium">
+                  {selectedClaimItem?.productName}
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-muted-foreground">
+                    {t("claimCategory")}
+                  </label>
+                  <select
+                    value={claimCategory}
+                    onChange={(e) =>
+                      setClaimCategory(e.target.value as ClaimCategory)
+                    }
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                  >
+                    <option value={ClaimCategory.DAMAGED_ITEM}>
+                      {t("claimDamaged")}
+                    </option>
+                    <option value={ClaimCategory.MISSING_ITEM}>
+                      {t("claimNotReceived")}
+                    </option>
+                    <option value={ClaimCategory.WRONG_ITEM}>
+                      {t("claimWrongItem")}
+                    </option>
+                    <option value={ClaimCategory.NON_DELIVERY}>
+                      {t("claimNotReceived")}
+                    </option>
+                    <option value={ClaimCategory.GENERAL}>
+                      {t("claimOther")}
+                    </option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-muted-foreground">
+                    {t("claimDescription")}
+                  </label>
+                  <Textarea
+                    placeholder={t("claimDescriptionPlaceholder")}
+                    value={claimDescription}
+                    onChange={(e) => setClaimDescription(e.target.value)}
+                    rows={4}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+          {!claimSuccessMessage && (
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setClaimDialogOpen(false)}
+                disabled={submittingClaim}
+              >
+                {t("cancel")}
+              </Button>
+              <Button
+                onClick={handleSubmitClaim}
+                disabled={submittingClaim || !claimDescription.trim()}
+              >
+                {submittingClaim && (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                )}
+                {t("submitClaim")}
+              </Button>
+            </DialogFooter>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <ReceiptToCollectionModal
+        isOpen={isReceiptModalOpen}
+        onClose={() => setIsReceiptModalOpen(false)}
+        orderId={order.id}
+        onImportSuccess={loadOrder}
+      />
+
+      <SellerReviewModal
+        isOpen={!!reviewItem}
+        onClose={() => setReviewItem(null)}
+        orderId={order.id}
+        item={reviewItem}
+        onReviewSuccess={loadOrder}
+      />
     </div>
   );
 }

@@ -7,10 +7,13 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from "typeorm";
 import { Listing } from "./listing.entity";
 import { Order } from "./order.entity";
+import { RefundLine } from "./refund-line.entity";
+import { ReturnItem } from "./return-item.entity";
 
 @Entity()
 export class OrderItem {
@@ -96,4 +99,33 @@ export class OrderItem {
 
   @Column({ type: "timestamp", nullable: true })
   deliveredAt: Date | null;
+
+  /**
+   * Moment the buyer confirmed physically receiving this line (MKT-05, INT-03).
+   *
+   * A seller marking a line delivered is a declaration, not a receipt: only a
+   * buyer confirmation makes the copies eligible for import into a collection.
+   */
+  @Column({ type: "timestamp", nullable: true })
+  receiptConfirmedAt: Date | null;
+
+  /** Snapshot of listing real photo evidence at time of order creation (MKT-03). */
+  @Column({ type: "jsonb", nullable: true })
+  listingPhotoUrls?: string[] | null;
+
+  /** Snapshot of disclosed defect tags at time of order creation (MKT-03). */
+  @Column({ type: "jsonb", nullable: true })
+  listingDefects?: string[] | null;
+
+  @OneToMany(
+    () => RefundLine,
+    (line) => line.orderItem,
+  )
+  refundLines?: RefundLine[];
+
+  @OneToMany(
+    () => ReturnItem,
+    (ret) => ret.orderItem,
+  )
+  returnItems?: ReturnItem[];
 }

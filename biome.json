@@ -20,7 +20,16 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": false
+      "recommended": false,
+      "correctness": {
+        "noUnreachable": "error"
+      },
+      "suspicious": {
+        "noDebugger": "error",
+        "noDuplicateParameters": "error",
+        "noDuplicateObjectKeys": "error",
+        "noDuplicateJsxProps": "error"
+      }
     }
   },
   "javascript": {

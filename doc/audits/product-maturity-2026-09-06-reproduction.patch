@@ -1,0 +1,163 @@
+--- a/apps/api/test/settlement-and-journey.e2e-spec.ts
++++ b/apps/api/test/settlement-and-journey.e2e-spec.ts
+@@ -1,8 +1,31 @@
++import { MarketplaceCheckout1785974400000 } from "../src/migrations/1785974400000-MarketplaceCheckout";
++import { ShippingFees1785978000000 } from "../src/migrations/1785978000000-ShippingFees";
++import { PlatformShippingRates1785981600000 } from "../src/migrations/1785981600000-PlatformShippingRates";
++import { Translations1786060800000 } from "../src/migrations/1786060800000-Translations";
++import { UserPreferredLocale1786064400000 } from "../src/migrations/1786064400000-UserPreferredLocale";
++import { NotificationTranslations1786068000000 } from "../src/migrations/1786068000000-NotificationTranslations";
++import { CatalogTranslations1786071600000 } from "../src/migrations/1786071600000-CatalogTranslations";
++import { DropLegacyCatalogColumns1786075200000 } from "../src/migrations/1786075200000-DropLegacyCatalogColumns";
++import { SealedProductTranslations1786078800000 } from "../src/migrations/1786078800000-SealedProductTranslations";
++import { ArticlePublishing1786082400000 } from "../src/migrations/1786082400000-ArticlePublishing";
++import { OnlinePlaySessions1786086000000 } from "../src/migrations/1786086000000-OnlinePlaySessions";
++import { PerformanceIndexes1786089600000 } from "../src/migrations/1786089600000-PerformanceIndexes";
++import { SwissTournaments1786093200000 } from "../src/migrations/1786093200000-SwissTournaments";
++import { DoubleElimination1786096800000 } from "../src/migrations/1786096800000-DoubleElimination";
++import { ArticleSlugIntegrity1786097000000 } from "../src/migrations/1786097000000-ArticleSlugIntegrity";
++import { AuthIdentities1786098000000 } from "../src/migrations/1786098000000-AuthIdentities";
++import { CheckoutAttemptAndAuditOutbox1786099000000 } from "../src/migrations/1786099000000-CheckoutAttemptAndAuditOutbox";
++import { RefundsReturnsClaims1786100000000 } from "../src/migrations/1786100000000-RefundsReturnsClaims";
++import { CollectionInventoryAndListings1786101000000 } from "../src/migrations/1786101000000-CollectionInventoryAndListings";
++import { TournamentOperations1786102000000 } from "../src/migrations/1786102000000-TournamentOperations";
++import { SellerSettlementAndTrust1786200000000 } from "../src/migrations/1786200000000-SellerSettlementAndTrust";
+ import { INestApplication } from "@nestjs/common";
+ import { getRepositoryToken } from "@nestjs/typeorm";
+ import type { Server } from "http";
+ import request from "supertest";
+-import { Repository } from "typeorm";
++import { Repository, DataSource } from "typeorm";
++import { OrderService } from "../src/marketplace/order.service";
++import { CollectionItem } from "../src/collection-item/entities/collection-item.entity";
+ import { FulfillmentStatus } from "../src/common/enums/fulfillment-status";
+ import {
+   PayoutStatus,
+@@ -27,7 +50,7 @@
+   createRefund: jest.fn().mockResolvedValue({ id: "re_e2e_settle", status: "succeeded" }),
+ };
+
+-describe("Settlement, Receipt Import & User Journey (e2e)", () => {
++describe("Product maturity audit diagnostic (e2e)", () => {
+   let app: INestApplication;
+   let httpServer: Server;
+   let listingRepo: Repository<Listing>;
+@@ -319,6 +342,64 @@
+       .expect(200);
+     expect(Number(summaryFinal.body.balancePaidOut)).toBe(30);
+
++    const outsider = await createUser(httpServer);
++    for (const suffix of ["refunds", "refunds/remaining", "returns"]) {
++      await request(httpServer).get(`/marketplace/orders/${orderId}/${suffix}`)
++        .set(authAs(outsider)).expect(200);
++    }
++    console.log("AUDIT: unrelated authenticated user reads all three refund/return endpoints (200)");
++
++    for (let attempt = 0; attempt < 2; attempt++) {
++      await request(httpServer).post(`/marketplace/admin/payouts/${payoutId}/process`)
++        .set(authAs(admin)).send({ action: "FAIL", failureReason: "Audit replay" }).expect(201);
++    }
++    const inflated = await request(httpServer).get("/marketplace/seller/settlement/summary").set(authAs(seller)).expect(200);
++    expect(Number(inflated.body.balanceAvailable)).toBe(77.5);
++    expect(Number(inflated.body.balancePaidOut)).toBe(30);
++    console.log("AUDIT: two FAIL calls after COMPLETE inflate available balance from 17.50 to 77.50; paid-out remains 30");
++
++    const destination = await request(httpServer).post("/collection").set(authAs(buyer))
++      .send({ name: "Audit duplicate receipt", isPublic: false }).expect(201);
++    const duplicate = await request(httpServer).post(`/marketplace/orders/${orderId}/import-to-collection`)
++      .set(authAs(buyer)).send({ collectionId: String(destination.body.id), items: [{ orderItemId: orderItem.id }], allowDuplicates: false }).expect(200);
++    expect(duplicate.body.importedCount).toBe(1);
++    console.log("AUDIT: same purchase imported into another collection with allowDuplicates=false");
++
++    const itemRepository = app.get(DataSource).getRepository(CollectionItem);
++    const imported = await itemRepository.findOneOrFail({ where: { collection: { id: String(destination.body.id) } }, relations: ["pokemonCard"] });
++    const csvContent = `cardId,quantity,variant\n${imported.pokemonCard!.id},2,normal`;
++    const csv = await request(httpServer).post(`/collection/${destination.body.id}/import/csv`).set(authAs(buyer))
++      .send({ csvContent, operationId: "audit-add-two" }).expect(201);
++    expect(csv.body.updatedCount).toBe(1);
++    expect((await itemRepository.findOneByOrFail({ id: imported.id })).quantity).toBe(3);
++    await request(httpServer).post(`/collection/${destination.body.id}/items/undo-operation`).set(authAs(buyer))
++      .send({ operationId: "audit-add-two" }).expect(201);
++    expect(await itemRepository.findOneBy({ id: imported.id })).toBeNull();
++    console.log("AUDIT: undo CSV add deletes pre-existing physical item (1 + 2 -> 3 -> deleted)");
++
++    const returned = await request(httpServer).post(`/marketplace/orders/${orderId}/items/${orderItem.id}/returns`)
++      .set(authAs(buyer)).send({ quantity: 1, reason: "Audit return" }).expect(201);
++    for (const disposition of ["restock", "damaged", "restock"]) {
++      await request(httpServer).patch(`/marketplace/returns/${returned.body.id}/disposition`)
++        .set(authAs(seller)).send({ disposition }).expect(200);
++    }
++    expect((await listingRepo.findOneByOrFail({ id: listingId })).quantityAvailable).toBe(3);
++    console.log("AUDIT: restock -> damaged -> restock adds the same returned copy twice (available 1 -> 3)");
++
++    await expect(listingRepo.find({ relations: ["seller", "cardState"] })).rejects.toThrow('Property "cardState"');
++    console.log("AUDIT: deck offer query fails because cardState is a column, not a relation");
++
++    stripeServiceMock.createRefund.mockClear();
++    await request(httpServer).post(`/marketplace/orders/${orderId}/refund`).set(authAs(admin))
++      .send({ lines: [{ orderItemId: 2147483647, quantity: 1, amount: 1 }] }).expect(400);
++    expect(stripeServiceMock.createRefund).toHaveBeenCalledTimes(1);
++    console.log("AUDIT: invalid refund line rejected only AFTER provider refund call");
++
++    await app.get(OrderService).handlePaymentRefunded(paymentIntentId, "re_audit_partial", 1);
++    const afterPartial = await request(httpServer).get(`/marketplace/orders/${orderId}`).set(authAs(buyer)).expect(200);
++    expect(afterPartial.body.status).toBe(OrderStatus.REFUNDED);
++    console.log("AUDIT: partial refund event of 1 on a 50 order marks entire order REFUNDED");
++
+     // 8. User Journey Next Actions (INT-04)
+     const journeyRes = await request(httpServer)
+       .get("/users/me/journey/next-actions")
+@@ -329,3 +410,53 @@
+     expect(Array.isArray(journeyRes.body.actions)).toBe(true);
+   });
+ });
++
++
++describe("Fresh database migration audit", () => {
++  const MIGRATIONS = [
++    MarketplaceCheckout1785974400000,
++    ShippingFees1785978000000,
++    PlatformShippingRates1785981600000,
++    Translations1786060800000,
++    UserPreferredLocale1786064400000,
++    NotificationTranslations1786068000000,
++    CatalogTranslations1786071600000,
++    DropLegacyCatalogColumns1786075200000,
++    SealedProductTranslations1786078800000,
++    ArticlePublishing1786082400000,
++    OnlinePlaySessions1786086000000,
++    PerformanceIndexes1786089600000,
++    SwissTournaments1786093200000,
++    DoubleElimination1786096800000,
++    ArticleSlugIntegrity1786097000000,
++    AuthIdentities1786098000000,
++    CheckoutAttemptAndAuditOutbox1786099000000,
++    RefundsReturnsClaims1786100000000,
++    CollectionInventoryAndListings1786101000000,
++    TournamentOperations1786102000000,
++    SellerSettlementAndTrust1786200000000,
++  ];
++
++
++  it("diagnoses the first migration failing on an empty database with synchronization disabled", async () => {
++    const options = {
++      type: "postgres" as const, host: process.env.DATABASE_HOST,
++      port: Number(process.env.DATABASE_PORT), username: process.env.DATABASE_USER,
++      password: process.env.DATABASE_PASSWORD, synchronize: false,
++    };
++    const admin = await new DataSource({ ...options, database: process.env.DATABASE_NAME }).initialize();
++    const fresh = new DataSource({ ...options, database: "tcg_audit_empty", migrations: MIGRATIONS });
++    try {
++      await admin.query('CREATE DATABASE tcg_audit_empty');
++      await fresh.initialize();
++      let failure: unknown;
++      try { await fresh.runMigrations(); } catch (error) { failure = error; }
++      expect(failure).toBeDefined();
++      console.log("AUDIT: fresh migration fails:", (failure as Error).message);
++    } finally {
++      if (fresh.isInitialized) await fresh.destroy();
++      await admin.query('DROP DATABASE IF EXISTS tcg_audit_empty');
++      await admin.destroy();
++    }
++  });
++});

@@ -23,3 +23,7 @@ export {
   TournamentRegistration,
 } from "./tournament-registration.entity";
 export { RewardType, TournamentReward } from "./tournament-reward.entity";
+export {
+  TournamentDeckSnapshot,
+  SnapshotCardItem,
+} from "./tournament-deck-snapshot.entity";

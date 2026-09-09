@@ -2,6 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { User } from "./entities/user.entity";
 import { UserController } from "./user.controller";
+import { UserJourneyService } from "./user-journey.service";
 import { UserService } from "./user.service";
 
 describe("UserController", () => {
@@ -16,6 +17,10 @@ describe("UserController", () => {
     remove: jest.fn(),
   };
 
+  const mockUserJourneyService = {
+    getNextActions: jest.fn(),
+  };
+
   beforeEach(async () => {
     jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
@@ -24,6 +29,10 @@ describe("UserController", () => {
         {
           provide: UserService,
           useValue: mockUserService,
+        },
+        {
+          provide: UserJourneyService,
+          useValue: mockUserJourneyService,
         },
         {
           provide: getRepositoryToken(User),
@@ -118,5 +127,21 @@ describe("UserController", () => {
       1,
       7,
     );
+  });
+
+  it("getMyJourneyNextActions delegates to userJourneyService.getNextActions with current user", async () => {
+    const mockActions = {
+      userId: 5,
+      actions: [],
+      totalActionableCount: 0,
+      generatedAt: new Date(),
+    };
+    mockUserJourneyService.getNextActions.mockResolvedValue(mockActions);
+    await expect(
+      controller.getMyJourneyNextActions({ id: 5 } as User),
+    ).resolves.toEqual(mockActions);
+    expect(mockUserJourneyService.getNextActions).toHaveBeenCalledWith({
+      id: 5,
+    });
   });
 });

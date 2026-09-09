@@ -5,6 +5,7 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { SupportTicket } from "./entities/support-ticket.entity";
 import { SupportMessage } from "../support-message/entities/support-message.entity";
 import { MailModule } from "../mail/mail.module";
+import { MarketplaceModule } from "../marketplace/marketplace.module";
 
 @Module({
   controllers: [SupportTicketController],
@@ -12,6 +13,8 @@ import { MailModule } from "../mail/mail.module";
   imports: [
     TypeOrmModule.forFeature([SupportTicket, SupportMessage]),
     MailModule,
+    // Supplies the settlement service that releases a claim's funds on close.
+    MarketplaceModule,
   ],
 })
 export class SupportTicketModule {}

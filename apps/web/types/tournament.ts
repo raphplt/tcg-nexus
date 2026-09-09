@@ -56,12 +56,15 @@ export interface Match {
   round: number;
   phase: "qualification" | "quarter_final" | "semi_final" | "final";
   status: "scheduled" | "in_progress" | "finished" | "forfeit" | "cancelled";
+  resultStatus?: "unreported" | "proposed" | "confirmed" | "disputed";
+  tableNumber?: number | null;
   scheduledDate?: string | null;
   startedAt?: string | null;
   finishedAt?: string | null;
   playerAScore: number;
   playerBScore: number;
   notes?: string | null;
+  proposals?: MatchResultProposal[];
 }
 export interface Ranking {
   id: number;
@@ -73,6 +76,12 @@ export interface Ranking {
   losses: number;
   draws: number;
   winRate: number;
+  omwPercentage?: number;
+  gwPercentage?: number;
+  ogwPercentage?: number;
+  byesCount?: number;
+  isProvisional?: boolean;
+  tiebreakExplanation?: string;
 }
 export interface Reward {
   id: number;
@@ -244,4 +253,146 @@ export interface TournamentRegistrationDto {
   tournamentId: number;
   playerId: number;
   notes?: string;
+}
+
+export interface MatchResultProposal {
+  id: number;
+  playerAScore: number;
+  playerBScore: number;
+  status:
+    | "pending_confirmation"
+    | "confirmed"
+    | "disputed"
+    | "superseded"
+    | "resolved_by_organizer";
+  opponentResponse: "pending" | "accepted" | "rejected";
+  disputeReason?: string | null;
+  organizerResolutionReason?: string | null;
+  createdAt: string;
+}
+
+export interface SubmittedCardItem {
+  cardId: string;
+  name: string;
+  quantity: number;
+  role?: string;
+  supertype?: string;
+  setCode?: string;
+}
+
+export interface TournamentDeckSnapshot {
+  id: number;
+  tournamentId: number;
+  playerId: number;
+  userId?: number;
+  playerName?: string;
+  deckId?: number | null;
+  deckName: string;
+  formatId?: string;
+  ruleVersion: string;
+  cards: SubmittedCardItem[];
+  cardsSnapshot?: SubmittedCardItem[];
+  cardCount: number;
+  isLocked: boolean;
+  isValid: boolean;
+  validationErrors?: string[] | null;
+  submittedAt: string;
+  lockedAt?: string | null;
+}
+
+export interface RoundClockStatus {
+  tournamentId: number;
+  currentRound: number;
+  roundStartedAt: string | null;
+  roundDeadline: string | null;
+  roundDurationMinutes: number;
+  isRoundPaused: boolean;
+  pausedAt: string | null;
+  remainingSeconds: number;
+  isExpired: boolean;
+}
+
+export interface ExplainableStanding {
+  rank: number;
+  playerId: number;
+  playerName: string;
+  points: number;
+  wins: number;
+  losses: number;
+  draws: number;
+  byes: number;
+  winRate: number;
+  omwPercentage: number;
+  gwPercentage: number;
+  ogwPercentage: number;
+  isProvisional: boolean;
+  tiebreakExplanation?: string;
+}
+
+export interface ExplainableStandingsResponse {
+  tournamentId: number;
+  tournamentName: string;
+  currentRound: number;
+  totalRounds: number;
+  isFinished: boolean;
+  ruleVersion: string;
+  generatedAt: string;
+  standings: ExplainableStanding[];
+}
+
+export interface ActiveMatchCockpit {
+  matchId: number;
+  round: number;
+  tableNumber?: number | null;
+  opponentName?: string;
+  opponentPlayerId?: number;
+  status: string;
+  resultStatus: string;
+  myScore: number;
+  opponentScore: number;
+  pendingProposal?: {
+    proposalId: number;
+    proposedByMe: boolean;
+    playerAScore: number;
+    playerBScore: number;
+    status: string;
+    opponentResponse: string;
+    disputeReason?: string | null;
+  } | null;
+}
+
+export interface PlayerTournamentDashboard {
+  tournamentId: number;
+  tournamentName: string;
+  tournamentStatus: string;
+  currentRound: number;
+  totalRounds: number;
+  registrationStatus: string;
+  checkedIn: boolean;
+  isDropped: boolean;
+  roundStartedAt?: string | null;
+  roundDeadline?: string | null;
+  isRoundPaused: boolean;
+  remainingSeconds?: number | null;
+  deckStatus: {
+    isSubmitted: boolean;
+    isLocked: boolean;
+    isValid: boolean;
+    deckName?: string;
+    deckId?: number | null;
+    validationErrors?: string[] | null;
+  };
+  activeMatch?: ActiveMatchCockpit | null;
+  nextAction:
+    | "SUBMIT_DECK"
+    | "CHECK_IN"
+    | "WAIT_FOR_PAIRINGS"
+    | "PLAY_MATCH"
+    | "REPORT_SCORE"
+    | "CONFIRM_SCORE"
+    | "AWAIT_SCORE_CONFIRMATION"
+    | "DISPUTE_IN_PROGRESS"
+    | "WAIT_FOR_NEXT_ROUND"
+    | "TOURNAMENT_FINISHED"
+    | "PLAYER_DROPPED";
 }

@@ -25,8 +25,14 @@ import {
   ResetMatchDto,
   StartMatchDto,
 } from "./dto/match-operations.dto";
+import {
+  ProposeMatchResultDto,
+  ResolveMatchDisputeDto,
+  RespondMatchResultDto,
+} from "./dto/match-result-proposal.dto";
 import { UpdateMatchDto } from "./dto/update-match.dto";
 import { MatchPermissionGuard } from "./guards/match-permission.guard";
+import { MatchResultService } from "./match-result.service";
 import { MatchQueryDto, MatchService } from "./match.service";
 
 @ApiTags("matches")
@@ -34,7 +40,10 @@ import { MatchQueryDto, MatchService } from "./match.service";
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller("matches")
 export class MatchController {
-  constructor(private readonly matchService: MatchService) {}
+  constructor(
+    private readonly matchService: MatchService,
+    private readonly matchResultService: MatchResultService,
+  ) {}
 
   @Get("play-hub")
   getPlayHub(@CurrentUser() user: User) {
@@ -119,5 +128,44 @@ export class MatchController {
     @Param("tournamentId", ParseIntPipe) tournamentId: number,
   ) {
     return this.matchService.getPlayerMatches(tournamentId, playerId);
+  }
+
+  @Post(":id/propose-result")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(MatchPermissionGuard)
+  proposeResult(
+    @Param("id", ParseIntPipe) id: number,
+    @CurrentUser() user: User,
+    @Body() dto: ProposeMatchResultDto,
+  ) {
+    return this.matchResultService.proposeResult(id, user.id, dto);
+  }
+
+  @Post(":id/respond-result")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(MatchPermissionGuard)
+  respondResult(
+    @Param("id", ParseIntPipe) id: number,
+    @CurrentUser() user: User,
+    @Body() dto: RespondMatchResultDto,
+  ) {
+    return this.matchResultService.respondResult(id, user.id, dto);
+  }
+
+  @Post(":id/resolve-dispute")
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.ADMIN, UserRole.MODERATOR, UserRole.USER)
+  resolveDispute(
+    @Param("id", ParseIntPipe) id: number,
+    @CurrentUser() user: User,
+    @Body() dto: ResolveMatchDisputeDto,
+  ) {
+    return this.matchResultService.resolveDispute(id, user, dto);
+  }
+
+  @Get(":id/proposals")
+  @UseGuards(MatchPermissionGuard)
+  getProposals(@Param("id", ParseIntPipe) id: number) {
+    return this.matchResultService.getMatchProposals(id);
   }
 }

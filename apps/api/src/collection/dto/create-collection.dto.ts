@@ -13,10 +13,23 @@ export class CreateCollectionDto {
   @IsOptional()
   isPublic?: boolean;
 
-  @IsNumber()
-  userId: number;
-
   @IsString()
   @IsOptional()
   masterSetId?: string;
+
+  @IsString()
+  @IsOptional()
+  completionPolicy?: string;
+
+  /**
+   * Owner sent by existing clients.
+   *
+   * NOTE: accepted but never read — the owner comes from the access token, so
+   * the body cannot file a collection under someone else's account. It was a
+   * required field before, which meant any caller omitting it got a 400; it
+   * stays whitelisted so already-loaded pages keep working.
+   */
+  @IsNumber()
+  @IsOptional()
+  userId?: number;
 }

@@ -132,4 +132,127 @@ describe("RuleBasedParser", () => {
     assert.equal(results[0]?.success, true);
     assert.equal(results[1]?.success, true);
   });
+
+  it("parses self damage and opponent bench damage", () => {
+    const card: CardInput = {
+      id: "card-dmg-recoil",
+      name: "Electrode",
+      category: "Pokémon",
+      attacks: [
+        {
+          name: "Explosion",
+          effect:
+            "Ce Pokémon s'inflige 30 dégâts. Cette attaque inflige 10 dégâts à chacun des Pokémon de banc adverses.",
+        },
+      ],
+    };
+
+    const res = parser.parseCard(card);
+    assert.equal(res.success, true);
+    const effects = res.effects?.attacks?.["Explosion"]?.effects ?? [];
+    assert.ok(effects.some((e) => e.type === "DAMAGE" && e.target === "SELF"));
+    assert.ok(
+      effects.some(
+        (e) => e.type === "DAMAGE" && e.target === "ALL_OPPONENT_BENCH",
+      ),
+    );
+  });
+
+  it("parses discard energy effect", () => {
+    const card: CardInput = {
+      id: "card-discard",
+      name: "Dracaufeu",
+      category: "Pokémon",
+      attacks: [
+        {
+          name: "Lance-Flammes",
+          effect: "Défaussez une Énergie attachée à ce Pokémon.",
+        },
+      ],
+    };
+
+    const res = parser.parseCard(card);
+    assert.equal(res.success, true);
+    const effects = res.effects?.attacks?.["Lance-Flammes"]?.effects ?? [];
+    assert.ok(effects.some((e) => e.type === "DISCARD_ENERGY"));
+  });
+
+  it("parses search deck effect", () => {
+    const card: CardInput = {
+      id: "card-search",
+      name: "Pikachu",
+      category: "Pokémon",
+      attacks: [
+        {
+          name: "Appel aux Amis",
+          effect:
+            "Cherchez dans votre deck un Pokémon de base et placez-le sur votre banc. Mélangez ensuite votre deck.",
+        },
+      ],
+    };
+
+    const res = parser.parseCard(card);
+    assert.equal(res.success, true);
+    const effects = res.effects?.attacks?.["Appel aux Amis"]?.effects ?? [];
+    assert.ok(effects.some((e) => e.type === "SEARCH_DECK"));
+  });
+
+  it("parses prevent damage effect", () => {
+    const card: CardInput = {
+      id: "card-prevent",
+      name: "Onix",
+      category: "Pokémon",
+      attacks: [
+        {
+          name: "Armure",
+          effect:
+            "Pendant le prochain tour de votre adversaire, ce Pokémon ne subit aucun dégât.",
+        },
+      ],
+    };
+
+    const res = parser.parseCard(card);
+    assert.equal(res.success, true);
+    const effects = res.effects?.attacks?.["Armure"]?.effects ?? [];
+    assert.ok(effects.some((e) => e.type === "PREVENT_DAMAGE"));
+  });
+
+  it("parses switch pokemon effect", () => {
+    const card: CardInput = {
+      id: "card-switch",
+      name: "Doduo",
+      category: "Pokémon",
+      attacks: [
+        {
+          name: "Repli Rapide",
+          effect:
+            "Échangez votre Pokémon Actif avec l'un de vos Pokémon de banc.",
+        },
+      ],
+    };
+
+    const res = parser.parseCard(card);
+    assert.equal(res.success, true);
+    const effects = res.effects?.attacks?.["Repli Rapide"]?.effects ?? [];
+    assert.ok(effects.some((e) => e.type === "SWITCH_OWN_ACTIVE"));
+  });
+
+  it("parses remove special condition effect", () => {
+    const card: CardInput = {
+      id: "card-cure",
+      name: "Stari",
+      category: "Pokémon",
+      attacks: [
+        {
+          name: "Régénération",
+          effect: "Ce Pokémon guérit toutes les altérations de statut.",
+        },
+      ],
+    };
+
+    const res = parser.parseCard(card);
+    assert.equal(res.success, true);
+    const effects = res.effects?.attacks?.["Régénération"]?.effects ?? [];
+    assert.ok(effects.some((e) => e.type === "REMOVE_SPECIAL_CONDITION"));
+  });
 });

@@ -1,6 +1,6 @@
 import TCGdex from "@tcgdex/sdk";
 import express, { Request, Response } from "express";
-import { PokecardexService } from "./pokecardex.service";
+import { PokecardexService } from "./pokecardex.service.js";
 
 class TcgDexService {
   private tcgdex: TCGdex;
@@ -177,7 +177,7 @@ const port = process.env.PORT || 3005;
 const tcgDexService = new TcgDexService();
 const pokecardexService = new PokecardexService();
 
-app.get("/tcgdex/cards/:id", async (req: Request, res: Response) => {
+app.get("/tcgdex/cards/:id", async (req, res) => {
   try {
     const card = await tcgDexService.getCardById(req.params.id);
     res.json(card);
@@ -186,7 +186,7 @@ app.get("/tcgdex/cards/:id", async (req: Request, res: Response) => {
   }
 });
 
-app.get("/tcgdex/series", async (req: Request, res: Response) => {
+app.get("/tcgdex/series", async (req, res) => {
   try {
     const series = await tcgDexService.getSeries();
     res.json(series);
@@ -195,7 +195,7 @@ app.get("/tcgdex/series", async (req: Request, res: Response) => {
   }
 });
 
-app.get("/tcgdex/seriesDetails", async (req: Request, res: Response) => {
+app.get("/tcgdex/seriesDetails", async (req, res) => {
   try {
     const series = await tcgDexService.getSeriesDetails();
     res.json(series);
@@ -204,7 +204,7 @@ app.get("/tcgdex/seriesDetails", async (req: Request, res: Response) => {
   }
 });
 
-app.get("/tcgdex/series/:id", async (req: Request, res: Response) => {
+app.get("/tcgdex/series/:id", async (req, res) => {
   try {
     const series = await tcgDexService.getSeriesById(req.params.id);
     res.json(series);
@@ -213,7 +213,7 @@ app.get("/tcgdex/series/:id", async (req: Request, res: Response) => {
   }
 });
 
-app.get("/tcgdex/sets/:id", async (req: Request, res: Response) => {
+app.get("/tcgdex/sets/:id", async (req, res) => {
   try {
     const set = await tcgDexService.getSetById(req.params.id);
     res.json(set);
@@ -222,7 +222,7 @@ app.get("/tcgdex/sets/:id", async (req: Request, res: Response) => {
   }
 });
 
-app.get("/tcgdex/sets", async (req: Request, res: Response) => {
+app.get("/tcgdex/sets", async (req, res) => {
   try {
     const set = await tcgDexService.getSets();
     res.json(set);
@@ -231,7 +231,7 @@ app.get("/tcgdex/sets", async (req: Request, res: Response) => {
   }
 });
 
-app.get("/tcgdex/setsDetails", async (req: Request, res: Response) => {
+app.get("/tcgdex/setsDetails", async (req, res) => {
   try {
     const sets = await tcgDexService.getAllSetsDetails();
     res.json(sets);
@@ -240,7 +240,7 @@ app.get("/tcgdex/setsDetails", async (req: Request, res: Response) => {
   }
 });
 
-app.get("/tcgdex/setCard/:id", async (req: Request, res: Response) => {
+app.get("/tcgdex/setCard/:id", async (req, res) => {
   try {
     const setWithCards = await tcgDexService.getSetWithCards(req.params.id);
     res.json(setWithCards);
@@ -249,7 +249,7 @@ app.get("/tcgdex/setCard/:id", async (req: Request, res: Response) => {
   }
 });
 
-app.get("/tcgdex/bloc/:id", async (req: Request, res: Response) => {
+app.get("/tcgdex/bloc/:id", async (req, res) => {
   try {
     const bloc = await tcgDexService.getBloc(req.params.id);
     res.json(bloc);
@@ -258,7 +258,7 @@ app.get("/tcgdex/bloc/:id", async (req: Request, res: Response) => {
   }
 });
 
-app.get("/tcgdex/cardsDetailed", async (req: Request, res: Response) => {
+app.get("/tcgdex/cardsDetailed", async (req, res) => {
   try {
     const cards = await tcgDexService.getAllCardsDetails();
     res.json(cards);
@@ -276,17 +276,14 @@ app.get("/pokecardex/series", async (_req: Request, res: Response) => {
   }
 });
 
-app.get(
-  "/pokecardex/series/:id/sealed",
-  async (req: Request, res: Response) => {
-    try {
-      const items = await pokecardexService.scrapeSeriesItems(req.params.id);
-      res.json(items);
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
-    }
-  },
-);
+app.get("/pokecardex/series/:id/sealed", async (req, res) => {
+  try {
+    const items = await pokecardexService.scrapeSeriesItems(req.params.id);
+    res.json(items);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 pokecardexService.init().catch((err) => {
   console.warn(

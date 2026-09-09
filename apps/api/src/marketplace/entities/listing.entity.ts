@@ -18,6 +18,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from "typeorm";
+import { CollectionItem } from "src/collection-item/entities/collection-item.entity";
 import { Currency } from "../../common/enums/currency";
 import { OrderItem } from "./order-item.entity";
 
@@ -27,6 +28,7 @@ import { OrderItem } from "./order-item.entity";
 @Index(["pokemonCard", "currency", "cardState"])
 @Index(["sealedProduct", "currency"])
 @Index(["productKind"])
+@Index(["inventoryItem"])
 export class Listing {
   @PrimaryGeneratedColumn()
   id: number;
@@ -49,6 +51,15 @@ export class Listing {
   @JoinColumn({ name: "sealed_product_id" })
   sealedProduct?: SealedProduct | null;
 
+  /** Linked physical collection item when inventory-backed. */
+  @ManyToOne(() => CollectionItem, { nullable: true, onDelete: "SET NULL" })
+  @JoinColumn({ name: "inventory_item_id" })
+  inventoryItem?: CollectionItem | null;
+
+  /** Flag indicating whether this listing is backed by verified physical collection inventory. */
+  @Column({ type: "boolean", default: false })
+  isInventoryBacked: boolean;
+
   @Column("decimal", { precision: 10, scale: 2 })
   price: number;
 
@@ -57,6 +68,24 @@ export class Listing {
 
   @Column({ type: "int", default: 1 })
   quantityAvailable: number;
+
+  /**
+   * Copies of {@link inventoryItem} this listing currently holds reserved.
+   *
+   * It covers the offered quantity plus any copy committed to a pending order,
+   * so every lifecycle transition can reserve or release an exact delta instead
+   * of guessing from the offered quantity.
+   */
+  @Column({ type: "int", default: 0 })
+  inventoryReservedQuantity: number;
+
+  /**
+   * Number of reservation changes already applied to physical stock. It makes
+   * every inventory movement of this listing uniquely identifiable, so repeated
+   * deactivate/reactivate cycles each get their own durable record.
+   */
+  @Column({ type: "int", default: 0 })
+  reservationRevision: number;
 
   @Column("decimal", { precision: 10, scale: 2, default: 0 })
   shippingCost: number;
@@ -81,6 +110,18 @@ export class Listing {
 
   @Column({ nullable: true })
   description?: string;
+
+  /** Real item photo URLs uploaded as evidence by seller (MKT-03). */
+  @Column({ type: "jsonb", nullable: true })
+  photoUrls?: string[] | null;
+
+  /** Structured defect tags (e.g. EDGE_WEAR, SURFACE_SCRATCH, CREASE) (MKT-03). */
+  @Column({ type: "jsonb", nullable: true })
+  defects?: string[] | null;
+
+  /** Detailed disclosure of condition flaws or defects (MKT-03). */
+  @Column({ type: "text", nullable: true })
+  defectDescription?: string | null;
 
   @Column({ nullable: true, default: Languages.FR })
   language?: Languages;

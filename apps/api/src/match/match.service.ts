@@ -511,15 +511,31 @@ export class MatchService {
   /**
    * Reports final match scores and computes winner or draw status.
    *
+   * A match still `SCHEDULED` in the tournament's current round is started on
+   * the spot: an organizer keeping score on paper reports the result of a game
+   * that already happened, and forcing an explicit "start" click first only
+   * produced a dead end where the score form was offered but the submission
+   * rejected.
+   *
    * @param id Match ID.
    * @param reportScoreDto Score payload.
    * @returns Updated Match.
+   * @throws BadRequestException If the match is not open for scoring.
    */
   async reportScore(
     id: number,
     reportScoreDto: ReportScoreDto,
+    outerManager?: EntityManager,
   ): Promise<Match> {
-    const result = await this.dataSource.transaction<{
+    const run = <T>(work: (manager: EntityManager) => Promise<T>): Promise<T> =>
+      outerManager
+        ? work(outerManager)
+        : this.dataSource.transaction((manager) => work(manager));
+
+    // A caller already holding a transaction — a mutual score confirmation, for
+    // instance — reports the official result inside it, so a rejection here
+    // rolls its own writes back instead of leaving a confirmation without one.
+    const result = await run<{
       match: Match;
       tournamentFinished: boolean;
     }>(async (manager: EntityManager) => {
@@ -554,10 +570,22 @@ export class MatchService {
         });
       }
 
-      if (match.status !== MatchStatus.IN_PROGRESS) {
+      const isStartableNow =
+        match.status === MatchStatus.SCHEDULED &&
+        match.tournament?.status === TournamentStatus.IN_PROGRESS &&
+        match.round === match.tournament.currentRound &&
+        Boolean(match.playerA) &&
+        Boolean(match.playerB);
+
+      if (match.status !== MatchStatus.IN_PROGRESS && !isStartableNow) {
         throw new BadRequestException(
           "Seuls les matches en cours peuvent recevoir des scores",
         );
+      }
+
+      if (isStartableNow) {
+        match.status = MatchStatus.IN_PROGRESS;
+        match.startedAt = new Date();
       }
 
       const { playerAScore, playerBScore, isForfeit, notes } = reportScoreDto;
@@ -622,37 +650,50 @@ export class MatchService {
       return { match: savedMatch, tournamentFinished };
     });
 
-    if (result.tournamentFinished) {
-      const rankings = await this.rankingService.updateTournamentRankings(
-        result.match.tournament.id,
-      );
-      const tournament = await this.tournamentRepository.findOne({
-        where: { id: result.match.tournament.id },
-        relations: [
-          "registrations",
-          "registrations.player",
-          "registrations.player.user",
-        ],
-      });
-      const rankByPlayer = new Map(
-        rankings.map((ranking) => [ranking.player.id, ranking.rank]),
-      );
-
-      if (tournament) {
-        this.eventEmitter.emit("tournament.finished", {
-          tournamentId: tournament.id,
-          name: tournament.name,
-          rankings: tournament.registrations
-            .filter((registration) => registration.player?.user?.id)
-            .map((registration) => ({
-              userId: registration.player.user.id,
-              rank: rankByPlayer.get(registration.player.id) ?? 0,
-            })),
-        });
-      }
+    // Ranking updates and notifications open their own connection, so they run
+    // only once the score transaction has committed. A caller that owns the
+    // transaction runs them itself through applyPostScoreEffects.
+    if (!outerManager && result.tournamentFinished) {
+      await this.applyPostScoreEffects(result.match.tournament.id);
     }
 
     return result.match;
+  }
+
+  /**
+   * Runs the effects a finished tournament triggers, after its score committed.
+   *
+   * They touch rankings and notifications through their own connections, so a
+   * caller holding the score transaction must call this once it has committed.
+   *
+   * @param tournamentId - Tournament whose final standings must be published.
+   */
+  async applyPostScoreEffects(tournamentId: number): Promise<void> {
+    const rankings =
+      await this.rankingService.updateTournamentRankings(tournamentId);
+    const tournament = await this.tournamentRepository.findOne({
+      where: { id: tournamentId },
+      relations: [
+        "registrations",
+        "registrations.player",
+        "registrations.player.user",
+      ],
+    });
+    if (!tournament) return;
+
+    const rankByPlayer = new Map(
+      rankings.map((ranking) => [ranking.player.id, ranking.rank]),
+    );
+    this.eventEmitter.emit("tournament.finished", {
+      tournamentId: tournament.id,
+      name: tournament.name,
+      rankings: tournament.registrations
+        .filter((registration) => registration.player?.user?.id)
+        .map((registration) => ({
+          userId: registration.player.user.id,
+          rank: rankByPlayer.get(registration.player.id) ?? 0,
+        })),
+    });
   }
 
   /**

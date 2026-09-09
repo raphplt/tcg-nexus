@@ -16,14 +16,17 @@ import { TournamentOrganizer } from "../tournament/entities/tournament-organizer
 import { TournamentRegistration } from "../tournament/entities/tournament-registration.entity";
 import { SwissPairingModule } from "../tournament/swiss-pairing.module";
 import { User } from "../user/entities/user.entity";
+import { AuditModule } from "../audit/audit.module";
 import { CasualMatchService } from "./casual/casual-match.service";
 import { MatchmakingService } from "./casual/matchmaking.service";
 import { CasualMatchController } from "./casual-match.controller";
 import { CasualMatchSession } from "./entities/casual-match-session.entity";
+import { MatchResultProposal } from "./entities/match-result-proposal.entity";
 import { Match } from "./entities/match.entity";
 import { OnlineMatchSession } from "./entities/online-match-session.entity";
 import { TrainingMatchSession } from "./entities/training-match-session.entity";
 import { MatchPermissionGuard } from "./guards/match-permission.guard";
+import { MatchResultService } from "./match-result.service";
 import { MatchController } from "./match.controller";
 import { MatchGateway } from "./match.gateway";
 import { MatchService } from "./match.service";
@@ -38,10 +41,12 @@ import { TrainingMatchController } from "./training-match.controller";
   imports: [
     ConfigModule,
     AuthModule,
+    AuditModule,
     RankingModule,
     TypeOrmModule.forFeature([
       CardTranslation,
       Match,
+      MatchResultProposal,
       OnlineMatchSession,
       TrainingMatchSession,
       CasualMatchSession,
@@ -75,9 +80,11 @@ import { TrainingMatchController } from "./training-match.controller";
     TrainingAiService,
     MatchPermissionGuard,
     MatchGateway,
+    MatchResultService,
   ],
   exports: [
     MatchService,
+    MatchResultService,
     MatchOnlineService,
     TrainingMatchService,
     CasualMatchService,
