@@ -29,6 +29,11 @@ import { PublicTournamentDataInterceptor } from "./interceptors/public-tournamen
 import { BracketService } from "./services/bracket.service";
 import { ExternalTournamentSyncService } from "./services/external-tournament-sync.service";
 import { SeedingService } from "./services/seeding.service";
+import { Card } from "../card/entities/card.entity";
+import { DeckFormat } from "../deck-format/entities/deck-format.entity";
+import { RankedMatchHistory } from "../ranking/entities/ranked-match-history.entity";
+import { TournamentDeckSnapshotRevision } from "./entities/tournament-deck-snapshot-revision.entity";
+import { DeckLegalityService } from "./services/deck-legality.service";
 import { TournamentDeckSnapshotService } from "./services/tournament-deck-snapshot.service";
 import { TournamentIncidentService } from "./services/tournament-incident.service";
 import { TournamentOrchestrationService } from "./services/tournament-orchestration.service";
@@ -49,12 +54,16 @@ import { TournamentService } from "./tournament.service";
       TournamentNotification,
       RegistrationPayment,
       TournamentDeckSnapshot,
+      TournamentDeckSnapshotRevision,
       Player,
       User,
       Match,
       MatchResultProposal,
       Ranking,
       Deck,
+      DeckFormat,
+      Card,
+      RankedMatchHistory,
     ]),
     RankingModule,
     MatchModule,
@@ -68,6 +77,7 @@ import { TournamentService } from "./tournament.service";
     SeedingService,
     TournamentOrchestrationService,
     TournamentStateService,
+    DeckLegalityService,
     TournamentDeckSnapshotService,
     TournamentRoundClockService,
     TournamentIncidentService,

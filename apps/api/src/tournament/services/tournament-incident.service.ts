@@ -1,11 +1,12 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { In, MoreThan, Repository } from "typeorm";
 import { AuditService } from "../../audit/audit.service";
 import {
   MatchResultStatus,
@@ -324,7 +325,11 @@ export class TournamentIncidentService {
     tournamentId: number,
     user: User,
     dto: ScoreCorrectionApplyDto,
-  ): Promise<{ match: Match; message: string }> {
+  ): Promise<{
+    match: Match;
+    downstreamMatchIds: number[];
+    message: string;
+  }> {
     const isOrganizer = await this.organizerRepository.findOne({
       where: {
         tournament: { id: tournamentId },
@@ -348,6 +353,18 @@ export class TournamentIncidentService {
       throw new NotFoundException("Match introuvable dans ce tournoi.");
     }
 
+    // Later matches already played were paired from the result being corrected;
+    // this correction does not re-pair them, so an operator must acknowledge it.
+    const downstream = await this.findDownstreamMatches(tournamentId, match);
+    if (downstream.length && !dto.acknowledgeDownstreamImpact) {
+      throw new ConflictException({
+        code: "DOWNSTREAM_MATCHES_AFFECTED",
+        message:
+          "Des matches ultérieurs de ces joueurs sont déjà joués : confirmez la correction pour l'appliquer sans réapparier.",
+        downstreamMatchIds: downstream.map((entry) => entry.id),
+      });
+    }
+
     const beforeState = {
       playerAScore: match.playerAScore,
       playerBScore: match.playerBScore,
@@ -369,6 +386,13 @@ export class TournamentIncidentService {
 
     await this.matchRepository.save(match);
 
+    // The rating this result already produced is reversed before the corrected
+    // outcome is rated, so a correction cannot leave the old ELO applied.
+    const reversedRatings = await this.rankingService.reverseMatchElo(
+      match.id,
+      `Score correction by ${actorName}`,
+    );
+
     // Recalculate tournament rankings with updated score
     await this.rankingService.updateTournamentRankings(tournamentId);
 
@@ -385,13 +409,59 @@ export class TournamentIncidentService {
         playerAScore: dto.playerAScore,
         playerBScore: dto.playerBScore,
         winnerId: match.winner?.id ?? null,
+        reversedRatings,
+        downstreamMatchIds: downstream.map((entry) => entry.id),
+        downstreamAcknowledged: !!dto.acknowledgeDownstreamImpact,
       },
     });
 
     return {
       match,
-      message: "Score corrigé et classements recalculés avec succès.",
+      downstreamMatchIds: downstream.map((entry) => entry.id),
+      message: downstream.length
+        ? "Score corrigé et classements recalculés ; les matches ultérieurs déjà joués n'ont pas été réappariés."
+        : "Score corrigé et classements recalculés avec succès.",
     };
+  }
+
+  /**
+   * Finds later matches of the same players that this correction cannot re-pair.
+   *
+   * @param tournamentId - Tournament the correction applies to.
+   * @param match - Match whose result is being corrected.
+   * @returns Matches in later rounds that are already played or running.
+   */
+  private async findDownstreamMatches(
+    tournamentId: number,
+    match: Match,
+  ): Promise<Match[]> {
+    const playerIds = [match.playerA?.id, match.playerB?.id].filter(
+      (id): id is number => !!id,
+    );
+    if (!playerIds.length) return [];
+
+    const later = await this.matchRepository.find({
+      where: [
+        {
+          tournament: { id: tournamentId },
+          round: MoreThan(match.round ?? 0),
+          playerA: { id: In(playerIds) },
+        },
+        {
+          tournament: { id: tournamentId },
+          round: MoreThan(match.round ?? 0),
+          playerB: { id: In(playerIds) },
+        },
+      ],
+      relations: ["playerA", "playerB"],
+    });
+
+    return later.filter(
+      (entry) =>
+        entry.status === MatchStatus.FINISHED ||
+        entry.status === MatchStatus.IN_PROGRESS ||
+        entry.status === MatchStatus.FORFEIT,
+    );
   }
 
   /**

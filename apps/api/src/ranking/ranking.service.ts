@@ -1,6 +1,6 @@
 import { HttpStatus, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { In, Repository } from "typeorm";
+import { In, IsNull, Repository } from "typeorm";
 import { Match, MatchStatus } from "../match/entities/match.entity";
 import { Player } from "../player/entities/player.entity";
 import {
@@ -624,7 +624,9 @@ export class RankingService {
     const matchIds = sortedMatches.map((match) => match.id);
     const existingHistory = matchIds.length
       ? await this.rankedHistoryRepository.find({
-          where: { matchId: In(matchIds) },
+          // A reversed rating no longer counts as applied, so a corrected
+          // result is rated again from its new outcome.
+          where: { matchId: In(matchIds), reversedAt: IsNull() },
           select: { matchId: true },
         })
       : [];
@@ -1036,6 +1038,48 @@ export class RankingService {
     await this.rankedHistoryRepository.save(history);
 
     return { ...result, delta };
+  }
+
+  /**
+   * Reverses the rating a match already applied, before it is rated again.
+   *
+   * The inverse delta is applied to both players rather than restoring their
+   * former values, because later matches may have moved their rating since.
+   *
+   * @param matchId - Match whose rating must be undone.
+   * @param reason - Why the rating is being reversed.
+   * @returns Number of rating entries reversed.
+   */
+  async reverseMatchElo(matchId: number, reason: string): Promise<number> {
+    const applied = await this.rankedHistoryRepository.find({
+      where: { matchId, reversedAt: IsNull() },
+      relations: ["winner", "loser"],
+    });
+
+    let reversed = 0;
+    for (const entry of applied) {
+      if (!entry.winner || !entry.loser) continue;
+      const [winnerPlayer, loserPlayer] = await Promise.all([
+        this.playerRepository.findOne({
+          where: { user: { id: entry.winner.id } },
+        }),
+        this.playerRepository.findOne({
+          where: { user: { id: entry.loser.id } },
+        }),
+      ]);
+      if (!winnerPlayer || !loserPlayer) continue;
+
+      winnerPlayer.elo = (winnerPlayer.elo ?? 1000) - entry.delta;
+      loserPlayer.elo = (loserPlayer.elo ?? 1000) + entry.delta;
+      await this.playerRepository.save([winnerPlayer, loserPlayer]);
+
+      entry.reversedAt = new Date();
+      entry.reversalReason = reason;
+      await this.rankedHistoryRepository.save(entry);
+      reversed++;
+    }
+
+    return reversed;
   }
 
   async getEloForUser(userId: number): Promise<number> {

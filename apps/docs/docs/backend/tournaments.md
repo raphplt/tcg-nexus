@@ -60,3 +60,13 @@ Module complet pour créer, gérer et suivre les tournois (états, brackets, ins
 
 - `JwtAuthGuard` + `RolesGuard` globaux ; `TournamentOrganizerGuard` et `TournamentOrganizerRoles` gèrent owner/admin/modérateur.
 - `TournamentParticipantGuard` sécurise les inscriptions.
+
+## Deck legality, score confirmation and corrections
+
+A submitted list is checked against the catalog and the rule data actually stored: a card the catalog does not know is refused, more than four copies of anything but basic energy is refused, and a card the rule set marks illegal is refused. When a rule cannot be read — an unknown rule set, a card without legality data, a missing format — the list is recorded as `unverified` rather than valid. `legalityStatus` therefore has three values, and `isValid` means "every checked rule passed".
+
+Every submission is appended to `tournament_deck_snapshot_revision` with the legality decided for it, so a correction never erases what a player registered or what the rules said at the time. An organizer can settle a list with `POST /tournaments/:id/deck-snapshots/:snapshotId/legality`, which records who decided, why, and what the computed status was; a new submission clears that decision. `GET /tournaments/:id/deck-snapshots/:snapshotId/revisions` returns the history.
+
+Score confirmation is one transaction: the match row is locked, the proposal is confirmed and the official result is reported inside it, so a score the tournament rejects leaves no confirmed proposal behind. Concurrent proposals on one match are serialized by the same lock, and only one stays pending. Dispute arbitration follows the same path. Effects that need their own connection — final standings and notifications — run after that transaction commits, through `applyPostScoreEffects`.
+
+A score correction refuses to run when later matches of the same players are already played or running, unless the operator acknowledges it with `acknowledgeDownstreamImpact`; the affected match identifiers are returned by the preview, by the correction and in its audit record. This release does not re-pair those matches, and says so rather than implying it did. The rating the corrected match applied is reversed before the corrected outcome is rated: `ranked_match_history` keeps the row, marks it `reversedAt` with its reason, and a reversed rating no longer counts as applied.

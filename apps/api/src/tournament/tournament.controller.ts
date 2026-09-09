@@ -40,7 +40,10 @@ import {
 } from "./guards";
 import { PublicTournamentDataInterceptor } from "./interceptors/public-tournament-data.interceptor";
 import { RankingService } from "../ranking/ranking.service";
-import { SubmitTournamentDeckDto } from "./dto/tournament-deck-snapshot.dto";
+import {
+  OverrideDeckLegalityDto,
+  SubmitTournamentDeckDto,
+} from "./dto/tournament-deck-snapshot.dto";
 import {
   DropPlayerDto,
   RoundControlAction,
@@ -479,6 +482,35 @@ export class TournamentController {
     @CurrentUser() user: User,
   ) {
     return this.snapshotService.getTournamentDeckSnapshots(id, user);
+  }
+
+  /**
+   * Records an organizer decision on a submitted list's legality (TRN-02).
+   */
+  @Post(":id/deck-snapshots/:snapshotId/legality")
+  @HttpCode(HttpStatus.OK)
+  async overrideDeckLegality(
+    @Param("id", ParseIntPipe) id: number,
+    @Param("snapshotId", ParseIntPipe) snapshotId: number,
+    @CurrentUser() user: User,
+    @Body() dto: OverrideDeckLegalityDto,
+  ) {
+    return this.snapshotService.overrideLegality(id, snapshotId, user, {
+      legalityStatus: dto.legalityStatus,
+      reason: dto.reason,
+    });
+  }
+
+  /**
+   * Lists every submission recorded for a deck snapshot (TRN-02).
+   */
+  @Get(":id/deck-snapshots/:snapshotId/revisions")
+  @UseGuards(TournamentVisibilityGuard)
+  async getDeckSnapshotRevisions(
+    @Param("id", ParseIntPipe) _id: number,
+    @Param("snapshotId", ParseIntPipe) snapshotId: number,
+  ) {
+    return this.snapshotService.getRevisions(snapshotId);
   }
 
   // --- TRN-03: Round Clock & Controls ---

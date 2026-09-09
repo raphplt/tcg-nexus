@@ -15,7 +15,7 @@ Corrections are delivered as independently tested commits. No block closes an en
 | 3c | Lossless CSV round-trip and compensating bulk undo | Implemented; verification below |
 | 4 | Checkout recovery, cancellation/payment races and safe operational expiration | Implemented; verification below |
 | 5 | Durable event contracts, consumer deduplication and notification failure recovery | Implemented; verification below |
-| 6 | Tournament legality, score confirmation and downstream correction policy | Pending |
+| 6 | Tournament legality, score confirmation and downstream correction policy | Implemented; verification below |
 | 7 | Fresh/legacy database migrations and lossless inventory backfill | Pending |
 | 8 | Remaining inventory semantics, valuation, client integration, localization and acceptance documentation | Pending |
 
@@ -193,3 +193,22 @@ provider, and the notification acceptance documentation of block 8.
 ### Verification
 
 The PostgreSQL suite `apps/api/test/product-maturity-events.e2e-spec.ts` covers a buyer claim reaching the seller it names, delivery and return events naming their recipient, exactly-once delivery across a redelivery, an event nobody consumes staying unprocessed, a failed delivery retrying and then succeeding, and the migration's up/down DDL. Unit coverage was updated for the propagating listener and the dispatcher's consumer check.
+
+
+## Block 6 — tournament legality and corrections
+
+This sub-block addresses A12.
+
+- Deck legality is decided from the catalog and the stored rule data: an unknown card is refused — the audited defect accepted 60 copies of a fabricated one — as are more than four copies of anything but basic energy and cards the rule set marks illegal. A rule that cannot be read leaves the list `unverified`; missing data is never presented as verified validity.
+- Every submission is appended to `tournament_deck_snapshot_revision` with its computed legality, and an organizer can settle a list through a recorded override that states who decided and why. A new submission supersedes that decision.
+- Proposal, confirmation and arbitration run inside one transaction that locks the match row: the official result is reported in it, so a rejected score leaves no confirmed proposal, and concurrent proposals cannot both stay pending. Effects needing their own connection run after the commit.
+- A score correction refuses to run when later matches of the same players are already played or running, unless the operator acknowledges the impact; the affected matches are returned by the preview, by the correction and in its audit record. Re-pairing is explicitly not performed.
+- The rating a corrected match applied is reversed before the corrected outcome is rated: the history row is kept and marked reversed with its reason, and a reversed rating no longer counts as applied.
+
+Out of scope here and still open: automatic re-pairing of downstream matches
+after a correction, complete tournament format rule sets beyond the checks
+listed above, and the tournament acceptance evidence of block 8.
+
+### Verification
+
+The PostgreSQL suite `apps/api/test/product-maturity-tournament.e2e-spec.ts` covers the fabricated card, an unknown rule set, rating reversal and its idempotence, concurrent proposals on one match, a confirmation committing with its official result, a rejected result leaving no confirmed proposal, and the migration's up/down DDL. `deck-legality.service.spec.ts` adds 9 unit tests for the rule checks, and the incident suite covers the downstream refusal and the acknowledged correction.

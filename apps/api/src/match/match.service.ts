@@ -525,8 +525,17 @@ export class MatchService {
   async reportScore(
     id: number,
     reportScoreDto: ReportScoreDto,
+    outerManager?: EntityManager,
   ): Promise<Match> {
-    const result = await this.dataSource.transaction<{
+    const run = <T>(work: (manager: EntityManager) => Promise<T>): Promise<T> =>
+      outerManager
+        ? work(outerManager)
+        : this.dataSource.transaction((manager) => work(manager));
+
+    // A caller already holding a transaction — a mutual score confirmation, for
+    // instance — reports the official result inside it, so a rejection here
+    // rolls its own writes back instead of leaving a confirmation without one.
+    const result = await run<{
       match: Match;
       tournamentFinished: boolean;
     }>(async (manager: EntityManager) => {
@@ -641,37 +650,50 @@ export class MatchService {
       return { match: savedMatch, tournamentFinished };
     });
 
-    if (result.tournamentFinished) {
-      const rankings = await this.rankingService.updateTournamentRankings(
-        result.match.tournament.id,
-      );
-      const tournament = await this.tournamentRepository.findOne({
-        where: { id: result.match.tournament.id },
-        relations: [
-          "registrations",
-          "registrations.player",
-          "registrations.player.user",
-        ],
-      });
-      const rankByPlayer = new Map(
-        rankings.map((ranking) => [ranking.player.id, ranking.rank]),
-      );
-
-      if (tournament) {
-        this.eventEmitter.emit("tournament.finished", {
-          tournamentId: tournament.id,
-          name: tournament.name,
-          rankings: tournament.registrations
-            .filter((registration) => registration.player?.user?.id)
-            .map((registration) => ({
-              userId: registration.player.user.id,
-              rank: rankByPlayer.get(registration.player.id) ?? 0,
-            })),
-        });
-      }
+    // Ranking updates and notifications open their own connection, so they run
+    // only once the score transaction has committed. A caller that owns the
+    // transaction runs them itself through applyPostScoreEffects.
+    if (!outerManager && result.tournamentFinished) {
+      await this.applyPostScoreEffects(result.match.tournament.id);
     }
 
     return result.match;
+  }
+
+  /**
+   * Runs the effects a finished tournament triggers, after its score committed.
+   *
+   * They touch rankings and notifications through their own connections, so a
+   * caller holding the score transaction must call this once it has committed.
+   *
+   * @param tournamentId - Tournament whose final standings must be published.
+   */
+  async applyPostScoreEffects(tournamentId: number): Promise<void> {
+    const rankings =
+      await this.rankingService.updateTournamentRankings(tournamentId);
+    const tournament = await this.tournamentRepository.findOne({
+      where: { id: tournamentId },
+      relations: [
+        "registrations",
+        "registrations.player",
+        "registrations.player.user",
+      ],
+    });
+    if (!tournament) return;
+
+    const rankByPlayer = new Map(
+      rankings.map((ranking) => [ranking.player.id, ranking.rank]),
+    );
+    this.eventEmitter.emit("tournament.finished", {
+      tournamentId: tournament.id,
+      name: tournament.name,
+      rankings: tournament.registrations
+        .filter((registration) => registration.player?.user?.id)
+        .map((registration) => ({
+          userId: registration.player.user.id,
+          rank: rankByPlayer.get(registration.player.id) ?? 0,
+        })),
+    });
   }
 
   /**

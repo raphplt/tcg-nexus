@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   NotFoundException,
 } from "@nestjs/common";
+import { MatchResultProposal } from "./entities/match-result-proposal.entity";
 import { MatchResultService } from "./match-result.service";
 import {
   MatchResultStatus,
@@ -10,7 +11,7 @@ import {
   ProposalStatus,
 } from "../common/enums/match-result-status";
 import { UserRole } from "../common/enums/user";
-import { MatchStatus } from "./entities/match.entity";
+import { Match, MatchStatus } from "./entities/match.entity";
 
 describe("MatchResultService", () => {
   let service: MatchResultService;
@@ -36,6 +37,8 @@ describe("MatchResultService", () => {
     resultStatus: MatchResultStatus.UNREPORTED,
   } as any;
 
+  let manager: Record<string, jest.Mock>;
+
   beforeEach(() => {
     matchRepository = {
       findOne: jest.fn(),
@@ -54,9 +57,35 @@ describe("MatchResultService", () => {
       reportScore: jest
         .fn()
         .mockResolvedValue({ id: 100, status: MatchStatus.FINISHED }),
+      applyPostScoreEffects: jest.fn().mockResolvedValue(undefined),
     };
     auditService = {
       record: jest.fn().mockResolvedValue({ id: 1 }),
+    };
+
+    // Proposals, confirmations and arbitrations run inside one transaction, so
+    // the manager stands in for the repositories they write through.
+    manager = {
+      findOne: jest.fn(async (entity: unknown, options: unknown) =>
+        entity === Match
+          ? matchRepository.findOne(options)
+          : entity === MatchResultProposal
+            ? proposalRepository.findOne(options)
+            : organizerRepository.findOne(options),
+      ),
+      findOneOrFail: jest.fn(async (entity: unknown, options: unknown) => {
+        const found =
+          entity === Match
+            ? await matchRepository.findOne(options)
+            : await proposalRepository.findOne(options);
+        if (!found) throw new Error("Entity not found");
+        return found;
+      }),
+      create: jest.fn((_entity: unknown, data: unknown) => ({
+        id: 55,
+        ...(data as Record<string, unknown>),
+      })),
+      save: jest.fn(async (_entity: unknown, data: unknown) => data),
     };
 
     service = new MatchResultService(
@@ -65,6 +94,7 @@ describe("MatchResultService", () => {
       organizerRepository,
       matchService,
       auditService,
+      { transaction: (work: (m: unknown) => Promise<unknown>) => work(manager) } as never,
     );
   });
 
@@ -82,7 +112,8 @@ describe("MatchResultService", () => {
       expect(result.playerAScore).toBe(2);
       expect(result.playerBScore).toBe(1);
       expect(result.status).toBe(ProposalStatus.PENDING_CONFIRMATION);
-      expect(matchRepository.save).toHaveBeenCalledWith(
+      expect(manager.save).toHaveBeenCalledWith(
+        Match,
         expect.objectContaining({ resultStatus: MatchResultStatus.PROPOSED }),
       );
     });
@@ -111,11 +142,16 @@ describe("MatchResultService", () => {
 
       expect(res.proposal.status).toBe(ProposalStatus.CONFIRMED);
       expect(res.proposal.opponentResponse).toBe(OpponentResponse.ACCEPTED);
-      expect(matchService.reportScore).toHaveBeenCalledWith(100, {
-        playerAScore: 2,
-        playerBScore: 0,
-        notes: expect.stringContaining("Score confirmé mutuellement"),
-      });
+      // The official score is reported inside the confirmation's transaction.
+      expect(matchService.reportScore).toHaveBeenCalledWith(
+        100,
+        {
+          playerAScore: 2,
+          playerBScore: 0,
+          notes: expect.stringContaining("Score confirmé mutuellement"),
+        },
+        manager,
+      );
     });
 
     it("should reject validation by proposer themselves", async () => {
@@ -167,16 +203,21 @@ describe("MatchResultService", () => {
         reason: "Judge verification of slip",
       });
 
-      expect(matchService.reportScore).toHaveBeenCalledWith(100, {
-        playerAScore: 2,
-        playerBScore: 1,
-        notes: expect.stringContaining("Arbitrage"),
-      });
+      expect(matchService.reportScore).toHaveBeenCalledWith(
+        100,
+        {
+          playerAScore: 2,
+          playerBScore: 1,
+          notes: expect.stringContaining("Arbitrage"),
+        },
+        manager,
+      );
       expect(auditService.record).toHaveBeenCalledWith(
         expect.objectContaining({
           action: "RESOLVE_MATCH_DISPUTE",
           reason: "Judge verification of slip",
         }),
+        manager,
       );
     });
   });

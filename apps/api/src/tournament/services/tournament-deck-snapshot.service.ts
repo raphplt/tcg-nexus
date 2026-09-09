@@ -18,6 +18,7 @@ import {
   TournamentDeckSnapshotResponseDto,
 } from "../dto/tournament-deck-snapshot.dto";
 import {
+  DeckLegalityStatus,
   SnapshotCardItem,
   TournamentDeckSnapshot,
 } from "../entities/tournament-deck-snapshot.entity";
@@ -27,6 +28,8 @@ import {
   TournamentRegistration,
 } from "../entities/tournament-registration.entity";
 import { Tournament, TournamentStatus } from "../entities/tournament.entity";
+import { TournamentDeckSnapshotRevision } from "../entities/tournament-deck-snapshot-revision.entity";
+import { DeckLegalityService } from "./deck-legality.service";
 
 /**
  * Service managing tournament deck list snapshots and access-control visibility (TRN-02).
@@ -46,8 +49,93 @@ export class TournamentDeckSnapshotService {
     private readonly deckRepository: Repository<Deck>,
     @InjectRepository(TournamentOrganizer)
     private readonly organizerRepository: Repository<TournamentOrganizer>,
+    @InjectRepository(TournamentDeckSnapshotRevision)
+    private readonly revisionRepository: Repository<TournamentDeckSnapshotRevision>,
+    private readonly deckLegality: DeckLegalityService,
     private readonly auditService: AuditService,
   ) {}
+
+  /**
+   * Records an organizer decision over the computed legality of a list (TRN-02).
+   *
+   * The computed status and its reasons are kept; the override states who
+   * accepted or refused the list and why, so an unverifiable rule can be
+   * settled by a judge without the system claiming it verified one.
+   *
+   * @param tournamentId - Tournament the list belongs to.
+   * @param snapshotId - Deck snapshot being decided.
+   * @param user - Organizer or administrator making the decision.
+   * @param decision - Accepted status and its justification.
+   */
+  async overrideLegality(
+    tournamentId: number,
+    snapshotId: number,
+    user: User,
+    decision: { legalityStatus: DeckLegalityStatus; reason: string },
+  ): Promise<TournamentDeckSnapshotResponseDto> {
+    const isOrganizer = await this.organizerRepository.findOne({
+      where: {
+        tournament: { id: tournamentId },
+        user: { id: user.id },
+        isActive: true,
+      },
+    });
+    if (user.role !== UserRole.ADMIN && !isOrganizer) {
+      throw new ForbiddenException(
+        "Seul un organisateur actif ou un administrateur peut statuer sur une liste.",
+      );
+    }
+    if (decision.legalityStatus === DeckLegalityStatus.UNVERIFIED) {
+      throw new BadRequestException(
+        "Une décision d'organisateur doit accepter ou refuser la liste.",
+      );
+    }
+
+    const snapshot = await this.snapshotRepository.findOne({
+      where: { id: snapshotId, tournament: { id: tournamentId } },
+      relations: ["player", "player.user", "user", "deck"],
+    });
+    if (!snapshot) {
+      throw new NotFoundException("Liste de deck introuvable pour ce tournoi.");
+    }
+
+    const previousStatus = snapshot.legalityStatus;
+    snapshot.legalityStatus = decision.legalityStatus;
+    snapshot.isValid = decision.legalityStatus === DeckLegalityStatus.VALID;
+    snapshot.overriddenByUserId = user.id;
+    snapshot.overrideReason = decision.reason;
+    snapshot.overriddenAt = new Date();
+    await this.snapshotRepository.save(snapshot);
+
+    await this.auditService.record({
+      actorId: user.id,
+      actorRole: user.role,
+      targetType: "TOURNAMENT_DECK_SNAPSHOT",
+      targetId: String(snapshot.id),
+      action: "OVERRIDE_DECK_LEGALITY",
+      reason: decision.reason,
+      beforeState: { legalityStatus: previousStatus },
+      afterState: {
+        legalityStatus: decision.legalityStatus,
+        revision: snapshot.revision,
+      },
+    });
+
+    return this.mapToResponseDto(snapshot, true);
+  }
+
+  /**
+   * Lists every submission recorded for a deck snapshot, newest first.
+   */
+  async getRevisions(
+    snapshotId: number,
+  ): Promise<TournamentDeckSnapshotRevision[]> {
+    return this.revisionRepository.find({
+      where: { snapshot: { id: snapshotId } },
+      relations: ["submittedBy"],
+      order: { revision: "DESC" },
+    });
+  }
 
   /**
    * Submits or updates a deck snapshot for an enrolled tournament player.
@@ -174,23 +262,23 @@ export class TournamentDeckSnapshotService {
       );
     }
 
-    const totalCards = cards.reduce(
-      (sum, item) => sum + (item.quantity || 1),
-      0,
-    );
-    const validationErrors: string[] = [];
-    let isValid = true;
-
-    if (totalCards !== 60) {
-      isValid = false;
-      validationErrors.push(
-        `Un deck au format officiel doit comporter exactement 60 cartes (actuellement ${totalCards}).`,
-      );
-    }
-
     const formatIdNum = dto.formatId
       ? Number(dto.formatId) || null
       : (deckEntity?.format?.id ?? null);
+    const ruleVersion =
+      dto.ruleVersion || snapshot?.ruleVersion || "POKEMON_STANDARD_2026";
+
+    // Legality is decided from the catalog and the rule data available: an
+    // unknown card is refused, and a rule that cannot be read leaves the list
+    // unverified instead of being reported as legal.
+    const legality = await this.deckLegality.validate(
+      cards,
+      ruleVersion,
+      formatIdNum,
+    );
+    const totalCards = legality.totalCards;
+    const validationErrors = [...legality.errors, ...legality.unknowns];
+    const isValid = legality.status === DeckLegalityStatus.VALID;
 
     if (!snapshot) {
       snapshot = this.snapshotRepository.create({
@@ -200,10 +288,12 @@ export class TournamentDeckSnapshotService {
         deck: deckEntity,
         deckName,
         formatId: formatIdNum,
-        ruleVersion: dto.ruleVersion || "POKEMON_STANDARD_2026",
+        ruleVersion,
         cardsSnapshot: cards,
         isLocked: false,
         isValid,
+        legalityStatus: legality.status,
+        revision: 1,
         validationErrors: validationErrors.length ? validationErrors : null,
         submittedAt: now,
       });
@@ -211,9 +301,15 @@ export class TournamentDeckSnapshotService {
       snapshot.deck = deckEntity ?? snapshot.deck;
       snapshot.deckName = deckName;
       snapshot.formatId = formatIdNum ?? snapshot.formatId;
-      snapshot.ruleVersion = dto.ruleVersion || snapshot.ruleVersion;
+      snapshot.ruleVersion = ruleVersion;
       snapshot.cardsSnapshot = cards;
       snapshot.isValid = isValid;
+      snapshot.legalityStatus = legality.status;
+      snapshot.revision = (snapshot.revision ?? 1) + 1;
+      // A new submission supersedes an organizer decision on the previous list.
+      snapshot.overriddenByUserId = null;
+      snapshot.overrideReason = null;
+      snapshot.overriddenAt = null;
       snapshot.validationErrors = validationErrors.length
         ? validationErrors
         : null;
@@ -221,6 +317,20 @@ export class TournamentDeckSnapshotService {
     }
 
     await this.snapshotRepository.save(snapshot);
+
+    // Every submission is kept, so a correction never erases what a player
+    // originally registered or what the rules said about it.
+    await this.revisionRepository.save(
+      this.revisionRepository.create({
+        snapshot,
+        revision: snapshot.revision,
+        submittedBy: { id: userId } as User,
+        cardsSnapshot: cards,
+        legalityStatus: legality.status,
+        validationErrors: validationErrors.length ? validationErrors : null,
+        ruleVersion,
+      }),
+    );
 
     await this.auditService.record({
       actorId: userId,
@@ -232,6 +342,8 @@ export class TournamentDeckSnapshotService {
         tournamentId,
         playerId: player.id,
         totalCards,
+        legalityStatus: legality.status,
+        revision: snapshot.revision,
         isValid,
       },
     });

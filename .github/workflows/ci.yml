@@ -69,7 +69,7 @@ jobs:
 
             - name: Run tournament E2E tests on ephemeral PostgreSQL
               working-directory: apps/api
-              run: npm run test:e2e:postgres -- test/tournament.e2e-spec.ts test/tournament-concurrency.e2e-spec.ts test/tournament-operations.e2e-spec.ts
+              run: npm run test:e2e:postgres -- test/tournament.e2e-spec.ts test/tournament-concurrency.e2e-spec.ts test/tournament-operations.e2e-spec.ts test/product-maturity-tournament.e2e-spec.ts
 
             - name: Run marketplace, collection, settlement and migration E2E tests on ephemeral PostgreSQL
               working-directory: apps/api

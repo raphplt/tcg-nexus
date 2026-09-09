@@ -1,3 +1,4 @@
+import { DeckLegalityStatus } from "../entities/tournament-deck-snapshot.entity";
 import { BadRequestException, ForbiddenException } from "@nestjs/common";
 import { DeckVisibilityPolicy } from "../../common/enums/deck-visibility-policy";
 import { UserRole } from "../../common/enums/user";
@@ -14,6 +15,9 @@ describe("TournamentDeckSnapshotService", () => {
   let deckRepository: any;
   let organizerRepository: any;
   let auditService: any;
+
+  let revisionRepository: any;
+  let deckLegality: any;
 
   beforeEach(() => {
     snapshotRepository = {
@@ -41,6 +45,21 @@ describe("TournamentDeckSnapshotService", () => {
     auditService = {
       record: jest.fn().mockResolvedValue({ id: 1 }),
     };
+    revisionRepository = {
+      find: jest.fn().mockResolvedValue([]),
+      create: jest.fn().mockImplementation((dto) => ({ id: 1, ...dto })),
+      save: jest.fn().mockImplementation((entity) => Promise.resolve(entity)),
+    };
+    // Legality comes from the catalog service; these tests cover the snapshot
+    // lifecycle, and the rule checks have their own suite.
+    deckLegality = {
+      validate: jest.fn().mockResolvedValue({
+        status: DeckLegalityStatus.VALID,
+        errors: [],
+        unknowns: [],
+        totalCards: 60,
+      }),
+    };
 
     service = new TournamentDeckSnapshotService(
       snapshotRepository,
@@ -49,6 +68,8 @@ describe("TournamentDeckSnapshotService", () => {
       playerRepository,
       deckRepository,
       organizerRepository,
+      revisionRepository,
+      deckLegality,
       auditService,
     );
   });

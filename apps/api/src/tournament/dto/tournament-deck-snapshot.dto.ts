@@ -1,12 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import {
   IsArray,
+  IsIn,
   IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
   ValidateNested,
 } from "class-validator";
+import { DeckLegalityStatus } from "../entities/tournament-deck-snapshot.entity";
 import { Type } from "class-transformer";
 
 export class SubmittedCardItemDto {
@@ -125,4 +127,21 @@ export class TournamentDeckSnapshotResponseDto {
 
   @ApiPropertyOptional()
   lockedAt?: Date | null;
+}
+
+/**
+ * Organizer decision over the computed legality of a submitted list (TRN-02).
+ */
+export class OverrideDeckLegalityDto {
+  @ApiProperty({
+    description: "Legality the organizer accepts for this list",
+    enum: [DeckLegalityStatus.VALID, DeckLegalityStatus.INVALID],
+  })
+  @IsIn([DeckLegalityStatus.VALID, DeckLegalityStatus.INVALID])
+  legalityStatus: DeckLegalityStatus;
+
+  @ApiProperty({ description: "Justification recorded with the decision" })
+  @IsString()
+  @IsNotEmpty()
+  reason: string;
 }

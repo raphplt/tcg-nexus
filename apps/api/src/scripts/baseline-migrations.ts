@@ -198,6 +198,12 @@ const PROBES: MigrationProbe[] = [
     probe: `SELECT 1 FROM information_schema.tables
             WHERE table_name = 'processed_event'`,
   },
+  {
+    name: "DeckLegalityAndCorrections1789400000000",
+    timestamp: 1789400000000,
+    probe: `SELECT 1 FROM information_schema.tables
+            WHERE table_name = 'tournament_deck_snapshot_revision'`,
+  },
 ];
 
 /**

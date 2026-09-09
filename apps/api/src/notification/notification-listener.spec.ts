@@ -213,7 +213,29 @@ describe("NotificationListener", () => {
     expect(emailService.sendCritical).toHaveBeenCalledTimes(1);
   });
 
-  it("propagates a failed notification so its event can be retried", async () => {
+  it("propagates a failed delivery of an event the dispatcher retries", async () => {
+    notificationService.createNotification.mockRejectedValueOnce(
+      new Error("boom"),
+    );
+
+    await expect(
+      listener.onOrderRefundCreated({
+        eventId: "outbox-9",
+        aggregateType: "order",
+        aggregateId: "42",
+        orderId: 42,
+        buyerUserId: 1,
+        refundOperationId: "op-1",
+        amount: 10,
+        currency: "EUR",
+        reason: null,
+      }),
+    ).rejects.toThrow("boom");
+  });
+
+  it("reports a failed direct delivery instead of rejecting into a void", async () => {
+    // Nothing retries a directly emitted event, so its failure is logged
+    // rather than left as an unhandled rejection.
     notificationService.createNotification.mockRejectedValueOnce(
       new Error("boom"),
     );
@@ -224,7 +246,7 @@ describe("NotificationListener", () => {
         followedUserId: 2,
         followerName: "Alice",
       }),
-    ).rejects.toThrow("boom");
+    ).resolves.toBeUndefined();
   });
 
   it("claims each marketplace delivery under its own consumer", async () => {

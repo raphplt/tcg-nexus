@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { Type } from "class-transformer";
 import {
+  IsBoolean,
   IsEnum,
   IsInt,
   IsNotEmpty,
@@ -124,4 +125,13 @@ export class ScoreCorrectionPreviewDto {
 /**
  * DTO for applying an audited score correction.
  */
-export class ScoreCorrectionApplyDto extends ScoreCorrectionPreviewDto {}
+export class ScoreCorrectionApplyDto extends ScoreCorrectionPreviewDto {
+  @ApiPropertyOptional({
+    description:
+      "Acknowledges that later matches already played will not be re-paired by this correction",
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  acknowledgeDownstreamImpact?: boolean;
+}

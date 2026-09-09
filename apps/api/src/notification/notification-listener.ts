@@ -171,131 +171,169 @@ export class NotificationListener {
     );
   }
 
-  @OnEvent("tournament.started", { suppressErrors: false })
-  async onTournamentStarted(payload: TournamentStartedPayload): Promise<void> {
-    const link = `/tournaments/${payload.tournamentId}`;
-    for (const userId of payload.participantUserIds) {
-      await this.safeCreate(
-        userId,
-        "tournament.started",
-        { link, tournamentId: payload.tournamentId },
-        { name: payload.name },
+  /**
+   * Runs a directly emitted notification, reporting a failure rather than
+   * rejecting into a void.
+   *
+   * Events dispatched through the outbox propagate instead, because the
+   * dispatcher retries them and counts what never reached its recipient.
+   */
+  private async deliverDirect(
+    eventName: string,
+    work: () => Promise<void>,
+  ): Promise<void> {
+    try {
+      await work();
+    } catch (err) {
+      this.logger.error(
+        `Delivery of ${eventName} failed: ${(err as Error).message}`,
       );
-      await this.sendEmailToUser(userId, "tournament-started", {
-        name: payload.name,
-        link,
-      });
     }
   }
 
-  @OnEvent("tournament.finished", { suppressErrors: false })
+  @OnEvent("tournament.started")
+  async onTournamentStarted(payload: TournamentStartedPayload): Promise<void> {
+    await this.deliverDirect("tournament.started", async () => {
+      const link = `/tournaments/${payload.tournamentId}`;
+      for (const userId of payload.participantUserIds) {
+        await this.safeCreate(
+          userId,
+          "tournament.started",
+          { link, tournamentId: payload.tournamentId },
+          { name: payload.name },
+        );
+        await this.sendEmailToUser(userId, "tournament-started", {
+          name: payload.name,
+          link,
+        });
+      }
+    });
+  }
+
+  @OnEvent("tournament.finished")
   async onTournamentFinished(
     payload: TournamentFinishedPayload,
   ): Promise<void> {
-    const link = `/tournaments/${payload.tournamentId}`;
-    for (const entry of payload.rankings) {
-      await this.safeCreate(
-        entry.userId,
-        "tournament.finished",
-        { link, tournamentId: payload.tournamentId, rank: entry.rank },
-        { name: payload.name },
-      );
-      await this.sendEmailToUser(entry.userId, "tournament-finished", {
-        name: payload.name,
-        link,
-        rank: entry.rank,
-      });
-    }
+    await this.deliverDirect("tournament.finished", async () => {
+      const link = `/tournaments/${payload.tournamentId}`;
+      for (const entry of payload.rankings) {
+        await this.safeCreate(
+          entry.userId,
+          "tournament.finished",
+          { link, tournamentId: payload.tournamentId, rank: entry.rank },
+          { name: payload.name },
+        );
+        await this.sendEmailToUser(entry.userId, "tournament-finished", {
+          name: payload.name,
+          link,
+          rank: entry.rank,
+        });
+      }
+    });
   }
 
-  @OnEvent("tournament.match_reminder", { suppressErrors: false })
+  @OnEvent("tournament.match_reminder")
   async onTournamentMatchReminder(
     payload: TournamentMatchReminderPayload,
   ): Promise<void> {
-    const link = `/tournaments/${payload.tournamentId}/matches/${payload.matchId}`;
-    await this.safeCreate(payload.userId, "tournament.match_reminder", {
-      link,
-      tournamentId: payload.tournamentId,
-      matchId: payload.matchId,
+    await this.deliverDirect("tournament.match_reminder", async () => {
+      const link = `/tournaments/${payload.tournamentId}/matches/${payload.matchId}`;
+      await this.safeCreate(payload.userId, "tournament.match_reminder", {
+        link,
+        tournamentId: payload.tournamentId,
+        matchId: payload.matchId,
+      });
+      await this.sendEmailToUser(payload.userId, "match-reminder", { link });
     });
-    await this.sendEmailToUser(payload.userId, "match-reminder", { link });
   }
 
-  @OnEvent("match.ready", { suppressErrors: false })
+  @OnEvent("match.ready")
   async onMatchReady(payload: MatchReadyPayload): Promise<void> {
-    const link = `/tournaments/${payload.tournamentId}/matches/${payload.matchId}`;
-    const data = {
-      link,
-      tournamentId: payload.tournamentId,
-      matchId: payload.matchId,
-    };
-    if (payload.playerAUserId) {
-      await this.safeCreate(payload.playerAUserId, "match.ready", data);
-    }
-    if (payload.playerBUserId) {
-      await this.safeCreate(payload.playerBUserId, "match.ready", data);
-    }
+    await this.deliverDirect("match.ready", async () => {
+      const link = `/tournaments/${payload.tournamentId}/matches/${payload.matchId}`;
+      const data = {
+        link,
+        tournamentId: payload.tournamentId,
+        matchId: payload.matchId,
+      };
+      if (payload.playerAUserId) {
+        await this.safeCreate(payload.playerAUserId, "match.ready", data);
+      }
+      if (payload.playerBUserId) {
+        await this.safeCreate(payload.playerBUserId, "match.ready", data);
+      }
+    });
   }
 
-  @OnEvent("badge.unlocked", { suppressErrors: false })
+  @OnEvent("badge.unlocked")
   async onBadgeUnlocked(payload: BadgeUnlockedPayload): Promise<void> {
-    await this.safeCreate(
-      payload.userId,
-      "badge.unlocked",
-      { link: "/profile", badgeCode: payload.badgeCode },
-      { badgeName: payload.badgeName },
-    );
+    await this.deliverDirect("badge.unlocked", async () => {
+      await this.safeCreate(
+        payload.userId,
+        "badge.unlocked",
+        { link: "/profile", badgeCode: payload.badgeCode },
+        { badgeName: payload.badgeName },
+      );
+    });
   }
 
-  @OnEvent("follow.created", { suppressErrors: false })
+  @OnEvent("follow.created")
   async onFollowCreated(payload: FollowCreatedPayload): Promise<void> {
-    await this.safeCreate(
-      payload.followedUserId,
-      "follow.created",
-      { link: `/users/${payload.followerUserId}` },
-      { followerName: payload.followerName },
-    );
+    await this.deliverDirect("follow.created", async () => {
+      await this.safeCreate(
+        payload.followedUserId,
+        "follow.created",
+        { link: `/users/${payload.followerUserId}` },
+        { followerName: payload.followerName },
+      );
+    });
   }
 
-  @OnEvent("follow.removed", { suppressErrors: false })
+  @OnEvent("follow.removed")
   async onFollowRemoved(payload: FollowRemovedPayload): Promise<void> {
-    await this.safeCreate(
-      payload.followedUserId,
-      "follow.removed",
-      { link: `/users/${payload.followerUserId}` },
-      { followerName: payload.followerName },
-    );
+    await this.deliverDirect("follow.removed", async () => {
+      await this.safeCreate(
+        payload.followedUserId,
+        "follow.removed",
+        { link: `/users/${payload.followerUserId}` },
+        { followerName: payload.followerName },
+      );
+    });
   }
 
-  @OnEvent("marketplace.sale", { suppressErrors: false })
+  @OnEvent("marketplace.sale")
   async onMarketplaceSale(payload: MarketplaceSalePayload): Promise<void> {
-    const link = "/marketplace/sales";
-    const amount = this.formatAmount(payload.total, payload.currency);
-    await this.safeCreate(
-      payload.sellerUserId,
-      "marketplace.sale",
-      { link, orderId: payload.orderId, total: payload.total },
-      { amount },
-    );
-    await this.sendEmailToUser(payload.sellerUserId, "marketplace-sale", {
-      orderId: payload.orderId,
-      total: payload.total,
-      link,
+    await this.deliverDirect("marketplace.sale", async () => {
+      const link = "/marketplace/sales";
+      const amount = this.formatAmount(payload.total, payload.currency);
+      await this.safeCreate(
+        payload.sellerUserId,
+        "marketplace.sale",
+        { link, orderId: payload.orderId, total: payload.total },
+        { amount },
+      );
+      await this.sendEmailToUser(payload.sellerUserId, "marketplace-sale", {
+        orderId: payload.orderId,
+        total: payload.total,
+        link,
+      });
     });
   }
 
-  @OnEvent("order.shipped", { suppressErrors: false })
+  @OnEvent("order.shipped")
   async onOrderShipped(payload: OrderShippedPayload): Promise<void> {
-    const link = `/orders/${payload.orderId}`;
-    await this.safeCreate(payload.buyerUserId, "order.shipped", {
-      link,
-      orderId: payload.orderId,
-      trackingNumber: payload.trackingNumber,
-    });
-    await this.sendEmailToUser(payload.buyerUserId, "order-shipped", {
-      orderId: payload.orderId,
-      trackingNumber: payload.trackingNumber,
-      link,
+    await this.deliverDirect("order.shipped", async () => {
+      const link = `/orders/${payload.orderId}`;
+      await this.safeCreate(payload.buyerUserId, "order.shipped", {
+        link,
+        orderId: payload.orderId,
+        trackingNumber: payload.trackingNumber,
+      });
+      await this.sendEmailToUser(payload.buyerUserId, "order-shipped", {
+        orderId: payload.orderId,
+        trackingNumber: payload.trackingNumber,
+        link,
+      });
     });
   }
 
