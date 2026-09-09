@@ -38,7 +38,7 @@ Distincte des decks dont on est l'auteur : permet de sauvegarder en bibliothèqu
 
 ## Analyse IA
 
-- `POST /deck/:id/analyze` (public) : analyse un deck et retourne des recommandations (`AnalyzeDeckResultDto`), via le module `ai` (`POST /ai/analyzeDeck`).
+- `POST /deck/:id/analyze` (public) : analyse un deck existant et retourne des métriques de composition et recommandations (`AnalyzeDeckResultDto`). Pour une analyse autonome ou sur une liste brute d'identifiants de cartes, voir aussi le module dédié `ai` (`POST /ai/analyzeDeck`).
 
 ## Formats & cartes
 

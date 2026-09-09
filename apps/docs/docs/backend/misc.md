@@ -56,7 +56,7 @@ Recherche unifiée à travers le catalogue (cartes, sets…), avec suggestions.
 
 ## Analyse IA (`/ai`)
 
-- `POST /ai/analyzeDeck` : analyse un deck et retourne des recommandations. Backend de `POST /deck/:id/analyze`, voir [Decks](./decks).
+- `POST /ai/analyzeDeck` : analyse un ensemble de cartes ou un deck (`AnalyzeDeckDto`) et retourne une évaluation de composition, distribution d'énergie et synergies détectées (`DeckAnalysisResponseDto`).
 
 ## Suivi social (`/users/:id/follow`)
 

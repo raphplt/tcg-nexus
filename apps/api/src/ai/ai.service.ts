@@ -8,9 +8,12 @@ import { In, Repository } from "typeorm";
 import { Card } from "../card/entities/card.entity";
 import { PokemonCardsType } from "../common/enums/pokemonCardsType";
 import { Deck } from "../deck/entities/deck.entity";
-import { AnalyzeDeckDto } from "./dto/analyze-deck.dto";
 import { DeckAnalysisResponseDto } from "./dto/analyze-deck-response.dto";
+import { AnalyzeDeckDto } from "./dto/analyze-deck.dto";
 
+/**
+ * Service evaluating deck balance, type curves, and tactical card synergies.
+ */
 @Injectable()
 export class AiService {
   constructor(
@@ -23,15 +26,16 @@ export class AiService {
   /**
    * Analyzes deck composition (type breakdown, energy curve, duplicates, and synergies).
    *
-   * @param dto Deck analysis payload containing deckId or cardIds.
-   * @returns Detailed analysis response DTO.
+   * @param dto Deck analysis payload containing either a persisted deckId or a list of cardIds.
+   * @returns Comprehensive analysis response including warnings and deck-building recommendations.
+   * @throws NotFoundException When the requested deckId cannot be found in the database.
+   * @throws BadRequestException When neither deckId nor cardIds are provided, or when no matching cards are found.
    */
   async analyzeDeck(dto: AnalyzeDeckDto): Promise<DeckAnalysisResponseDto> {
     let cards: { card: Card; qty: number }[] = [];
     let deckId: number | undefined;
 
     if (dto.deckId) {
-      // Analyze an existing deck
       const deck = await this.deckRepo.findOne({
         where: { id: dto.deckId },
         relations: ["cards", "cards.card", "cards.card.pokemonDetails"],
@@ -42,9 +46,11 @@ export class AiService {
       }
 
       deckId = deck.id;
-      cards = deck.cards?.map((dc) => ({ card: dc.card, qty: dc.qty })) || [];
+      cards =
+        deck.cards
+          ?.filter((dc) => Boolean(dc.card))
+          .map((dc) => ({ card: dc.card, qty: dc.qty || 1 })) || [];
     } else if (dto.cardIds && dto.cardIds.length > 0) {
-      // Analyze a list of card IDs
       const pokemonCards = await this.pokemonCardRepo.find({
         where: { id: In(dto.cardIds) },
         relations: ["pokemonDetails"],
@@ -54,7 +60,6 @@ export class AiService {
         throw new BadRequestException("No cards found");
       }
 
-      // Count card occurrences
       const cardCount = new Map<string, number>();
       dto.cardIds.forEach((id) => {
         cardCount.set(id, (cardCount.get(id) || 0) + 1);
@@ -73,13 +78,20 @@ export class AiService {
     return this.performAnalysis(cards, deckId);
   }
 
+  /**
+   * Computes distributions, detects duplicate copies, identifies archetype synergies,
+   * and formulates deck-building recommendations based on standard competitive rules.
+   *
+   * @param cards Array of cards and their respective quantities.
+   * @param deckId Optional identifier of the persisted deck being analyzed.
+   * @returns Complete breakdown of deck statistics and actionable advice.
+   */
   private performAnalysis(
     cards: { card: Card; qty: number }[],
     deckId?: number,
   ): DeckAnalysisResponseDto {
     const totalCards = cards.reduce((sum, c) => sum + c.qty, 0);
 
-    // Type distribution
     const typeMap = new Map<string, number>();
     cards.forEach(({ card, qty }) => {
       const types = card.pokemonDetails?.types;
@@ -94,11 +106,10 @@ export class AiService {
       ([type, count]) => ({
         type,
         count,
-        percentage: Math.round((count / totalCards) * 100),
+        percentage: totalCards > 0 ? Math.round((count / totalCards) * 100) : 0,
       }),
     );
 
-    // Category distribution (Pokémon, Trainer, Energy)
     const categoryMap = new Map<string, number>();
     cards.forEach(({ card, qty }) => {
       const category = card.pokemonDetails?.category || "Unknown";
@@ -109,11 +120,10 @@ export class AiService {
       ([category, count]) => ({
         category,
         count,
-        percentage: Math.round((count / totalCards) * 100),
+        percentage: totalCards > 0 ? Math.round((count / totalCards) * 100) : 0,
       }),
     );
 
-    // Energy cost distribution for attacks
     const costMap = new Map<number, number>();
     cards.forEach(({ card, qty }) => {
       const attacks = card.pokemonDetails?.attacks;
@@ -129,11 +139,10 @@ export class AiService {
       .map(([cost, count]) => ({
         cost,
         count,
-        percentage: Math.round((count / totalCards) * 100),
+        percentage: totalCards > 0 ? Math.round((count / totalCards) * 100) : 0,
       }))
       .sort((a, b) => a.cost - b.cost);
 
-    // Duplicate detection
     const duplicates = cards
       .filter((c) => c.qty > 1)
       .map((c) => ({
@@ -142,21 +151,22 @@ export class AiService {
         count: c.qty,
       }));
 
-    // Simple synergy detection
     const synergies = this.detectSynergies(cards);
 
-    // Warnings and recommendations
     const warnings: string[] = [];
     const recommendations: string[] = [];
 
+    // Canonical Pokémon TCG deck construction requires exactly 60 cards
     if (totalCards < 60) {
       warnings.push(`Deck incomplet: ${totalCards}/60 cartes`);
     } else if (totalCards > 60) {
       warnings.push(`Deck trop grand: ${totalCards}/60 cartes`);
     }
 
+    // Competitive guideline: balanced decks typically feature 30-40% energy cards
     const energyCount = categoryMap.get(PokemonCardsType.Energy) || 0;
-    const energyPercentage = (energyCount / totalCards) * 100;
+    const energyPercentage =
+      totalCards > 0 ? (energyCount / totalCards) * 100 : 0;
 
     if (energyPercentage < 30) {
       recommendations.push(
@@ -168,6 +178,7 @@ export class AiService {
       );
     }
 
+    // A minimal core of 10 trainer cards is recommended to maintain hand flow and consistency
     const trainerCount = categoryMap.get(PokemonCardsType.Trainer) || 0;
     if (trainerCount < 10) {
       recommendations.push(
@@ -188,12 +199,17 @@ export class AiService {
     };
   }
 
+  /**
+   * Identifies tactical synergies including shared energy types, evolution lines, and trainer cores.
+   *
+   * @param cards Evaluated card pool with quantities.
+   * @returns Detected synergy groupings.
+   */
   private detectSynergies(
     cards: { card: Card; qty: number }[],
   ): DeckAnalysisResponseDto["synergies"] {
     const synergies: DeckAnalysisResponseDto["synergies"] = [];
 
-    // Energy type synergy
     const typeGroups = new Map<string, string[]>();
     cards.forEach(({ card }) => {
       const types = card.pokemonDetails?.types;
@@ -217,7 +233,6 @@ export class AiService {
       }
     });
 
-    // Evolution synergy
     const evolutionChains = new Map<string, string[]>();
     cards.forEach(({ card }) => {
       const evolveFrom = card.pokemonDetails?.evolveFrom;
@@ -243,7 +258,6 @@ export class AiService {
       }
     });
 
-    // Trainer support synergy
     const trainerCards = cards.filter(
       (c) => c.card.pokemonDetails?.category === PokemonCardsType.Trainer,
     );

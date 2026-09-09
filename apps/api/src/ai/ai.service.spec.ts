@@ -365,5 +365,19 @@ describe("AiService", () => {
       expect(trainerSynergy).toBeDefined();
       expect(trainerSynergy?.cardIds).toHaveLength(5);
     });
+
+    it("should gracefully handle an empty deck without NaN percentages", async () => {
+      mockDeckRepo.findOne.mockResolvedValue({ id: 10, cards: [] });
+
+      const result = await service.analyzeDeck({ deckId: 10 });
+
+      expect(result.totalCards).toBe(0);
+      expect(result.typeDistribution).toEqual([]);
+      expect(result.categoryDistribution).toEqual([]);
+      expect(result.warnings).toContain("Deck incomplet: 0/60 cartes");
+      expect(result.recommendations).toContain(
+        "Considérez ajouter plus de cartes énergie (recommandé: 30-40%)",
+      );
+    });
   });
 });

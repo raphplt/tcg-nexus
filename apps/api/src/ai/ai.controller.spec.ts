@@ -1,19 +1,14 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { AiController } from "./ai.controller";
 import { AiService } from "./ai.service";
-import { AnalyzeDeckDto } from "./dto/analyze-deck.dto";
 import { DeckAnalysisResponseDto } from "./dto/analyze-deck-response.dto";
+import { AnalyzeDeckDto } from "./dto/analyze-deck.dto";
 
 describe("AiController", () => {
   let controller: AiController;
 
   const mockAiService = {
     analyzeDeck: jest.fn(),
-    create: jest.fn(),
-    findAll: jest.fn(),
-    findOne: jest.fn(),
-    update: jest.fn(),
-    remove: jest.fn(),
   };
 
   beforeEach(async () => {
