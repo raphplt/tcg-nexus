@@ -2,6 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { UserService } from "../user/user.service";
 import { EmailNotificationService } from "./email-notification.service";
 import { NotificationService } from "./notification.service";
+import { EventConsumerService } from "../outbox/event-consumer.service";
 import { NotificationListener } from "./notification-listener";
 import { NotificationI18nService } from "./notification-i18n.service";
 import { MailI18nService } from "../mail/mail-i18n.service";
@@ -13,6 +14,10 @@ jest.mock("bcrypt", () => ({
 
 describe("NotificationListener", () => {
   let listener: NotificationListener;
+  let consumers: {
+    claims: string[];
+    runOnce: jest.Mock;
+  };
   const notificationService = {
     createNotification: jest.fn().mockResolvedValue({ id: 1 }),
   };
@@ -28,6 +33,15 @@ describe("NotificationListener", () => {
     notificationService.createNotification.mockResolvedValue({ id: 1 });
     emailService.sendCritical.mockResolvedValue(undefined);
     userService.findById.mockResolvedValue({ id: 1, email: "user@test.com" });
+    consumers = {
+      claims: [] as string[],
+      runOnce: jest.fn(async (consumer: string, _event, work: () => Promise<void>) => {
+        consumers.claims.push(consumer);
+        await work();
+        return true;
+      }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         NotificationListener,
@@ -36,6 +50,7 @@ describe("NotificationListener", () => {
         { provide: UserService, useValue: userService },
         MailI18nService,
         NotificationI18nService,
+        { provide: EventConsumerService, useValue: consumers },
       ],
     }).compile();
     listener = module.get<NotificationListener>(NotificationListener);
@@ -198,16 +213,58 @@ describe("NotificationListener", () => {
     expect(emailService.sendCritical).toHaveBeenCalledTimes(1);
   });
 
-  it("swallows createNotification errors", async () => {
+  it("propagates a failed notification so its event can be retried", async () => {
     notificationService.createNotification.mockRejectedValueOnce(
       new Error("boom"),
     );
+
     await expect(
       listener.onFollowCreated({
         followerUserId: 1,
         followedUserId: 2,
         followerName: "Alice",
       }),
-    ).resolves.toBeUndefined();
+    ).rejects.toThrow("boom");
+  });
+
+  it("claims each marketplace delivery under its own consumer", async () => {
+    await listener.onOrderItemClaimCreated({
+      eventId: "outbox-1",
+      aggregateType: "support_ticket",
+      aggregateId: "7",
+      ticketId: 7,
+      orderId: 42,
+      orderItemId: 9,
+      claimCategory: "damaged_item",
+      buyerId: 1,
+      sellerUserId: 2,
+    });
+
+    expect(consumers.claims).toEqual([
+      "notification:order.item_claim_created",
+    ]);
+    expect(notificationService.createNotification).toHaveBeenCalledWith(
+      2,
+      expect.any(String),
+      expect.any(String),
+      "order.item_claim_created",
+      expect.objectContaining({ orderId: 42, ticketId: 7 }),
+      expect.objectContaining({ key: "order.item_claim_created" }),
+    );
+  });
+
+  it("refuses to deliver an event that carries no recipient", async () => {
+    await expect(
+      listener.onOrderItemDelivered({
+        eventId: "outbox-2",
+        aggregateType: "order_item",
+        aggregateId: "9",
+        orderId: 42,
+        orderItemId: 9,
+        sellerUserId: null,
+        buyerId: 1,
+        deliveredAt: new Date(),
+      }),
+    ).rejects.toThrow("no recipient");
   });
 });

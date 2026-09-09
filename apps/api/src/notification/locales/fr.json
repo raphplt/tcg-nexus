@@ -50,5 +50,9 @@
   "order.item_claim_created": {
     "title": "Réclamation ouverte",
     "body": "Une réclamation a été ouverte pour un article de la commande #{orderId}."
+  },
+  "payment.compensation_required": {
+    "title": "Remboursement dû",
+    "body": "Un paiement de {amount} pour la commande #{orderId} a été encaissé après son annulation et va être remboursé."
   }
 }

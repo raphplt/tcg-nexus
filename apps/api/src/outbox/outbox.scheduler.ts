@@ -1,7 +1,6 @@
 import { Injectable, Logger, Optional } from "@nestjs/common";
 import { Interval } from "@nestjs/schedule";
 import { DataSource } from "typeorm";
-import { runWithPostgresAdvisoryLock } from "../common/postgres-advisory-lock";
 import { OutboxService } from "./outbox.service";
 
 /**
@@ -21,17 +20,13 @@ export class OutboxScheduler {
    */
   @Interval(10000)
   async handleOutboxDispatch(): Promise<void> {
-    await runWithPostgresAdvisoryLock(
-      this.dataSource,
-      "tcg-nexus:outbox-dispatcher",
-      async () => {
-        const result = await this.outboxService.processPendingEvents(50);
-        if (result.processed > 0 || result.failed > 0) {
-          this.logger.log(
-            `Outbox sweep completed: ${result.processed} processed, ${result.failed} failed.`,
-          );
-        }
-      },
-    );
+    // The dispatch lock lives in the service, so every caller — this sweep and
+    // the administrative replay alike — is serialized by it.
+    const result = await this.outboxService.processPendingEvents(50);
+    if (result.processed > 0 || result.failed > 0) {
+      this.logger.log(
+        `Outbox sweep completed: ${result.processed} processed, ${result.failed} failed.`,
+      );
+    }
   }
 }

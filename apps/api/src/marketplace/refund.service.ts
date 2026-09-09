@@ -283,7 +283,7 @@ export class RefundService {
   ): Promise<ReturnItem> {
     const orderItem = await this.orderItemRepository.findOne({
       where: { id: orderItemId },
-      relations: ["order", "order.buyer", "listing"],
+      relations: ["order", "order.buyer", "listing", "seller"],
     });
 
     if (!orderItem) {
@@ -330,6 +330,7 @@ export class RefundService {
         returnItemId: saved.id,
         orderId: orderItem.order.id,
         orderItemId: orderItem.id,
+        sellerUserId: orderItem.seller?.id ?? null,
         quantity: dto.quantity,
         reason: dto.reason,
       },

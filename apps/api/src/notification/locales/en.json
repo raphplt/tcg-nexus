@@ -50,5 +50,9 @@
   "order.item_claim_created": {
     "title": "Claim opened",
     "body": "A claim has been opened for item in order #{orderId}."
+  },
+  "payment.compensation_required": {
+    "title": "Refund owed to you",
+    "body": "A payment of {amount} for order #{orderId} was captured after it was cancelled and is being refunded."
   }
 }

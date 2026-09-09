@@ -1,17 +1,36 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger, Optional } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { InjectRepository } from "@nestjs/typeorm";
-import { EntityManager, In, LessThanOrEqual, Repository } from "typeorm";
+import {
+  DataSource,
+  EntityManager,
+  In,
+  LessThanOrEqual,
+  Repository,
+} from "typeorm";
+import {
+  DomainEventPayloads,
+  DomainEventType,
+} from "../common/events/domain-events";
+import { runWithPostgresAdvisoryLock } from "../common/postgres-advisory-lock";
 import { OutboxEvent, OutboxEventStatus } from "./entities/outbox-event.entity";
+
+/** Lock shared by every dispatcher so one event is never delivered twice at once. */
+const DISPATCH_LOCK = "tcg-nexus:outbox-dispatcher";
 
 /**
  * Parameters for staging an event in the transactional outbox.
+ *
+ * The event name and its payload come from the shared contract, so a producer
+ * cannot publish a name no consumer knows or omit a field one reads.
  */
-export interface RecordOutboxParams {
-  eventType: string;
+export interface RecordOutboxParams<
+  T extends DomainEventType = DomainEventType,
+> {
+  eventType: T;
   aggregateType: string;
   aggregateId: string;
-  payload: Record<string, unknown>;
+  payload: DomainEventPayloads[T];
 }
 
 /**
@@ -26,6 +45,7 @@ export class OutboxService {
     @InjectRepository(OutboxEvent)
     private readonly outboxRepository: Repository<OutboxEvent>,
     private readonly eventEmitter: EventEmitter2,
+    @Optional() private readonly dataSource?: DataSource,
   ) {}
 
   /**
@@ -35,8 +55,8 @@ export class OutboxService {
    * @param manager - Optional active database transaction manager.
    * @returns Created OutboxEvent entity.
    */
-  async record(
-    params: RecordOutboxParams,
+  async record<T extends DomainEventType>(
+    params: RecordOutboxParams<T>,
     manager?: EntityManager,
   ): Promise<OutboxEvent> {
     const repo = manager
@@ -47,7 +67,7 @@ export class OutboxService {
       eventType: params.eventType,
       aggregateType: params.aggregateType,
       aggregateId: params.aggregateId,
-      payload: params.payload,
+      payload: params.payload as Record<string, unknown>,
       status: OutboxEventStatus.PENDING,
       retryCount: 0,
       lastError: null,
@@ -73,6 +93,19 @@ export class OutboxService {
   async processPendingEvents(
     limit = 50,
   ): Promise<{ processed: number; failed: number }> {
+    // Administrative replays and the scheduler share this lock, so a manual
+    // retry cannot dispatch an event the sweep is already delivering.
+    const result = await runWithPostgresAdvisoryLock(
+      this.dataSource,
+      DISPATCH_LOCK,
+      () => this.dispatchPendingEvents(limit),
+    );
+    return result ?? { processed: 0, failed: 0 };
+  }
+
+  private async dispatchPendingEvents(
+    limit: number,
+  ): Promise<{ processed: number; failed: number }> {
     const pending = await this.outboxRepository.find({
       where: {
         status: In([OutboxEventStatus.PENDING, OutboxEventStatus.FAILED]),
@@ -87,6 +120,14 @@ export class OutboxService {
 
     for (const event of pending) {
       try {
+        // An event nobody consumes is a broken contract, not a delivery: marking
+        // it processed would hide the mismatch this check surfaces.
+        if (this.eventEmitter.listeners(event.eventType).length === 0) {
+          throw new Error(
+            `No consumer registered for event ${event.eventType}`,
+          );
+        }
+
         await this.eventEmitter.emitAsync(event.eventType, {
           eventId: event.id,
           aggregateType: event.aggregateType,

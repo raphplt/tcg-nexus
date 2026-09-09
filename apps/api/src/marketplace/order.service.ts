@@ -31,6 +31,7 @@ import { CartItem } from "../user_cart/entities/cart-item.entity";
 import { UserCartService } from "../user_cart/user_cart.service";
 import { AuditService } from "../audit/audit.service";
 
+import { orderStatusEvent } from "../common/events/domain-events";
 import { OutboxService } from "../outbox/outbox.service";
 import { financeFingerprint } from "./finance/finance.utils";
 import { CardPopularityService } from "./card-popularity.service";
@@ -551,8 +552,9 @@ export class OrderService {
           aggregateType: "order",
           aggregateId: String(savedOrder.id),
           payload: {
+            orderId: savedOrder.id,
             buyerId: user.id,
-            totalAmount: savedOrder.totalAmount,
+            totalAmount: Number(savedOrder.totalAmount),
             currency,
           },
         },
@@ -1227,7 +1229,7 @@ export class OrderService {
 
       await this.outboxService.record(
         {
-          eventType: `order.${nextStatus.toLowerCase()}`,
+          eventType: orderStatusEvent(nextStatus),
           aggregateType: "order",
           aggregateId: String(order.id),
           payload: { orderId: order.id, previousStatus, nextStatus },
@@ -1620,7 +1622,7 @@ export class OrderService {
       payload: {
         orderId,
         orderItemId: orderItem.id,
-        sellerId: orderItem.seller?.id,
+        sellerUserId: orderItem.seller?.id ?? null,
         buyerId: buyer.id,
         deliveredAt: orderItem.deliveredAt,
       },
@@ -1701,7 +1703,7 @@ export class OrderService {
     });
 
     await this.outboxService.record({
-      eventType: "claim.opened",
+      eventType: "order.item_claim_created",
       aggregateType: "support_ticket",
       aggregateId: String(saved.id),
       payload: {
@@ -1710,7 +1712,7 @@ export class OrderService {
         orderItemId: itemId,
         claimCategory: dto.claimCategory,
         buyerId: buyer.id,
-        sellerId: orderItem.seller?.id,
+        sellerUserId: orderItem.seller?.id ?? null,
       },
     });
 

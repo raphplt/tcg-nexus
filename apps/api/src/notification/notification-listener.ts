@@ -3,6 +3,8 @@ import { NotificationI18nService } from "./notification-i18n.service";
 import { MailI18nService } from "../mail/mail-i18n.service";
 import { Injectable, Logger } from "@nestjs/common";
 import { OnEvent } from "@nestjs/event-emitter";
+import { DomainEventEnvelope } from "../common/events/domain-events";
+import { EventConsumerService } from "../outbox/event-consumer.service";
 import { UserService } from "../user/user.service";
 import { EmailNotificationService } from "./email-notification.service";
 import { NotificationService } from "./notification.service";
@@ -96,6 +98,7 @@ export class NotificationListener {
     private readonly userService: UserService,
     private readonly mailI18n: MailI18nService,
     private readonly notificationI18n: NotificationI18nService,
+    private readonly consumers: EventConsumerService,
   ) {}
 
   private formatAmount(
@@ -123,26 +126,26 @@ export class NotificationListener {
     data: Record<string, any>,
     params: Record<string, any> = {},
   ): Promise<void> {
-    try {
-      const user = await this.userService.findById(userId);
-      const rendered = this.notificationI18n.render(
-        type,
-        user?.preferredLocale,
-        params,
-      );
-      await this.notificationService.createNotification(
-        userId,
-        rendered.title,
-        rendered.body,
-        type,
-        data,
-        { key: type, params },
-      );
-    } catch (err) {
-      this.logger.error(
-        `createNotification failed for user ${userId} (${type}): ${(err as Error).message}`,
-      );
+    // A recipient the event did not carry is a contract defect, not a delivery.
+    if (!userId) {
+      throw new Error(`Notification ${type} has no recipient`);
     }
+    const user = await this.userService.findById(userId);
+    const rendered = this.notificationI18n.render(
+      type,
+      user?.preferredLocale,
+      params,
+    );
+    // Failures propagate: the dispatcher retries the event and the operational
+    // metrics show what never reached its recipient.
+    await this.notificationService.createNotification(
+      userId,
+      rendered.title,
+      rendered.body,
+      type,
+      data,
+      { key: type, params },
+    );
   }
 
   private async sendEmailToUser(
@@ -150,28 +153,25 @@ export class NotificationListener {
     template: string,
     context: Record<string, any>,
   ): Promise<void> {
-    try {
-      const user = await this.userService.findById(userId);
-      if (!user?.email) return;
-      const locale = user.preferredLocale;
-      await this.emailService.sendCritical(
-        user.email,
-        this.mailI18n.subject(template, locale, context),
-        template,
-        {
-          ...context,
-          t: this.mailI18n.texts(template, locale),
-          lang: this.mailI18n.resolveLocale(locale),
-        },
-      );
-    } catch (err) {
-      this.logger.error(
-        `sendEmailToUser failed for user ${userId}: ${(err as Error).message}`,
-      );
-    }
+    const user = await this.userService.findById(userId);
+    if (!user?.email) return;
+    const locale = user.preferredLocale;
+    // Mail failures propagate for the same reason in-app ones do; the email
+    // consumer keeps its own claim, so a retry does not repeat a notification
+    // that already succeeded.
+    await this.emailService.sendCritical(
+      user.email,
+      this.mailI18n.subject(template, locale, context),
+      template,
+      {
+        ...context,
+        t: this.mailI18n.texts(template, locale),
+        lang: this.mailI18n.resolveLocale(locale),
+      },
+    );
   }
 
-  @OnEvent("tournament.started")
+  @OnEvent("tournament.started", { suppressErrors: false })
   async onTournamentStarted(payload: TournamentStartedPayload): Promise<void> {
     const link = `/tournaments/${payload.tournamentId}`;
     for (const userId of payload.participantUserIds) {
@@ -188,7 +188,7 @@ export class NotificationListener {
     }
   }
 
-  @OnEvent("tournament.finished")
+  @OnEvent("tournament.finished", { suppressErrors: false })
   async onTournamentFinished(
     payload: TournamentFinishedPayload,
   ): Promise<void> {
@@ -208,7 +208,7 @@ export class NotificationListener {
     }
   }
 
-  @OnEvent("tournament.match_reminder")
+  @OnEvent("tournament.match_reminder", { suppressErrors: false })
   async onTournamentMatchReminder(
     payload: TournamentMatchReminderPayload,
   ): Promise<void> {
@@ -221,7 +221,7 @@ export class NotificationListener {
     await this.sendEmailToUser(payload.userId, "match-reminder", { link });
   }
 
-  @OnEvent("match.ready")
+  @OnEvent("match.ready", { suppressErrors: false })
   async onMatchReady(payload: MatchReadyPayload): Promise<void> {
     const link = `/tournaments/${payload.tournamentId}/matches/${payload.matchId}`;
     const data = {
@@ -237,7 +237,7 @@ export class NotificationListener {
     }
   }
 
-  @OnEvent("badge.unlocked")
+  @OnEvent("badge.unlocked", { suppressErrors: false })
   async onBadgeUnlocked(payload: BadgeUnlockedPayload): Promise<void> {
     await this.safeCreate(
       payload.userId,
@@ -247,7 +247,7 @@ export class NotificationListener {
     );
   }
 
-  @OnEvent("follow.created")
+  @OnEvent("follow.created", { suppressErrors: false })
   async onFollowCreated(payload: FollowCreatedPayload): Promise<void> {
     await this.safeCreate(
       payload.followedUserId,
@@ -257,7 +257,7 @@ export class NotificationListener {
     );
   }
 
-  @OnEvent("follow.removed")
+  @OnEvent("follow.removed", { suppressErrors: false })
   async onFollowRemoved(payload: FollowRemovedPayload): Promise<void> {
     await this.safeCreate(
       payload.followedUserId,
@@ -267,7 +267,7 @@ export class NotificationListener {
     );
   }
 
-  @OnEvent("marketplace.sale")
+  @OnEvent("marketplace.sale", { suppressErrors: false })
   async onMarketplaceSale(payload: MarketplaceSalePayload): Promise<void> {
     const link = "/marketplace/sales";
     const amount = this.formatAmount(payload.total, payload.currency);
@@ -284,7 +284,7 @@ export class NotificationListener {
     });
   }
 
-  @OnEvent("order.shipped")
+  @OnEvent("order.shipped", { suppressErrors: false })
   async onOrderShipped(payload: OrderShippedPayload): Promise<void> {
     const link = `/orders/${payload.orderId}`;
     await this.safeCreate(payload.buyerUserId, "order.shipped", {
@@ -299,56 +299,108 @@ export class NotificationListener {
     });
   }
 
-  @OnEvent("order.refund_created")
+  @OnEvent("order.refund_created", { suppressErrors: false })
   async onOrderRefundCreated(
-    payload: OrderRefundCreatedPayload,
+    payload: DomainEventEnvelope<"order.refund_created">,
   ): Promise<void> {
-    const link = `/orders/${payload.orderId}`;
-    const amount = this.formatAmount(payload.amount, payload.currency);
-    await this.safeCreate(
-      payload.buyerUserId,
-      "order.refund_created",
-      { link, orderId: payload.orderId, amount: payload.amount },
-      { amount, orderId: payload.orderId },
+    await this.consumers.runOnce(
+      "notification:order.refund_created",
+      { eventId: payload.eventId, eventType: "order.refund_created" },
+      async () => {
+        const link = `/orders/${payload.orderId}`;
+        const amount = this.formatAmount(payload.amount, payload.currency);
+        await this.safeCreate(
+          payload.buyerUserId,
+          "order.refund_created",
+          { link, orderId: payload.orderId, amount: payload.amount },
+          { amount, orderId: payload.orderId },
+        );
+      },
     );
   }
 
-  @OnEvent("order.return_requested")
+  @OnEvent("order.return_requested", { suppressErrors: false })
   async onOrderReturnRequested(
-    payload: OrderReturnRequestedPayload,
+    payload: DomainEventEnvelope<"order.return_requested">,
   ): Promise<void> {
-    const link = `/orders/${payload.orderId}`;
-    await this.safeCreate(
-      payload.sellerUserId,
-      "order.return_requested",
-      { link, orderId: payload.orderId, returnItemId: payload.returnItemId },
-      { orderId: payload.orderId },
+    await this.consumers.runOnce(
+      "notification:order.return_requested",
+      { eventId: payload.eventId, eventType: "order.return_requested" },
+      async () => {
+        const link = `/orders/${payload.orderId}`;
+        await this.safeCreate(
+          payload.sellerUserId as number,
+          "order.return_requested",
+          {
+            link,
+            orderId: payload.orderId,
+            returnItemId: payload.returnItemId,
+          },
+          { orderId: payload.orderId },
+        );
+      },
     );
   }
 
-  @OnEvent("order.item_delivered")
+  @OnEvent("order.item_delivered", { suppressErrors: false })
   async onOrderItemDelivered(
-    payload: OrderItemDeliveredPayload,
+    payload: DomainEventEnvelope<"order.item_delivered">,
   ): Promise<void> {
-    const link = `/orders/${payload.orderId}`;
-    await this.safeCreate(
-      payload.sellerUserId,
-      "order.item_delivered",
-      { link, orderId: payload.orderId, orderItemId: payload.orderItemId },
-      { orderId: payload.orderId },
+    await this.consumers.runOnce(
+      "notification:order.item_delivered",
+      { eventId: payload.eventId, eventType: "order.item_delivered" },
+      async () => {
+        const link = `/orders/${payload.orderId}`;
+        await this.safeCreate(
+          payload.sellerUserId as number,
+          "order.item_delivered",
+          { link, orderId: payload.orderId, orderItemId: payload.orderItemId },
+          { orderId: payload.orderId },
+        );
+      },
     );
   }
 
-  @OnEvent("order.item_claim_created")
+  @OnEvent("order.item_claim_created", { suppressErrors: false })
   async onOrderItemClaimCreated(
-    payload: OrderItemClaimCreatedPayload,
+    payload: DomainEventEnvelope<"order.item_claim_created">,
   ): Promise<void> {
-    const link = `/orders/${payload.orderId}`;
-    await this.safeCreate(
-      payload.sellerUserId,
-      "order.item_claim_created",
-      { link, orderId: payload.orderId, ticketId: payload.ticketId },
-      { orderId: payload.orderId },
+    await this.consumers.runOnce(
+      "notification:order.item_claim_created",
+      { eventId: payload.eventId, eventType: "order.item_claim_created" },
+      async () => {
+        const link = `/orders/${payload.orderId}`;
+        await this.safeCreate(
+          payload.sellerUserId as number,
+          "order.item_claim_created",
+          { link, orderId: payload.orderId, ticketId: payload.ticketId },
+          { orderId: payload.orderId },
+        );
+      },
+    );
+  }
+
+  @OnEvent("payment.compensation_required", { suppressErrors: false })
+  async onPaymentCompensationRequired(
+    payload: DomainEventEnvelope<"payment.compensation_required">,
+  ): Promise<void> {
+    await this.consumers.runOnce(
+      "notification:payment.compensation_required",
+      { eventId: payload.eventId, eventType: "payment.compensation_required" },
+      async () => {
+        if (!payload.buyerUserId) return;
+        const link = `/orders/${payload.orderId}`;
+        const amount = this.formatAmount(
+          payload.amount,
+          payload.currency ?? "EUR",
+        );
+        await this.safeCreate(
+          payload.buyerUserId,
+          "payment.compensation_required",
+          { link, orderId: payload.orderId, amount: payload.amount },
+          { amount, orderId: payload.orderId },
+        );
+      },
     );
   }
 }

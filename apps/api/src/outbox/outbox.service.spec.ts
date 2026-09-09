@@ -23,6 +23,7 @@ describe("OutboxService", () => {
     };
     eventEmitter = {
       emitAsync: jest.fn(async () => []),
+      listeners: jest.fn(() => [() => undefined]),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -47,7 +48,12 @@ describe("OutboxService", () => {
       eventType: "order.paid",
       aggregateType: "order",
       aggregateId: "123",
-      payload: { amount: 50 },
+      payload: {
+        orderId: 123,
+        buyerId: 1,
+        amount: 50,
+        currency: "EUR",
+      },
     });
 
     expect(repo.create).toHaveBeenCalledWith(
@@ -91,6 +97,30 @@ describe("OutboxService", () => {
     expect(pendingEvent.status).toBe(OutboxEventStatus.PROCESSED);
     expect(pendingEvent.processedAt).toBeDefined();
     expect(result).toEqual({ processed: 1, failed: 0 });
+  });
+
+  it("refuses to mark an event nobody consumes as processed", async () => {
+    const orphan = {
+      id: "outbox-orphan",
+      eventType: "order.paid",
+      aggregateType: "order",
+      aggregateId: "100",
+      payload: {},
+      status: OutboxEventStatus.PENDING,
+      retryCount: 0,
+      lastError: null,
+      processedAt: null,
+      createdAt: new Date(),
+    } as unknown as OutboxEvent;
+    repo.find.mockResolvedValue([orphan]);
+    eventEmitter.listeners.mockReturnValue([]);
+
+    const result = await service.processPendingEvents();
+
+    expect(result).toEqual({ processed: 0, failed: 1 });
+    expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
+    expect(orphan.status).not.toBe(OutboxEventStatus.PROCESSED);
+    expect(orphan.lastError).toContain("No consumer registered");
   });
 
   it("should track failed dispatch and increment retry count", async () => {

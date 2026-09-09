@@ -192,6 +192,12 @@ const PROBES: MigrationProbe[] = [
             WHERE table_name = 'payment_transaction'
               AND column_name = 'compensationRequiredAt'`,
   },
+  {
+    name: "ProcessedEvents1789300000000",
+    timestamp: 1789300000000,
+    probe: `SELECT 1 FROM information_schema.tables
+            WHERE table_name = 'processed_event'`,
+  },
 ];
 
 /**

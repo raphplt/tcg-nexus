@@ -12,12 +12,15 @@ import { Notification } from "./entities/notification.entity";
 import { EmailNotificationService } from "./email-notification.service";
 import { NotificationController } from "./notification.controller";
 import { NotificationGateway } from "./notification.gateway";
+import { OutboxModule } from "../outbox/outbox.module";
 import { NotificationListener } from "./notification-listener";
 import { NotificationReminderScheduler } from "./notification-reminder.scheduler";
 import { NotificationService } from "./notification.service";
 
 @Module({
   imports: [
+    // Supplies the consumer claims that keep notification delivery idempotent.
+    OutboxModule,
     ConfigModule,
     AuthModule,
     MailModule,

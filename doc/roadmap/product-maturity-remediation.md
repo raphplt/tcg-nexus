@@ -14,7 +14,7 @@ Corrections are delivered as independently tested commits. No block closes an en
 | 3b | Receipt import identity and cumulative received quantities | Implemented; verification below |
 | 3c | Lossless CSV round-trip and compensating bulk undo | Implemented; verification below |
 | 4 | Checkout recovery, cancellation/payment races and safe operational expiration | Implemented; verification below |
-| 5 | Durable event contracts, consumer deduplication and notification failure recovery | Pending |
+| 5 | Durable event contracts, consumer deduplication and notification failure recovery | Implemented; verification below |
 | 6 | Tournament legality, score confirmation and downstream correction policy | Pending |
 | 7 | Fresh/legacy database migrations and lossless inventory backfill | Pending |
 | 8 | Remaining inventory semantics, valuation, client integration, localization and acceptance documentation | Pending |
@@ -174,3 +174,22 @@ guarantees (block 5), and the operational runbook rewrite of block 8.
 ### Verification
 
 The PostgreSQL suite `apps/api/test/product-maturity-checkout.e2e-spec.ts` covers attempt-key resumption and payload conflict, recovery of an interrupted provider setup, concurrent buyer cancellations, provider intent cancellation, a capture succeeding after cancellation, the compensation endpoint's single refund, an expiry sweep run twice against a stale and a paid order, per-currency and ledger reconciliation, and the migration's up/down DDL. Its provider is simulated; no money moves. Unit coverage was updated for the locked cancellation and the operational service delegating its sweep.
+
+
+## Block 5 — event contracts and delivery
+
+This sub-block addresses A11.
+
+- `src/common/events/domain-events.ts` declares every domain event name and payload shape, and `OutboxService.record` is typed against it. The three audited mismatches became compile errors and were corrected: claims are published as `order.item_claim_created` rather than `claim.opened`, delivery confirmations and return requests carry `sellerUserId` rather than `sellerId` or nothing at all, and order status transitions resolve their name through a declared map instead of interpolating a status.
+- An event whose name has no registered listener is no longer marked processed: it fails with `No consumer registered`, retries, and shows up in the outbox metrics.
+- Consumers claim `(consumer, eventId)` in `processed_event` and do their work in the same transaction, so a redelivery is skipped and a failure rolls the claim back for the next dispatch. Each side effect keeps its own consumer name, so an email retry cannot repeat a notification that already succeeded.
+- Notification handlers propagate failures: `@OnEvent` is registered with `suppressErrors: false` (Nest suppresses listener errors by default, which is what hid the failures), and `safeCreate` refuses an event carrying no recipient instead of writing a notification to nobody.
+- Every dispatcher shares the `tcg-nexus:outbox-dispatcher` advisory lock, which now lives in the service, so the administrative replay can no longer dispatch an event concurrently with the scheduled sweep.
+- The compensation event added in block 4 has a consumer and localized EN/FR strings.
+
+Out of scope here and still open: outbound email delivery evidence against a real
+provider, and the notification acceptance documentation of block 8.
+
+### Verification
+
+The PostgreSQL suite `apps/api/test/product-maturity-events.e2e-spec.ts` covers a buyer claim reaching the seller it names, delivery and return events naming their recipient, exactly-once delivery across a redelivery, an event nobody consumes staying unprocessed, a failed delivery retrying and then succeeding, and the migration's up/down DDL. Unit coverage was updated for the propagating listener and the dispatcher's consumer check.
