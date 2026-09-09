@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  HttpStatus,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
@@ -13,19 +12,25 @@ import { UpdateCartItemDto } from "./dto/update-cart-item.dto";
 import { CartItem } from "./entities/cart-item.entity";
 import { UserCart } from "./entities/user_cart.entity";
 
+/**
+ * Service managing shopping carts and item lifecycles for users.
+ */
 @Injectable()
 export class UserCartService {
   constructor(
     @InjectRepository(UserCart)
-    private userCartRepository: Repository<UserCart>,
+    private readonly userCartRepository: Repository<UserCart>,
     @InjectRepository(CartItem)
-    private cartItemRepository: Repository<CartItem>,
+    private readonly cartItemRepository: Repository<CartItem>,
     @InjectRepository(Listing)
-    private listingRepository: Repository<Listing>,
+    private readonly listingRepository: Repository<Listing>,
   ) {}
 
   /**
-   * Crée ou récupère le panier d'un utilisateur
+   * Retrieves an existing cart for a user or initializes a new one.
+   *
+   * @param userId Unique identifier of the user.
+   * @returns Active cart record.
    */
   async findOrCreateCart(userId: number): Promise<UserCart> {
     let cart = await this.userCartRepository.findOne({
@@ -44,7 +49,10 @@ export class UserCartService {
   }
 
   /**
-   * Récupère le panier d'un utilisateur avec tous ses items
+   * Finds a user's cart including populated listings and catalog relations.
+   *
+   * @param userId Unique identifier of the user.
+   * @returns Detailed user cart entity.
    */
   async findCartByUserId(userId: number): Promise<UserCart> {
     const cart = await this.userCartRepository.findOne({
@@ -69,7 +77,13 @@ export class UserCartService {
   }
 
   /**
-   * Récupère un panier par son ID
+   * Finds a cart by primary key ID, validating ownership if a user ID is supplied.
+   *
+   * @param id Cart unique identifier.
+   * @param userId Optional user identifier for ownership validation.
+   * @returns Matching cart entity.
+   * @throws NotFoundException When the cart does not exist.
+   * @throws BadRequestException When the cart does not belong to the requesting user.
    */
   async findOne(id: number, userId?: number): Promise<UserCart> {
     const cart = await this.userCartRepository.findOne({
@@ -89,7 +103,6 @@ export class UserCartService {
       throw new NotFoundException(`Panier ${id} introuvable`);
     }
 
-    // Vérifier que le panier appartient à l'utilisateur si userId est fourni
     if (userId !== undefined && cart.user.id !== userId) {
       throw new BadRequestException(
         "Vous ne pouvez consulter que votre propre panier",
@@ -100,13 +113,18 @@ export class UserCartService {
   }
 
   /**
-   * Ajoute un item au panier
+   * Adds a marketplace listing to the user's cart.
+   *
+   * @param userId Authenticated user adding the item.
+   * @param createCartItemDto Target listing ID and requested quantity.
+   * @returns Created or updated cart item.
+   * @throws NotFoundException When the listing does not exist.
+   * @throws BadRequestException When trying to buy one's own listing, expired listings, or exceeding stock.
    */
   async addItemToCart(
     userId: number,
     createCartItemDto: CreateCartItemDto,
   ): Promise<CartItem> {
-    // Vérifier que le listing existe
     const listing = await this.listingRepository.findOne({
       where: { id: createCartItemDto.listingId },
       relations: ["seller"],
@@ -118,7 +136,6 @@ export class UserCartService {
       );
     }
 
-    // Vérifier que l'utilisateur n'achète pas sa propre annonce
     if (listing.seller.id === userId) {
       throw new BadRequestException(
         "Vous ne pouvez pas ajouter votre propre annonce au panier",
@@ -132,19 +149,15 @@ export class UserCartService {
       });
     }
 
-    // Vérifier la disponibilité
     if (listing.quantityAvailable < createCartItemDto.quantity) {
       throw new BadRequestException(
         `Stock insuffisant : ${listing.quantityAvailable} disponible(s), ${createCartItemDto.quantity} demandé(s)`,
       );
     }
 
-    // Récupérer ou créer le panier
     const cart = await this.findOrCreateCart(userId);
-
     await this.assertSameCurrency(cart.id, listing);
 
-    // Vérifier si l'item existe déjà dans le panier
     const existingItem = await this.cartItemRepository.findOne({
       where: {
         cart: { id: cart.id },
@@ -153,7 +166,6 @@ export class UserCartService {
     });
 
     if (existingItem) {
-      // Mettre à jour la quantité
       const newQuantity = existingItem.quantity + createCartItemDto.quantity;
 
       if (listing.quantityAvailable < newQuantity) {
@@ -166,7 +178,6 @@ export class UserCartService {
       return this.cartItemRepository.save(existingItem);
     }
 
-    // Créer un nouvel item
     const cartItem = this.cartItemRepository.create({
       cart,
       listing,
@@ -176,6 +187,9 @@ export class UserCartService {
     return this.cartItemRepository.save(cartItem);
   }
 
+  /**
+   * Asserts that items in a cart share the same currency denomination.
+   */
   private async assertSameCurrency(
     cartId: number,
     listing: Listing,
@@ -193,7 +207,14 @@ export class UserCartService {
   }
 
   /**
-   * Met à jour la quantité d'un item dans le panier
+   * Updates the selected quantity for an item within the user's cart.
+   *
+   * @param userId Authenticated user identifier.
+   * @param itemId Cart item identifier.
+   * @param updateCartItemDto Quantity update payload.
+   * @returns Updated cart item.
+   * @throws NotFoundException When item is not in the cart.
+   * @throws BadRequestException When user does not own the cart or requested quantity exceeds available stock.
    */
   async updateCartItem(
     userId: number,
@@ -211,16 +232,13 @@ export class UserCartService {
       );
     }
 
-    // Vérifier que le panier appartient à l'utilisateur
     if (cartItem.cart.user.id !== userId) {
       throw new BadRequestException(
         "Vous ne pouvez modifier que les articles de votre propre panier",
       );
     }
 
-    // Si on met à jour la quantité
     if (updateCartItemDto.quantity !== undefined) {
-      // Vérifier la disponibilité
       if (cartItem.listing.quantityAvailable < updateCartItemDto.quantity) {
         throw new BadRequestException(
           `Stock insuffisant : ${cartItem.listing.quantityAvailable} disponible(s), ${updateCartItemDto.quantity} demandé(s)`,
@@ -234,7 +252,12 @@ export class UserCartService {
   }
 
   /**
-   * Supprime un item du panier
+   * Removes an individual item from the user's cart.
+   *
+   * @param userId Authenticated user identifier.
+   * @param itemId Cart item identifier.
+   * @throws NotFoundException When the item does not exist.
+   * @throws BadRequestException When the cart does not belong to the user.
    */
   async removeItemFromCart(userId: number, itemId: number): Promise<void> {
     const cartItem = await this.cartItemRepository.findOne({
@@ -248,7 +271,6 @@ export class UserCartService {
       );
     }
 
-    // Vérifier que le panier appartient à l'utilisateur
     if (cartItem.cart.user.id !== userId) {
       throw new BadRequestException(
         "Vous ne pouvez retirer que les articles de votre propre panier",
@@ -259,7 +281,9 @@ export class UserCartService {
   }
 
   /**
-   * Vide le panier
+   * Removes all items from the user's cart.
+   *
+   * @param userId Authenticated user identifier.
    */
   async clearCart(userId: number): Promise<void> {
     const cart = await this.userCartRepository.findOne({
@@ -275,7 +299,10 @@ export class UserCartService {
   }
 
   /**
-   * Supprime un panier (et tous ses items)
+   * Deletes an entire cart entity and cascades item deletion.
+   *
+   * @param id Cart primary key identifier.
+   * @param userId Authenticated user identifier.
    */
   async remove(id: number, userId: number): Promise<void> {
     const cart = await this.findOne(id, userId);

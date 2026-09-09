@@ -57,7 +57,7 @@ export class VisionService {
     );
   }
 
-  // secret partagé optionnel : le microservice ne l'exige que s'il est configuré
+  // Optional shared secret: the vision microservice only enforces it when configured
   private get headers(): Record<string, string> {
     const apiKey = this.config.get<string>("VISION_API_KEY")?.trim();
     return {
@@ -146,7 +146,7 @@ export class VisionService {
       return this.parseResult(await response.json());
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
-      // sur timeout, retenter en mono serait aussi lent : on rend la main
+      // On timeout, single-frame fallback would be equally slow: yield immediately
       if (isTimeout(error)) {
         this.logger.warn(`Batch vision timeout (${reason}), repli OCR brut`);
         return null;

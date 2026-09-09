@@ -17,7 +17,7 @@ import { Public } from "src/auth/decorators/public.decorator";
 import { User } from "src/user/entities/user.entity";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { CreateListingDto } from "./dto/create-marketplace.dto";
-import { FindAllListingsQuery } from "./dto/ind-all-listings-query.dto";
+import { FindAllListingsQuery } from "./dto/find-all-listings-query.dto";
 import { UpdateListingDto } from "./dto/update-marketplace.dto";
 import { MarketplaceService } from "./marketplace.service";
 import { getShippingPolicy } from "./shipping-policy";

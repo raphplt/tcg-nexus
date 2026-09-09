@@ -354,7 +354,7 @@ describe("OrderService", () => {
         orderItems: [{ listing: { id: 10 }, quantity: 2 }],
         buyer,
       };
-      // transitionOrder verrouille la ligne puis la recharge avec ses relations
+      // transitionOrder locks the row then reloads it with relations
       manager.findOne.mockImplementation(async (entity: any) =>
         entity === Listing
           ? { id: 10, price: 10, quantityAvailable: 5, expiresAt: null }

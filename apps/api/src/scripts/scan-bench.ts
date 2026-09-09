@@ -151,11 +151,11 @@ const buildCases = (dir: string, labels: Labels): BenchCase[] => {
 };
 
 type Outcome =
-  | "correct" // bonne carte en tête
-  | "wrong" // candidats trouvés mais tête fausse
-  | "recoverable" // bonne carte présente dans les candidats mais pas en tête
-  | "no-candidate" // aucun candidat
-  | "unlabeled"; // pas de ground truth
+  | "correct" // Top candidate matches ground truth
+  | "wrong" // Candidates returned but top rank is incorrect
+  | "recoverable" // Correct card present among candidates but not ranked first
+  | "no-candidate" // No candidates returned
+  | "unlabeled"; // No ground truth available
 
 interface CaseResult {
   key: string;
@@ -431,8 +431,8 @@ async function main() {
   writeFileSync(outPath, JSON.stringify(results, null, 2));
   console.log(`Détail JSON → ${outPath}`);
 
-  // app.close() peut traîner (pool DB/sockets vision) -> on force la sortie pour
-  // ne pas laisser un process pendu et vider le buffer stdout.
+  // app.close() may linger on DB connections or vision sockets -> force
+  // shutdown to avoid hanging the process and properly flush stdout.
   await Promise.race([
     app.close().catch(() => {}),
     new Promise((r) => setTimeout(r, 3000)),

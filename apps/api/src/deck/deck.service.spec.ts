@@ -9,6 +9,7 @@ import { PokemonCardsType } from "../common/enums/pokemonCardsType";
 import { DeckCard } from "../deck-card/entities/deck-card.entity";
 import { DeckFormat } from "../deck-format/entities/deck-format.entity";
 import { PaginationHelper } from "../helpers/pagination";
+import { DeckMetricsService } from "../ai/engine/deck-metrics.service";
 import { DeckService } from "./deck.service";
 import { DeckSortBy, SortOrder } from "./dto/find-all-decks-query.dto";
 import { Deck } from "./entities/deck.entity";
@@ -41,6 +42,8 @@ describe("DeckService", () => {
     skip: jest.fn().mockReturnThis(),
     take: jest.fn().mockReturnThis(),
   });
+
+  const metricsService = { analyze: jest.fn() };
 
   beforeEach(async () => {
     deckCardRepo = {
@@ -119,6 +122,10 @@ describe("DeckService", () => {
             localize: jest.fn(async (payload) => payload),
             resolveLabels: jest.fn(async (payload) => payload),
           },
+        },
+        {
+          provide: DeckMetricsService,
+          useValue: metricsService,
         },
       ],
     }).compile();
@@ -313,164 +320,27 @@ describe("DeckService", () => {
       ).resolves.toBe(deck);
     });
   });
-
   describe("analyzeDeck", () => {
-    it("throws when deck is not found", async () => {
-      deckRepo.findOne.mockResolvedValue(null);
-      await expect(service.analyzeDeck(99)).rejects.toBeInstanceOf(
-        NotFoundException,
-      );
-    });
-
-    it("returns analysis with distributions and suggestions", async () => {
-      deckRepo.findOne.mockResolvedValue({
+    // Composition rules moved to DeckMetricsService and are covered by
+    // src/ai/engine/deck-metrics.service.spec.ts. What stays here is the
+    // contract this service still owns: load, check visibility, delegate.
+    it("delegates the analysis to the deck metrics engine", async () => {
+      const deck = {
         id: 1,
         isPublic: true,
-        cards: [
-          {
-            qty: 4,
-            card: withPokemonDetails({
-              id: "p1",
-              name: "Salameche",
-              category: PokemonCardsType.Pokemon,
-              types: ["Fire"],
-              attacks: [{ cost: ["Fire", "Colorless"] }],
-            }),
-          },
-          {
-            qty: 2,
-            card: withPokemonDetails({
-              id: "p2",
-              name: "Carapuce",
-              category: PokemonCardsType.Pokemon,
-              types: ["Water"],
-              attacks: [{ cost: ["Water"] }],
-            }),
-          },
-          {
-            qty: 8,
-            card: withPokemonDetails({
-              id: "e1",
-              name: "Energie Feu",
-              category: PokemonCardsType.Energy,
-              attacks: [],
-            }),
-          },
-          {
-            qty: 1,
-            card: withPokemonDetails({
-              id: "t1",
-              name: "Dresseur",
-              category: PokemonCardsType.Trainer,
-              attacks: [],
-            }),
-          },
-          {
-            qty: 5,
-            card: withPokemonDetails({
-              id: "p3",
-              name: "Pikachu",
-              category: PokemonCardsType.Pokemon,
-              types: ["Lightning"],
-              attacks: [{ cost: ["Lightning"] }],
-            }),
-          },
-          {
-            qty: 1,
-            card: undefined,
-          },
-        ],
-      });
+        format: { id: 3, type: "Standard" },
+        cards: [{ qty: 4, card: { id: "p1" } }],
+      };
+      deckRepo.findOne.mockResolvedValue(deck);
+      metricsService.analyze.mockResolvedValue({ deckId: 1, totalCards: 4 });
 
-      const result = await service.analyzeDeck(1);
+      const result = await service.analyzeDeck(1, undefined, "fr");
 
-      expect(result.totalCards).toBe(21);
-      expect(result.energyCount).toBe(8);
-      expect(
-        result.attackCostDistribution.find((d) => d.cost === 2)?.count,
-      ).toBe(4);
-      expect(result.duplicates).toContainEqual(
-        expect.objectContaining({ cardId: "p3", qty: 5 }),
+      expect(metricsService.analyze).toHaveBeenCalledWith(
+        [{ card: { id: "p1" }, qty: 4 }],
+        { deckId: 1, formatId: 3, formatType: "Standard", locale: "fr" },
       );
-      expect(result.warnings.some((w) => w.includes("limite"))).toBeTruthy();
-      expect(result.suggestions.length).toBeGreaterThan(0);
-      expect(
-        result.missingCards.find(
-          (s) =>
-            s.label.toLowerCase().includes("énergie") ||
-            s.label.toLowerCase().includes("energie"),
-        ),
-      ).toBeDefined();
-    });
-
-    it("flags decks that are too large and multi-type", async () => {
-      deckRepo.findOne.mockResolvedValue({
-        id: 2,
-        isPublic: true,
-        cards: [
-          {
-            qty: 40,
-            card: withPokemonDetails({
-              id: "e",
-              name: "Energy",
-              category: PokemonCardsType.Energy,
-              types: ["Fire"],
-              attacks: [],
-            }),
-          },
-          {
-            qty: 20,
-            card: withPokemonDetails({
-              id: "p",
-              name: "Dragonite",
-              category: PokemonCardsType.Pokemon,
-              types: ["Dragon"],
-              attacks: [
-                { cost: ["Colorless", "Colorless", "Colorless", "Colorless"] },
-              ],
-            }),
-          },
-          {
-            qty: 10,
-            card: withPokemonDetails({
-              id: "p2",
-              name: "Blastoise",
-              category: PokemonCardsType.Pokemon,
-              types: ["Water"],
-              attacks: [{ cost: ["Water"] }],
-            }),
-          },
-          {
-            qty: 10,
-            card: withPokemonDetails({
-              id: "p3",
-              name: "Venusaur",
-              category: PokemonCardsType.Pokemon,
-              types: ["Grass"],
-              attacks: [{ cost: ["Grass", "Colorless"] }],
-            }),
-          },
-          {
-            qty: 5,
-            card: withPokemonDetails({
-              id: "t",
-              name: "Supporter",
-              category: PokemonCardsType.Trainer,
-              attacks: [],
-            }),
-          },
-        ],
-      });
-
-      const result = await service.analyzeDeck(2);
-
-      expect(result.totalCards).toBe(85);
-      expect(
-        result.warnings.find((w) => w.includes("trop grand")),
-      ).toBeDefined();
-      expect(
-        result.suggestions.find((s) => s.includes("Deck multi-type")),
-      ).toBeDefined();
+      expect(result).toEqual({ deckId: 1, totalCards: 4 });
     });
   });
 
@@ -801,83 +671,6 @@ describe("DeckService", () => {
         expect.objectContaining({
           where: { user: { id: 7 }, isPublic: true },
         }),
-      );
-    });
-  });
-
-  describe("utility helpers", () => {
-    it("builds distributions and cost distributions", () => {
-      const typeDist = (service as any).mapToDistribution(
-        new Map([
-          ["A", 2],
-          ["B", 1],
-        ]),
-        3,
-      );
-      expect(typeDist[0]).toEqual({ label: "A", count: 2, percentage: 67 });
-      expect(typeDist[1]).toEqual({ label: "B", count: 1, percentage: 33 });
-
-      const costDist = (service as any).mapCostDistribution(
-        new Map([
-          [1, 1],
-          [3, 2],
-        ]),
-        3,
-      );
-      expect(costDist[0]).toEqual({ cost: 1, count: 1, percentage: 33 });
-      expect(costDist[1]).toEqual({ cost: 3, count: 2, percentage: 67 });
-    });
-
-    it("evaluates energy balance for low and high ratios", () => {
-      const warnings: string[] = [];
-      const suggestions: string[] = [];
-      (service as any).evaluateEnergyBalance(
-        0,
-        20,
-        40,
-        4,
-        warnings,
-        suggestions,
-      );
-      expect(
-        warnings.find((w) => w.includes("Pas assez d'énergies")),
-      ).toBeDefined();
-      expect(warnings.find((w) => w.includes("Aucune énergie"))).toBeDefined();
-      expect(
-        suggestions.find((s) => s.toLowerCase().includes("accélération")),
-      ).toBeDefined();
-
-      const highWarnings: string[] = [];
-      const highSuggestions: string[] = [];
-      (service as any).evaluateEnergyBalance(
-        30,
-        10,
-        40,
-        1,
-        highWarnings,
-        highSuggestions,
-      );
-      expect(highWarnings.find((w) => w.includes("Beaucoup d"))).toBeDefined();
-      expect(highSuggestions.find((s) => s.includes("Réduisez"))).toBeDefined();
-    });
-
-    it("builds missing card suggestions", () => {
-      const suggestions = (service as any).buildMissingCardsSuggestions({
-        energyCount: 5,
-        pokemonCount: 20,
-        trainerCount: 5,
-        totalCards: 40,
-        typeDistribution: [{ label: "Fire", count: 10, percentage: 25 }],
-        averageEnergyCost: 3.5,
-      });
-
-      expect(suggestions).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ label: "Énergies" }),
-          expect.objectContaining({ label: "Dresseurs de pioche" }),
-          expect.objectContaining({ label: "Support Fire" }),
-          expect.objectContaining({ label: "Accélération d'énergie" }),
-        ]),
       );
     });
   });

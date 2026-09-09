@@ -36,9 +36,9 @@ Distincte des decks dont on est l'auteur : permet de sauvegarder en bibliothèqu
 - `GET /deck/import/:code` (public) : consulter le deck associé à un code de partage.
 - `POST /deck/import/:code` : importer le deck associé à un code de partage vers son propre compte.
 
-## Analyse IA
+## Analyse IA & Moteur déterministe
 
-- `POST /deck/:id/analyze` (public) : analyse un deck existant et retourne des métriques de composition et recommandations (`AnalyzeDeckResultDto`). Pour une analyse autonome ou sur une liste brute d'identifiants de cartes, voir aussi le module dédié `ai` (`POST /ai/analyzeDeck`).
+- `POST /deck/:id/analyze` (public) : analyse un deck existant via le moteur déterministe local (`DeckMetricsService`) et retourne une évaluation complète (`DeckInsightsDto`) : consistance, courbe d'énergie, lignes d'évolution, légalité et suggestions. Pour analyser un pool ad-hoc en cours de construction dans le deck builder ou trouver des decks similaires, voir le module `/ai`.
 
 ## Formats & cartes
 

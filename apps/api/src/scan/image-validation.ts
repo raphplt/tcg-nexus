@@ -1,4 +1,4 @@
-// le type MIME du multipart est déclaré par le client : on renifle les octets
+// Multipart MIME types are declared by untrusted clients: sniff magic bytes directly
 const SIGNATURES: Array<{ format: string; matches: (b: Buffer) => boolean }> = [
   {
     format: "jpeg",
@@ -18,7 +18,7 @@ const SIGNATURES: Array<{ format: string; matches: (b: Buffer) => boolean }> = [
       b.subarray(8, 12).toString("ascii") === "WEBP",
   },
   {
-    // HEIC/HEIF : conteneur ISO-BMFF, brand juste après la box `ftyp`
+    // HEIC/HEIF: ISO-BMFF container, brand immediately follows the `ftyp` box
     format: "heic",
     matches: (b) =>
       b.subarray(4, 8).toString("ascii") === "ftyp" &&
@@ -29,10 +29,10 @@ const SIGNATURES: Array<{ format: string; matches: (b: Buffer) => boolean }> = [
 ];
 
 /**
- * Vérifie qu'un buffer commence bien par une signature d'image supportée.
+ * Validates that an incoming buffer begins with a recognized image magic signature.
  *
- * @param buffer Octets bruts reçus.
- * @returns True si le contenu est un format image reconnu.
+ * @param buffer Raw incoming file buffer.
+ * @returns True if the payload matches a supported image format.
  */
 export function isSupportedImage(buffer: Buffer): boolean {
   if (buffer.length < 12) return false;

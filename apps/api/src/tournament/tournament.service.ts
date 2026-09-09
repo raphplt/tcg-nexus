@@ -702,13 +702,13 @@ export class TournamentService {
     const tournament = await this.findOne(tournamentId);
     const targetRound = round || tournament.currentRound || 1;
 
-    // Une lecture publique ne doit jamais recalculer ni randomiser des
-    // appariements. Les matchs persistés constituent l'unique source de vérité.
+    // Public read operations must never recompute or randomize pairings.
+    // Persisted match records are the sole source of truth.
     return this.matchService.getMatchesByRound(tournamentId, targetRound);
   }
 
   /**
-   * Récupère les classements d'un tournoi
+   * Retrieves rankings and standings for a tournament.
    */
   getTournamentRankings(tournamentId: number) {
     return this.rankingService.getTournamentRankings(tournamentId);
@@ -1155,7 +1155,9 @@ export class TournamentService {
     return result.registrations[0];
   }
 
-  // Remplir un tournoi avec des joueurs aléatoires (admin only)
+  /**
+   * Fills a tournament with mock/random player accounts (admin only).
+   */
   async fillWithRandomPlayers(
     tournamentId: number,
     count: number = 8,
@@ -1266,7 +1268,9 @@ export class TournamentService {
     });
   }
 
-  // Check-in tous les joueurs confirmés (admin only)
+  /**
+   * Checks in all confirmed players for a tournament (admin only).
+   */
   async checkInAllPlayers(tournamentId: number): Promise<{
     checkedInCount: number;
   }> {

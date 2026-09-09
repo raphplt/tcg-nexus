@@ -377,7 +377,7 @@ export class TournamentOrchestrationService {
         });
       }
 
-      // Annuler tous les matches en cours
+      // Cancel all scheduled and active matches
       await manager.update(
         Match,
         {

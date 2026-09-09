@@ -332,7 +332,7 @@ export class CatalogImportService {
         legal: fallback.legal,
         pricing: fallback.pricing,
         updated: fallback.updated,
-        // L'illustrateur est un nom propre : il ne se traduit pas.
+        // Illustrator is a proper name and remains untranslated across locales
         illustrator: fallback.illustrator
           ? cleanString(String(fallback.illustrator))
           : null,

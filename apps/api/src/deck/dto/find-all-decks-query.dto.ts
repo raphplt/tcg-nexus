@@ -2,7 +2,7 @@ import { ApiPropertyOptional } from "@nestjs/swagger";
 import { Type } from "class-transformer";
 import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from "class-validator";
 
-// clés d'une map fermée côté service, jamais interpolées dans le SQL
+// Whitelist keys mapped internally on service side, never interpolated into raw SQL
 export enum DeckSortBy {
   CREATED_AT = "createdAt",
   UPDATED_AT = "updatedAt",

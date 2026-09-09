@@ -106,9 +106,8 @@ describe("CatalogLocalizationService", () => {
     expect(find).toHaveBeenCalledTimes(1);
   });
 
-  it("retombe sur n'importe quelle langue quand ni la langue demandée ni la langue par défaut n'existent", async () => {
-    // Certains sets n'existent qu'en anglais : leurs cartes doivent tout de
-    // même porter un nom pour un visiteur francophone.
+  it("falls back to any available language when neither requested nor default locale exists", async () => {
+    // English-only sets must still resolve a card name for French visitors
     find.mockResolvedValue([
       { cardId: "1", locale: "en", name: "Charizard ex" },
     ]);
@@ -178,9 +177,8 @@ describe("CatalogLocalizationService", () => {
     expect(payload.name).toBe("Journey Together - Booster Bundle");
   });
 
-  it("retombe sur le français quand le produit scellé n'a pas de nom anglais", async () => {
-    // 28 % des produits n'ont pas de nom composable : ils gardent le français
-    // plutôt qu'un libellé à moitié traduit.
+  it("falls back to French when sealed product lacks an English translation", async () => {
+    // Non-composable products retain French fallback instead of half-translated labels
     findSealed.mockResolvedValue([
       {
         sealedProductId: "swsh8-envolee",

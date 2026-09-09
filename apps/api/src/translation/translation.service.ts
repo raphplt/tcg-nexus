@@ -34,8 +34,8 @@ export class TranslationService {
   }
 
   /**
-   * Une valeur vide supprime l'override : la clé retombe sur le dictionnaire
-   * du dépôt plutôt que d'afficher du vide.
+   * An empty string value removes the override: the key falls back to the
+   * static dictionary instead of rendering empty text.
    */
   async upsertMany(entries: TranslationEntryDto[]): Promise<number> {
     const toRemove = entries.filter((entry) => entry.value.trim() === "");

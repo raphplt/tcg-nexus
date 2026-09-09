@@ -137,8 +137,7 @@ export class UserService {
   async findForAccessToken(id: number): Promise<User | null> {
     return this.userRepository.findOne({
       where: { id },
-      // colonnes scalaires uniquement (pas de relation) : plusieurs services
-      // lisent le nom et la locale sur l'utilisateur courant
+      // Scalar columns only (no relations): multiple services read name and locale from current user
       select: [
         "id",
         "email",

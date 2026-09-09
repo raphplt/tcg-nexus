@@ -170,7 +170,7 @@ export class TournamentStateService {
       }
     }
 
-    // Ajouter des warnings contextuels
+    // Add contextual warnings based on tournament capacity
     if (targetStatus === TournamentStatus.IN_PROGRESS) {
       const confirmedCount = await this.getConfirmedPlayersCount(tournamentId);
       if (
@@ -262,12 +262,12 @@ export class TournamentStateService {
   }
 
   /**
-   * Vérifie si tous les joueurs requis sont check-in
+   * Checks whether all required players have checked in.
    */
   private async allRequiredPlayersCheckedIn(
     tournament: Tournament,
   ): Promise<boolean> {
-    // Si le check-in n'est pas requis, toujours vrai
+    // If check-in is not required, condition is always met
     const requiresCheckIn =
       tournament.additionalInfo?.includes("check-in-required");
     if (!requiresCheckIn) return true;

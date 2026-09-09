@@ -308,12 +308,11 @@ export class SeedService {
     return await this.cardStateRepository.find();
   }
   /**
-   * Importe le catalogue Pokémon (séries, sets, cartes et leurs traductions)
-   * depuis le dataset local. Voir `CatalogImportService`.
+   * Imports the complete Pokémon catalog (series, sets, cards, and translations)
+   * from the local dataset. See `CatalogImportService`.
    *
-   * Les trois anciennes méthodes ne faisaient qu'une passe monolingue sur
-   * `data/` ; elles délèguent désormais à un import unique, qui traite toutes
-   * les langues activées en une fois.
+   * Replaces legacy monolingual imports with a unified pass processing all
+   * active languages concurrently.
    */
   async importPokemon(): Promise<CatalogImportReport> {
     return this.catalogImportService.importCatalog();
@@ -600,11 +599,11 @@ export class SeedService {
         });
         await this.tournamentRepository.save(tournament);
       }
-      // Ajoute les joueurs
+      // Assign players
       tournament.players = tData.playerIndexes.map((i) => players[i]);
       await this.tournamentRepository.save(tournament);
 
-      // Inscriptions
+      // Seed tournament registrations
       for (const i of tData.playerIndexes) {
         const player = players[i];
         let registration = await this.tournamentRegistrationRepository.findOne({
@@ -725,7 +724,7 @@ export class SeedService {
         }
       }
 
-      // Matchs (un match entre les deux premiers joueurs du tournoi)
+      // Seed an initial match between the first two tournament players
       if (tData.playerIndexes.length >= 2) {
         const playerA = players[tData.playerIndexes[0]];
         const playerB = players[tData.playerIndexes[1]];
@@ -1187,7 +1186,7 @@ export class SeedService {
           priceHistoriesToCreate.push(priceHistory);
         }
 
-        // Enregistrer aussi le prix actuel dans l'historique
+        // Record current listing price into price history
         const currentPriceHistory = this.priceHistoryRepository.create({
           pokemonCard: card,
           price: price,
@@ -2675,17 +2674,14 @@ export class SeedService {
   }
 
   /**
-   * Active les extensions Postgres requises par l'application.
-   * pg_trgm : recherche fuzzy par trigrammes (opérateur % et similarity()),
-   * utilisée par la recherche de cartes et le scan OCR (card.service findByNameFuzzy).
+   * Enables PostgreSQL extensions required by the application.
+   * pg_trgm: trigram fuzzy search (% operator and similarity()), used by card search and OCR.
    */
   async enableExtensions() {
     await this.userRepository.query(`CREATE EXTENSION IF NOT EXISTS pg_trgm;`);
-    // unaccent : la recherche de cartes doit trouver « Pokémon » quand on
-    // tape « pokemon », dans toutes les langues du catalogue.
+    // unaccent: card search matches accented characters (e.g. "Pokémon" matches "pokemon")
     await this.userRepository.query(`CREATE EXTENSION IF NOT EXISTS unaccent;`);
-    // Wrapper IMMUTABLE, seule forme indexable — voir la migration
-    // CatalogTranslations et `applyCardSearch`.
+    // IMMUTABLE wrapper required for indexing - see CatalogTranslations migration and applyCardSearch
     await this.userRepository.query(`
       CREATE OR REPLACE FUNCTION immutable_unaccent(text)
       RETURNS text

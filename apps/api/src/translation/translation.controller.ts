@@ -12,7 +12,7 @@ import { TranslationService } from "./translation.service";
 export class TranslationController {
   constructor(private readonly translationService: TranslationService) {}
 
-  // lu par le web à chaque rafraîchissement de son cache de messages
+  // Polled by the web frontend when refreshing its localized message bundle
   @Get()
   @Public()
   findAll(@Query("locale") locale?: string) {

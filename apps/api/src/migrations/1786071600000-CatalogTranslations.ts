@@ -70,9 +70,8 @@ export class CatalogTranslations1786071600000 implements MigrationInterface {
       ON "card_translation" ("locale", "name")
     `);
 
-    // La recherche est un `ILIKE '%…%'` sur une expression : seul un index
-    // trigram peut la servir. Sans lui, chaque recherche parcourt les 40 000
-    // traductions.
+    // Search relies on ILIKE '%...%' pattern matching: only a trigram index
+    // can index this efficiently without table-scanning all 40,000 translations.
     await queryRunner.query(`
       CREATE INDEX "IDX_card_translation_name_trgm"
       ON "card_translation"

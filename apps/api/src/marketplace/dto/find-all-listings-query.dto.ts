@@ -11,7 +11,7 @@ import { Languages } from "src/common/enums/languages";
 import { ListingStatus } from "src/common/enums/listing-status";
 import { ProductKind } from "src/common/enums/product-kind";
 
-// clés d'une map fermée côté service, jamais interpolées dans le SQL
+// Whitelist keys mapped internally on service side, never interpolated into raw SQL
 export enum ListingSortBy {
   CREATED_AT = "createdAt",
   PRICE = "price",

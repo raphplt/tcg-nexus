@@ -34,7 +34,7 @@ import {
 import {
   ListingSortBy,
   ListingSortOrder,
-} from "./dto/ind-all-listings-query.dto";
+} from "./dto/find-all-listings-query.dto";
 import { SealedProduct } from "../sealed-product/entities/sealed-product.entity";
 import { User } from "../user/entities/user.entity";
 import { CreateListingDto } from "./dto/create-marketplace.dto";
@@ -47,8 +47,8 @@ import { OrderService } from "./order.service";
 import { getMarketReferencePrice, round2 } from "./price.helper";
 import { getShippingCost, SHIPPING_POLICY } from "./shipping-policy";
 
-// TypeORM injecte l'expression orderBy telle quelle : jamais la construire à
-// partir de l'entrée utilisateur. `name` trie sur un alias localisé calculé.
+// TypeORM passes orderBy expressions directly: never construct from untrusted
+// user input. Sorting by 'name' uses a computed localized alias.
 const LISTING_SORT_COLUMNS: Record<
   Exclude<ListingSortBy, ListingSortBy.NAME>,
   string

@@ -54,9 +54,11 @@ Recherche unifiée à travers le catalogue (cartes, sets…), avec suggestions.
 
 - `GET /dashboard` : agrégation de données pour l'écran d'accueil connecté (stats perso, activité récente…).
 
-## Analyse IA (`/ai`)
+## Analyse & Similarité de Decks (`/ai`)
 
-- `POST /ai/analyzeDeck` : analyse un ensemble de cartes ou un deck (`AnalyzeDeckDto`) et retourne une évaluation de composition, distribution d'énergie et synergies détectées (`DeckAnalysisResponseDto`).
+- `POST /ai/decks/analyze` (public, throttled) : analyse un pool de cartes ad-hoc non persisté (`AnalyzePoolDto`) via le moteur déterministe local et retourne une évaluation complète (`DeckInsightsDto`).
+- `GET /ai/decks/:id/similar` (public) : liste les decks publics les plus proches en espace d'archétype via similarité vectorielle locale (pgvector).
+- `GET /ai/decks/:id/suggestions` (public) : suggère des cartes fréquemment jouées par les decks similaires et absentes du deck de référence.
 
 ## Suivi social (`/users/:id/follow`)
 

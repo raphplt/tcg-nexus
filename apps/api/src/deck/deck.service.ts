@@ -11,15 +11,13 @@ import { UserRole } from "src/common/enums/user";
 import { In, Repository } from "typeorm";
 import { Card } from "../card/entities/card.entity";
 import { DeckCardRole } from "../common/enums/deckCardRole";
-import { PokemonCardsType } from "../common/enums/pokemonCardsType";
 import { DeckCard } from "../deck-card/entities/deck-card.entity";
 import { DeckFormat } from "../deck-format/entities/deck-format.entity";
 import { PaginationHelper } from "../helpers/pagination";
 import { User } from "../user/entities/user.entity";
-import {
-  AnalyzeDeckResultDto,
-  MissingCardSuggestionDto,
-} from "./dto/analyze-deck-result.dto";
+import type { SupportedLocale } from "../translation/supported-locales";
+import { DeckMetricsService } from "../ai/engine/deck-metrics.service";
+import { DeckInsightsDto } from "../ai/dto/deck-insights.dto";
 import { CreateDeckDto } from "./dto/create-deck.dto";
 import { ImportDeckJsonDto } from "./dto/import-deck-json.dto";
 import { ShareDeckDto } from "./dto/share-deck.dto";
@@ -70,6 +68,7 @@ export class DeckService {
     @InjectRepository(SavedDeck)
     private readonly savedDeckRepo: Repository<SavedDeck>,
     private readonly localization: CatalogLocalizationService,
+    private readonly deckMetrics: DeckMetricsService,
   ) {}
   /**
    * Creates a new deck for a user along with its card compositions.
@@ -250,7 +249,7 @@ export class DeckService {
     return deck.user?.id === viewer.id || viewer.role === UserRole.ADMIN;
   }
 
-  // 404 et pas 403 : un 403 confirmerait l'existence du deck
+  // Return 404 rather than 403 to prevent revealing private deck existence
   private assertCanViewDeck(deck: Deck, viewer?: User): void {
     if (!this.canViewDeck(deck, viewer)) {
       throw new NotFoundException("Deck introuvable");
@@ -283,173 +282,49 @@ export class DeckService {
   }
 
   /**
-   * Performs strategic analysis on deck composition (type ratios, energy curve, warnings).
+   * Analyzes a deck's composition, engine, curve and legality.
+   *
+   * The deck is loaded and access-checked here; every rule lives in
+   * `DeckMetricsService` so this route and `POST /ai/decks/analyze` cannot
+   * drift apart.
    *
    * @param id Deck ID.
    * @param viewer Authenticated user, or undefined for anonymous callers.
-   * @returns Analysis result metrics and suggestions DTO.
+   * @param locale Locale to render diagnostics in.
+   * @returns Deterministic deck insights.
+   * @throws NotFoundException If the deck does not exist or is not visible.
    */
-  async analyzeDeck(id: number, viewer?: User): Promise<AnalyzeDeckResultDto> {
+  async analyzeDeck(
+    id: number,
+    viewer?: User,
+    locale?: SupportedLocale,
+  ): Promise<DeckInsightsDto> {
     const deck = await this.decksRepository.findOne({
       where: { id },
-      relations: ["user", "cards", "cards.card", "cards.card.pokemonDetails"],
+      relations: [
+        "user",
+        "format",
+        "cards",
+        "cards.card",
+        "cards.card.pokemonDetails",
+      ],
     });
 
     if (!deck) throw new NotFoundException("Deck not found");
     this.assertCanViewDeck(deck, viewer);
 
-    const cards = deck.cards || [];
-    // Analysis compares card names (energy matching): labels originate from localized translations and must be resolved first
-    await this.localization.resolveLabels(cards);
-
-    const totalCards = cards.reduce((sum, card) => sum + (card.qty || 0), 0);
-
-    const typeMap = new Map<string, number>();
-    const categoryMap = new Map<string, number>();
-    const attackCostMap = new Map<number, number>();
-    let totalAttackCost = 0;
-    let totalAttackCount = 0;
-
-    cards.forEach((deckCard) => {
-      const { card, qty } = deckCard;
-      const quantity = qty || 0;
-      if (!card) return;
-
-      card.pokemonDetails?.types?.forEach((type) =>
-        typeMap.set(type, (typeMap.get(type) || 0) + quantity),
-      );
-
-      const categoryLabel = card.pokemonDetails?.category || "Unknown";
-      const normalizedCategory = categoryLabel.toLowerCase().replace("é", "e");
-
-      let mappedCategory = categoryLabel;
-      if (normalizedCategory === "pokemon")
-        mappedCategory = PokemonCardsType.Pokemon;
-      if (normalizedCategory === "energy" || normalizedCategory === "energie")
-        mappedCategory = PokemonCardsType.Energy;
-      if (normalizedCategory === "trainer" || normalizedCategory === "dresseur")
-        mappedCategory = PokemonCardsType.Trainer;
-
-      categoryMap.set(
-        mappedCategory,
-        (categoryMap.get(mappedCategory) || 0) + quantity,
-      );
-
-      card.pokemonDetails?.attacks?.forEach((attack) => {
-        const cost = attack.cost?.length || 0;
-        attackCostMap.set(cost, (attackCostMap.get(cost) || 0) + quantity);
-        totalAttackCost += cost * quantity;
-        totalAttackCount += quantity;
-      });
-    });
-
-    const typeDistribution = this.mapToDistribution(typeMap, totalCards);
-    const categoryDistribution = this.mapToDistribution(
-      categoryMap,
-      totalCards,
+    return this.deckMetrics.analyze(
+      (deck.cards || []).map((deckCard) => ({
+        card: deckCard.card,
+        qty: deckCard.qty || 0,
+      })),
+      {
+        deckId: deck.id,
+        formatId: deck.format?.id ?? null,
+        formatType: deck.format?.type ?? null,
+        locale,
+      },
     );
-    const attackCostDistribution = this.mapCostDistribution(
-      attackCostMap,
-      totalAttackCount,
-    );
-
-    const pokemonCount = categoryMap.get(PokemonCardsType.Pokemon) || 0;
-    const energyCount = categoryMap.get(PokemonCardsType.Energy) || 0;
-    const trainerCount = categoryMap.get(PokemonCardsType.Trainer) || 0;
-
-    const averageEnergyCost = totalAttackCount
-      ? parseFloat((totalAttackCost / totalAttackCount).toFixed(2))
-      : 0;
-
-    const energyToPokemonRatio = pokemonCount
-      ? parseFloat((energyCount / pokemonCount).toFixed(2))
-      : 0;
-
-    const duplicates = cards
-      .filter(
-        (deckCard) =>
-          deckCard.qty > 4 &&
-          deckCard.card?.pokemonDetails?.category !== PokemonCardsType.Energy &&
-          !deckCard.card?.name?.toLowerCase().includes("energy") &&
-          !deckCard.card?.name?.toLowerCase().includes("energie") &&
-          !deckCard.card?.name?.toLowerCase().includes("énergie"),
-      )
-      .map((deckCard) => ({
-        cardId: deckCard.card.id,
-        cardName: deckCard.card.name || "Carte inconnue",
-        qty: deckCard.qty,
-      }));
-
-    const warnings: string[] = [];
-    const suggestions: string[] = [];
-
-    if (totalCards < 60) {
-      warnings.push(`Deck incomplet: ${totalCards}/60 cartes`);
-    } else if (totalCards > 60) {
-      warnings.push(`Deck trop grand: ${totalCards}/60 cartes`);
-    }
-
-    if (duplicates.length) {
-      warnings.push(
-        "Certaines cartes dépassent la limite autorisée (maximum 4 exemplaires hors énergies).",
-      );
-    }
-
-    this.evaluateEnergyBalance(
-      energyCount,
-      pokemonCount,
-      totalCards,
-      averageEnergyCost,
-      warnings,
-      suggestions,
-    );
-
-    if (trainerCount < 10) {
-      suggestions.push(
-        "Ajoutez des cartes Dresseur pour stabiliser le deck (recommandé: 10+).",
-      );
-    }
-
-    if (typeDistribution.length > 2) {
-      suggestions.push(
-        `Deck multi-type détecté (${typeDistribution
-          .slice(0, 3)
-          .map((d) => d.label)
-          .join(
-            ", ",
-          )}), concentrez-vous sur 1 à 2 types principaux pour plus de constance.`,
-      );
-    } else if (typeDistribution.length === 1 && energyCount > 0) {
-      suggestions.push(
-        `Renforcez le type ${typeDistribution[0].label} avec des cartes de support compatibles.`,
-      );
-    }
-
-    const missingCards = this.buildMissingCardsSuggestions({
-      energyCount,
-      pokemonCount,
-      trainerCount,
-      totalCards,
-      typeDistribution,
-      averageEnergyCost,
-    });
-
-    return {
-      deckId: deck.id,
-      totalCards,
-      pokemonCount,
-      energyCount,
-      trainerCount,
-      energyToPokemonRatio,
-      averageEnergyCost,
-      typeDistribution,
-      categoryDistribution,
-      attackCostDistribution,
-      duplicates,
-      warnings,
-      suggestions,
-      missingCards,
-    };
   }
 
   /**
@@ -471,7 +346,7 @@ export class DeckService {
     if (dto.deckName) {
       deck.name = dto.deckName;
     }
-    // pas de `if (dto.isPublic)` : false doit pouvoir repasser le deck en privé
+    // Explicit check on undefined allows setting isPublic to false
     if (dto.isPublic !== undefined) {
       deck.isPublic = dto.isPublic;
     }
@@ -484,8 +359,7 @@ export class DeckService {
     }
     await this.decksRepository.save(deck);
 
-    // filtré par deckId : un id de DeckCard du payload ne doit pas permettre
-    // de toucher aux cartes d'un autre deck
+    // Scoped by deckId: card IDs in the payload cannot delete cards from another deck
     if (dto.cardsToRemove?.length) {
       const removable = await this.deckCardRepo.find({
         where: {
@@ -522,7 +396,7 @@ export class DeckService {
 
     if (dto.cardsToUpdate?.length) {
       const updateIds = dto.cardsToUpdate.map((card) => card.id);
-      // filtré par deckId, même raison que pour cardsToRemove
+      // Scoped by deckId to prevent mutating cards belonging to another deck
       const cardEntities = await this.deckCardRepo.find({
         where: { id: In(updateIds), deck: { id: deck.id } },
       });
@@ -869,138 +743,14 @@ export class DeckService {
     return deckShare.deck;
   }
 
-  private mapToDistribution(
-    map: Map<string, number>,
-    total: number,
-  ): { label: string; count: number; percentage: number }[] {
-    return Array.from(map.entries())
-      .map(([label, count]) => ({
-        label,
-        count,
-        percentage: total ? Math.round((count / total) * 100) : 0,
-      }))
-      .sort((a, b) => b.count - a.count);
-  }
-
-  private mapCostDistribution(
-    map: Map<number, number>,
-    total: number,
-  ): { cost: number; count: number; percentage: number }[] {
-    return Array.from(map.entries())
-      .map(([cost, count]) => ({
-        cost,
-        count,
-        percentage: total ? Math.round((count / total) * 100) : 0,
-      }))
-      .sort((a, b) => a.cost - b.cost);
-  }
-
-  private evaluateEnergyBalance(
-    energyCount: number,
-    pokemonCount: number,
-    totalCards: number,
-    averageEnergyCost: number,
-    warnings: string[],
-    suggestions: string[],
-  ) {
-    if (!totalCards) return;
-
-    const energyRatio = energyCount / totalCards;
-
-    if (energyRatio < 0.25) {
-      warnings.push(
-        "Pas assez d'énergies pour alimenter les attaques (vise 25-35% du deck).",
-      );
-      suggestions.push(
-        "Ajoutez plusieurs cartes énergie pour sécuriser vos sorties.",
-      );
-    } else if (energyRatio > 0.45) {
-      warnings.push("Beaucoup d'energies detectees, risque de mains mortes.");
-      suggestions.push(
-        "Réduisez légèrement les énergies au profit de Dresseurs ou Pokémon clés.",
-      );
-    }
-
-    if (pokemonCount > 0 && energyCount === 0) {
-      warnings.push(
-        "Aucune énergie détectée alors que des Pokémon sont présents.",
-      );
-    }
-
-    if (averageEnergyCost > 3 && energyRatio < 0.35) {
-      suggestions.push(
-        "Les attaques coûtent cher ; ajoutez de l'accélération d'énergie ou augmentez légèrement le nombre d'énergies.",
-      );
-    }
-  }
-
-  private buildMissingCardsSuggestions({
-    energyCount,
-    pokemonCount,
-    trainerCount,
-    totalCards,
-    typeDistribution,
-    averageEnergyCost,
-  }: {
-    energyCount: number;
-    pokemonCount: number;
-    trainerCount: number;
-    totalCards: number;
-    typeDistribution: { label: string; count: number; percentage: number }[];
-    averageEnergyCost: number;
-  }): MissingCardSuggestionDto[] {
-    const suggestions: MissingCardSuggestionDto[] = [];
-
-    const targetEnergy = Math.max(
-      10,
-      Math.round(Math.max(totalCards * 0.25, pokemonCount * 0.4)),
-    );
-    if (energyCount < targetEnergy) {
-      suggestions.push({
-        label: "Énergies",
-        reason:
-          "Ajoutez des énergies pour suivre le rythme de vos Pokémon principaux.",
-        recommendedQty: targetEnergy - energyCount,
-      });
-    }
-
-    if (trainerCount < 12) {
-      suggestions.push({
-        label: "Dresseurs de pioche",
-        reason:
-          "Renforcez la consistance avec davantage de supporters / dresseurs utilitaires.",
-        recommendedQty: 12 - trainerCount,
-      });
-    }
-
-    if (typeDistribution.length) {
-      const mainType = typeDistribution[0];
-      suggestions.push({
-        label: `Support ${mainType.label}`,
-        reason: `Ajoutez 1-2 cartes qui profitent spécifiquement au type ${mainType.label}.`,
-        recommendedQty: 2,
-      });
-    }
-
-    if (averageEnergyCost >= 3 && energyCount < totalCards * 0.35) {
-      suggestions.push({
-        label: "Accélération d'énergie",
-        reason:
-          "Vos coûts moyens sont élevés : prévoyez des cartes qui mettent des énergies en jeu ou réduisent ces coûts.",
-        recommendedQty: 2,
-      });
-    }
-
-    const uniqueSuggestions = new Map<string, MissingCardSuggestionDto>();
-    suggestions.forEach((entry) => {
-      if (!uniqueSuggestions.has(entry.label)) {
-        uniqueSuggestions.set(entry.label, entry);
-      }
-    });
-
-    return Array.from(uniqueSuggestions.values());
-  }
-
+  /**
+   * Exports a deck as a portable JSON payload.
+   *
+   * @param id Deck ID.
+   * @param viewer Authenticated user, or undefined for anonymous callers.
+   * @returns Deck export payload.
+   * @throws NotFoundException If the deck does not exist or is not visible.
+   */
   async exportDeck(id: number, viewer?: User) {
     const deck = await this.decksRepository.findOne({
       where: { id },

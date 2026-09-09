@@ -23,11 +23,11 @@ export type PokemonWeaknessResistance = {
 };
 
 /**
- * Données de jeu d'une carte, identiques dans toutes les langues : points de
- * vie, types, faiblesses, coût de retraite…
+ * Card gameplay stats identical across all localizations: HP, types,
+ * retreat costs, weaknesses, and resistances.
  *
- * Les champs traduits — description, effet, capacités, attaques, niveau
- * d'évolution — vivent dans `card_translation`.
+ * Localized fields (descriptions, attack names, abilities, evolution stage)
+ * reside in `card_translation`.
  */
 @Entity()
 export class PokemonCardDetails {

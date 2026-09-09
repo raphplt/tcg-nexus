@@ -22,7 +22,9 @@ import { Public } from "../auth/decorators/public.decorator";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { User } from "../user/entities/user.entity";
 import { DeckService } from "./deck.service";
-import { AnalyzeDeckResultDto } from "./dto/analyze-deck-result.dto";
+import { DeckInsightsDto } from "../ai/dto/deck-insights.dto";
+import { RequestLocale } from "../translation/request-locale";
+import type { SupportedLocale } from "../translation/supported-locales";
 import { CreateDeckDto } from "./dto/create-deck.dto";
 import { FindAllDecksQueryDto } from "./dto/find-all-decks-query.dto";
 import { ImportDeckJsonDto } from "./dto/import-deck-json.dto";
@@ -42,7 +44,7 @@ export class DeckController {
   @UseGuards(JwtAuthGuard)
   @Get(":id/inventory-requirements")
   @ApiOperation({
-    summary: "Comparer les besoins du deck avec l'inventaire possédé",
+    summary: "Compare deck requirements against user inventory",
   })
   getInventoryRequirements(
     @Param("id", ParseIntPipe) id: number,
@@ -76,7 +78,7 @@ export class DeckController {
   @Get("/saved")
   @ApiBearerAuth()
   @ApiOperation({
-    summary: "Lister les decks de la bibliothèque de l'utilisateur",
+    summary: "List decks saved in user library",
   })
   findSavedDecks(
     @CurrentUser() user: User,
@@ -89,7 +91,7 @@ export class DeckController {
   @Get("/saved/ids")
   @ApiBearerAuth()
   @ApiOperation({
-    summary: "Récupérer les IDs des decks sauvegardés en bibliothèque",
+    summary: "Retrieve IDs of decks saved in user library",
   })
   findSavedDeckIds(@CurrentUser() user: User) {
     return this.deckService.findSavedDeckIds(user);
@@ -98,7 +100,7 @@ export class DeckController {
   @UseGuards(JwtAuthGuard)
   @Post(":id/save")
   @ApiBearerAuth()
-  @ApiOperation({ summary: "Ajouter un deck public à sa bibliothèque" })
+  @ApiOperation({ summary: "Save a public deck to user library" })
   saveDeck(@Param("id") id: string, @CurrentUser() user: User) {
     return this.deckService.saveDeckToLibrary(+id, user);
   }
@@ -106,14 +108,14 @@ export class DeckController {
   @UseGuards(JwtAuthGuard)
   @Delete(":id/save")
   @ApiBearerAuth()
-  @ApiOperation({ summary: "Retirer un deck de sa bibliothèque" })
+  @ApiOperation({ summary: "Remove a deck from user library" })
   unsaveDeck(@Param("id") id: string, @CurrentUser() user: User) {
     return this.deckService.removeDeckFromLibrary(+id, user);
   }
 
   @Public()
   @Get("export/:id")
-  @ApiOperation({ summary: "Exporter un deck au format JSON" })
+  @ApiOperation({ summary: "Export a deck to JSON format" })
   exportDeck(@Param("id") id: string, @CurrentUser() user?: User) {
     return this.deckService.exportDeck(+id, user);
   }
@@ -121,7 +123,7 @@ export class DeckController {
   @UseGuards(JwtAuthGuard)
   @Post("import-json")
   @ApiBearerAuth()
-  @ApiOperation({ summary: "Importer un deck depuis un fichier JSON" })
+  @ApiOperation({ summary: "Import a deck from JSON payload" })
   importDeckFromJson(
     @CurrentUser() user: User,
     @Body() dto: ImportDeckJsonDto,
@@ -146,13 +148,18 @@ export class DeckController {
 
   @Public()
   @Post(":id/analyze")
-  @ApiOperation({ summary: "Analyser un deck et fournir des recommandations" })
-  @ApiOkResponse({ type: AnalyzeDeckResultDto })
+  @ApiOperation({
+    summary: "Analyze a deck and provide insights",
+    description:
+      "Deterministic analysis computed locally: composition, draw engine, energy curve, evolution lines, and legality. No external services called.",
+  })
+  @ApiOkResponse({ type: DeckInsightsDto })
   analyze(
     @Param("id") id: string,
+    @RequestLocale() locale: SupportedLocale,
     @CurrentUser() user?: User,
-  ): Promise<AnalyzeDeckResultDto> {
-    return this.deckService.analyzeDeck(+id, user);
+  ): Promise<DeckInsightsDto> {
+    return this.deckService.analyzeDeck(+id, user, locale);
   }
 
   @UseGuards(JwtAuthGuard)

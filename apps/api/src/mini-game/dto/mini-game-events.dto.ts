@@ -56,15 +56,15 @@ export class SubmitGuessDto {
   @IsNotEmpty()
   sessionId: string;
 
-  // IsNumber rejette NaN et Infinity par défaut
+  // IsNumber rejects NaN and Infinity by default
   @Type(() => Number)
   @IsNumber()
   @Min(0)
   @Max(MAX_GUESS)
   guess: number;
 
-  // accepté pour les clients existants mais ignoré : le temps est mesuré côté
-  // serveur, une valeur négative gonflerait le bonus de vitesse
+  // Accepted for legacy client compatibility but ignored: round time is
+  // measured server-side to prevent tampering with speed bonuses.
   @IsOptional()
   @Type(() => Number)
   @IsNumber()

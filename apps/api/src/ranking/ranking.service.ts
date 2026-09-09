@@ -788,7 +788,7 @@ export class RankingService {
             playerAStats.points += pointsSystem.loss;
           }
         } else {
-          // Match nul
+          // Draw / tied match
           playerAStats.draws++;
           playerAStats.points += pointsSystem.draw;
           playerBStats.draws++;
@@ -796,7 +796,7 @@ export class RankingService {
         }
       });
 
-    // Calculer les winRates
+    // Compute win rate percentages
     playerStats.forEach((stats) => {
       const totalGames = stats.wins + stats.losses + stats.draws;
       stats.winRate = totalGames > 0 ? (stats.wins / totalGames) * 100 : 0;
@@ -806,7 +806,7 @@ export class RankingService {
   }
 
   /**
-   * Récupère le système de points selon le type de tournoi
+   * Resolves point allocation values based on tournament structure.
    */
   private getPointsSystem(tournamentType: TournamentType): {
     win: number;

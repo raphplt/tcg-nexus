@@ -81,8 +81,8 @@ describe("Order flow (e2e)", () => {
   });
 
   beforeEach(async () => {
-    // un checkout refusé laisse le panier rempli : sans ça l'article fuite sur
-    // les tests suivants, dont le checkout échoue alors en "stock insuffisant"
+    // A rejected checkout leaves the cart populated: clear cart to prevent
+    // leaking items into subsequent test cases causing unexpected "insufficient stock" errors.
     await request(httpServer).delete("/user-cart/me/clear").set(authAs(buyer));
     const active = await request(httpServer)
       .get("/marketplace/checkout/pending")

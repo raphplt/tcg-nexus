@@ -521,7 +521,7 @@ export class BracketService {
     const rounds: { index: number; matches: BracketNode[] }[] = [];
     const matchesByRound = new Map<number, Match[]>();
 
-    // Grouper les matches par round
+    // Group matches by round index
     [...tournament.matches]
       .sort(
         (a, b) =>
@@ -536,7 +536,7 @@ export class BracketService {
         matchesByRound.get(match.round)!.push(match);
       });
 
-    // Convertir en structure de bracket
+    // Build bracket node structure per round
     for (const [roundNumber, matches] of matchesByRound) {
       const nodes: BracketNode[] = matches.map((match, position) => ({
         matchId: match.id,
@@ -571,7 +571,7 @@ export class BracketService {
       rounds.push({ index: roundNumber, matches: nodes });
     }
 
-    // Trier les rounds
+    // Sort rounds sequentially
     rounds.sort((a, b) => a.index - b.index);
 
     return {

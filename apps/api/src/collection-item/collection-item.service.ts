@@ -78,8 +78,8 @@ export class CollectionItemService {
     return collection;
   }
 
-  // increment SQL plutôt que save() : deux ajouts concurrents ne doivent pas
-  // écraser la quantité l'un de l'autre
+  // Atomic SQL increment instead of save(): concurrent additions must not overwrite
+  // each other's quantity
   private async incrementQuantity(itemId: number): Promise<CollectionItem> {
     await this.collectionItemRepo.increment({ id: itemId }, "quantity", 1);
     return this.collectionItemRepo.findOneOrFail({ where: { id: itemId } });

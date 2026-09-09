@@ -1,123 +1,66 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { AiController } from "./ai.controller";
 import { AiService } from "./ai.service";
-import { DeckAnalysisResponseDto } from "./dto/analyze-deck-response.dto";
-import { AnalyzeDeckDto } from "./dto/analyze-deck.dto";
 
 describe("AiController", () => {
   let controller: AiController;
-
-  const mockAiService = {
-    analyzeDeck: jest.fn(),
-  };
+  let aiService: any;
 
   beforeEach(async () => {
+    aiService = {
+      analyzePool: jest.fn(),
+      findSimilarDecks: jest.fn(),
+      suggestCards: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AiController],
-      providers: [
-        {
-          provide: AiService,
-          useValue: mockAiService,
-        },
-      ],
+      providers: [{ provide: AiService, useValue: aiService }],
     }).compile();
 
     controller = module.get<AiController>(AiController);
-  });
-
-  afterEach(() => {
-    jest.clearAllMocks();
   });
 
   it("should be defined", () => {
     expect(controller).toBeDefined();
   });
 
-  describe("analyzeDeck", () => {
-    it("should call service.analyzeDeck with deckId", async () => {
-      const dto: AnalyzeDeckDto = { deckId: 1 };
-      const mockResponse: DeckAnalysisResponseDto = {
-        deckId: 1,
-        totalCards: 60,
-        typeDistribution: [],
-        categoryDistribution: [],
-        energyCostDistribution: [],
-        duplicates: [],
-        synergies: [],
-        warnings: [],
-        recommendations: [],
-      };
+  describe("analyzePool", () => {
+    it("delegates to aiService.analyzePool with locale", async () => {
+      const dto = { cards: [{ cardId: "c1", qty: 2 }] };
+      aiService.analyzePool.mockResolvedValue({ totalCards: 2 });
 
-      mockAiService.analyzeDeck.mockResolvedValue(mockResponse);
+      const result = await controller.analyzePool(dto, "fr");
 
-      const result = await controller.analyzeDeck(dto);
-
-      expect(mockAiService.analyzeDeck).toHaveBeenCalledWith(dto);
-      expect(result).toEqual(mockResponse);
+      expect(aiService.analyzePool).toHaveBeenCalledWith(dto, "fr");
+      expect(result).toEqual({ totalCards: 2 });
     });
+  });
 
-    it("should call service.analyzeDeck with cardIds", async () => {
-      const dto: AnalyzeDeckDto = { cardIds: ["card1", "card2", "card3"] };
-      const mockResponse: DeckAnalysisResponseDto = {
-        totalCards: 3,
-        typeDistribution: [],
-        categoryDistribution: [],
-        energyCostDistribution: [],
-        duplicates: [],
-        synergies: [],
-        warnings: [],
-        recommendations: [],
-      };
+  describe("findSimilarDecks", () => {
+    it("delegates to aiService.findSimilarDecks clamping limit to 25", async () => {
+      const user = { id: 1 } as any;
+      aiService.findSimilarDecks.mockResolvedValue({
+        available: true,
+        items: [],
+      });
 
-      mockAiService.analyzeDeck.mockResolvedValue(mockResponse);
+      const result = await controller.findSimilarDecks(5, 50, user);
 
-      const result = await controller.analyzeDeck(dto);
-
-      expect(mockAiService.analyzeDeck).toHaveBeenCalledWith(dto);
-      expect(result).toEqual(mockResponse);
+      expect(aiService.findSimilarDecks).toHaveBeenCalledWith(5, user, 25);
+      expect(result).toEqual({ available: true, items: [] });
     });
+  });
 
-    it("should return analysis response from service", async () => {
-      const dto: AnalyzeDeckDto = { deckId: 5 };
-      const mockResponse: DeckAnalysisResponseDto = {
-        deckId: 5,
-        totalCards: 60,
-        typeDistribution: [
-          { type: "Fire", count: 30, percentage: 50 },
-          { type: "Water", count: 30, percentage: 50 },
-        ],
-        categoryDistribution: [
-          { category: "Pokemon", count: 20, percentage: 33 },
-          { category: "Energy", count: 25, percentage: 42 },
-          { category: "Trainer", count: 15, percentage: 25 },
-        ],
-        energyCostDistribution: [
-          { cost: 1, count: 10, percentage: 17 },
-          { cost: 2, count: 10, percentage: 17 },
-        ],
-        duplicates: [{ cardId: "card1", cardName: "Pikachu", count: 4 }],
-        synergies: [
-          {
-            type: "energy-type",
-            description: "6 cartes de type Fire détectées",
-            cardIds: ["card1", "card2", "card3", "card4", "card5", "card6"],
-          },
-        ],
-        warnings: [],
-        recommendations: [
-          "Ajoutez plus de cartes Trainer pour améliorer la consistance du deck",
-        ],
-      };
+  describe("suggestCards", () => {
+    it("delegates to aiService.suggestCards clamping limit to 30", async () => {
+      const user = { id: 2 } as any;
+      aiService.suggestCards.mockResolvedValue({ available: true, items: [] });
 
-      mockAiService.analyzeDeck.mockResolvedValue(mockResponse);
+      const result = await controller.suggestCards(10, 50, "en", user);
 
-      const result = await controller.analyzeDeck(dto);
-
-      expect(result).toEqual(mockResponse);
-      expect(result.typeDistribution).toHaveLength(2);
-      expect(result.categoryDistribution).toHaveLength(3);
-      expect(result.duplicates).toHaveLength(1);
-      expect(result.synergies).toHaveLength(1);
+      expect(aiService.suggestCards).toHaveBeenCalledWith(10, user, 30, "en");
+      expect(result).toEqual({ available: true, items: [] });
     });
   });
 });

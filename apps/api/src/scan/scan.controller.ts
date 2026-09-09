@@ -14,9 +14,9 @@ import { ScanRecognizeDto } from "./dto/scan-recognize.dto";
 import { isSupportedImage } from "./image-validation";
 import { ScanService } from "./scan.service";
 
-const MAX_IMAGE_SIZE = 8 * 1024 * 1024; // 8 Mo
-const MAX_FRAMES = 8; // frames d'une rafale
-const MAX_TOTAL_UPLOAD_SIZE = 24 * 1024 * 1024; // budget cumulé d'une rafale
+const MAX_IMAGE_SIZE = 8 * 1024 * 1024; // 8 MB
+const MAX_FRAMES = 8; // Maximum frames per burst scan
+const MAX_TOTAL_UPLOAD_SIZE = 24 * 1024 * 1024; // Cumulative burst payload size budget
 
 @ApiTags("scan")
 @ApiBearerAuth("bearerAuth")

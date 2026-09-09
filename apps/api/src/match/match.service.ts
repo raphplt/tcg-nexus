@@ -398,7 +398,6 @@ export class MatchService {
     await this.matchRepository.remove(match);
   }
 
-  // Démarrer un match
   /**
    * Starts a single match by updating status and creating online game session.
    */
@@ -527,7 +526,9 @@ export class MatchService {
     reportScoreDto: ReportScoreDto,
     outerManager?: EntityManager,
   ): Promise<Match> {
-    const run = <T>(work: (manager: EntityManager) => Promise<T>): Promise<T> =>
+    const run = <T>(
+      work: (manager: EntityManager) => Promise<T>,
+    ): Promise<T> =>
       outerManager
         ? work(outerManager)
         : this.dataSource.transaction((manager) => work(manager));

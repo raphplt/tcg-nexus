@@ -1,383 +1,138 @@
-import { BadRequestException, NotFoundException } from "@nestjs/common";
+import { BadRequestException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { Card } from "../card/entities/card.entity";
-import { PokemonCardsType } from "../common/enums/pokemonCardsType";
-import { Deck } from "../deck/entities/deck.entity";
+import { DeckFormat } from "../deck-format/entities/deck-format.entity";
+import { DeckService } from "../deck/deck.service";
 import { AiService } from "./ai.service";
+import { DeckMetricsService } from "./engine/deck-metrics.service";
+import { DeckSimilarityService } from "./similarity/deck-similarity.service";
 
 describe("AiService", () => {
   let service: AiService;
-
-  const mockDeckRepo = {
-    findOne: jest.fn(),
-  };
-
-  const mockPokemonCardRepo = {
-    find: jest.fn(),
-  };
-
-  const withPokemonDetails = <T extends Record<string, any>>(card: T) => ({
-    ...card,
-    pokemonDetails: {
-      category: card.category,
-      types: card.types,
-      attacks: card.attacks,
-      evolveFrom: card.evolveFrom,
-    },
-  });
+  let cardRepository: any;
+  let formatRepository: any;
+  let deckService: any;
+  let deckMetricsService: any;
+  let deckSimilarityService: any;
 
   beforeEach(async () => {
+    cardRepository = {
+      find: jest.fn(),
+    };
+    formatRepository = {
+      findOneBy: jest.fn(),
+    };
+    deckService = {
+      findOneWithCards: jest.fn(),
+    };
+    deckMetricsService = {
+      analyze: jest.fn(),
+    };
+    deckSimilarityService = {
+      refreshDeckEmbedding: jest.fn(),
+      findSimilarDecks: jest.fn(),
+      suggestCards: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AiService,
-        {
-          provide: getRepositoryToken(Deck),
-          useValue: mockDeckRepo,
-        },
-        {
-          provide: getRepositoryToken(Card),
-          useValue: mockPokemonCardRepo,
-        },
+        { provide: getRepositoryToken(Card), useValue: cardRepository },
+        { provide: getRepositoryToken(DeckFormat), useValue: formatRepository },
+        { provide: DeckService, useValue: deckService },
+        { provide: DeckMetricsService, useValue: deckMetricsService },
+        { provide: DeckSimilarityService, useValue: deckSimilarityService },
       ],
     }).compile();
 
     service = module.get<AiService>(AiService);
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
   it("should be defined", () => {
     expect(service).toBeDefined();
   });
 
-  describe("analyzeDeck", () => {
-    it("should throw NotFoundException when deck is not found", async () => {
-      mockDeckRepo.findOne.mockResolvedValue(null);
-
-      await expect(service.analyzeDeck({ deckId: 999 })).rejects.toThrow(
-        NotFoundException,
-      );
-    });
-
-    it("should throw BadRequestException when no deckId or cardIds provided", async () => {
-      await expect(service.analyzeDeck({})).rejects.toThrow(
-        BadRequestException,
-      );
-    });
-
-    it("should throw BadRequestException when no cards found by cardIds", async () => {
-      mockPokemonCardRepo.find.mockResolvedValue([]);
+  describe("analyzePool", () => {
+    it("throws BadRequestException when no submitted cards are found", async () => {
+      cardRepository.find.mockResolvedValue([]);
 
       await expect(
-        service.analyzeDeck({ cardIds: ["invalid-id"] }),
+        service.analyzePool({
+          cards: [{ cardId: "unknown-1", qty: 2 }],
+        }),
       ).rejects.toThrow(BadRequestException);
     });
 
-    it("should analyze a deck by deckId successfully", async () => {
-      const mockPokemonCards = [
+    it("aggregates duplicate entries and calls deckMetrics.analyze", async () => {
+      const mockCard = { id: "card-1", name: "Pikachu" } as Card;
+      cardRepository.find.mockResolvedValue([mockCard]);
+      formatRepository.findOneBy.mockResolvedValue({ id: 1, type: "standard" });
+      deckMetricsService.analyze.mockResolvedValue({ totalCards: 3 } as any);
+
+      const result = await service.analyzePool(
         {
-          id: "card1",
-          name: "Pikachu",
-          category: PokemonCardsType.Pokemon,
-          types: ["Lightning"],
-          attacks: [
-            { cost: ["Lightning", "Colorless"], name: "Thunder", damage: 80 },
+          cards: [
+            { cardId: "card-1", qty: 2 },
+            { cardId: "card-1", qty: 1 },
           ],
+          formatId: 1,
         },
-        {
-          id: "card2",
-          name: "Lightning Energy",
-          category: PokemonCardsType.Energy,
-        },
-        {
-          id: "card3",
-          name: "Professor Research",
-          category: PokemonCardsType.Trainer,
-        },
-      ].map(withPokemonDetails);
+        "en",
+      );
 
-      const mockDeck = {
-        id: 1,
-        cards: [
-          { card: mockPokemonCards[0], qty: 2 },
-          { card: mockPokemonCards[1], qty: 20 },
-          { card: mockPokemonCards[2], qty: 4 },
-        ],
-      };
-
-      mockDeckRepo.findOne.mockResolvedValue(mockDeck);
-
-      const result = await service.analyzeDeck({ deckId: 1 });
-
-      expect(result).toBeDefined();
-      expect(result.deckId).toBe(1);
-      expect(result.totalCards).toBe(26);
-      expect(result.typeDistribution).toBeDefined();
-      expect(result.categoryDistribution).toBeDefined();
-      expect(result.duplicates).toBeDefined();
-      expect(result.synergies).toBeDefined();
-      expect(result.warnings).toBeDefined();
-      expect(result.recommendations).toBeDefined();
+      expect(cardRepository.find).toHaveBeenCalled();
+      expect(deckMetricsService.analyze).toHaveBeenCalledWith(
+        [{ card: mockCard, qty: 3 }],
+        { formatId: 1, formatType: "standard", locale: "en" },
+      );
+      expect(result).toEqual({ totalCards: 3 });
     });
+  });
 
-    it("should analyze cards by cardIds successfully", async () => {
-      const mockPokemonCards = [
-        {
-          id: "card1",
-          name: "Charizard",
-          category: PokemonCardsType.Pokemon,
-          types: ["Fire"],
-          attacks: [
-            { cost: ["Fire", "Fire", "Fire"], name: "Fire Blast", damage: 120 },
-          ],
-        },
-        {
-          id: "card2",
-          name: "Fire Energy",
-          category: PokemonCardsType.Energy,
-        },
-      ].map(withPokemonDetails);
-
-      mockPokemonCardRepo.find.mockResolvedValue(mockPokemonCards);
-
-      const result = await service.analyzeDeck({
-        cardIds: ["card1", "card2", "card2"],
+  describe("findSimilarDecks", () => {
+    it("checks deck visibility, refreshes embeddings and queries similar decks", async () => {
+      const mockUser = { id: 1 } as any;
+      deckService.findOneWithCards.mockResolvedValue({ id: 10 });
+      deckSimilarityService.findSimilarDecks.mockResolvedValue({
+        available: true,
+        items: [{ deckId: 12, similarity: 0.95 }],
       });
 
-      expect(result).toBeDefined();
-      expect(result.deckId).toBeUndefined();
-      expect(result.totalCards).toBe(3);
-    });
+      const result = await service.findSimilarDecks(10, mockUser, 5);
 
-    it("should detect duplicates correctly", async () => {
-      const mockPokemonCard = withPokemonDetails({
-        id: "card1",
-        name: "Mewtwo",
-        category: PokemonCardsType.Pokemon,
-        types: ["Psychic"],
+      expect(deckService.findOneWithCards).toHaveBeenCalledWith(10, mockUser);
+      expect(deckSimilarityService.refreshDeckEmbedding).toHaveBeenCalledWith(
+        10,
+      );
+      expect(deckSimilarityService.findSimilarDecks).toHaveBeenCalledWith(
+        10,
+        5,
+      );
+      expect(result.items).toHaveLength(1);
+    });
+  });
+
+  describe("suggestCards", () => {
+    it("checks deck visibility and returns card suggestions", async () => {
+      deckService.findOneWithCards.mockResolvedValue({ id: 10 });
+      deckSimilarityService.suggestCards.mockResolvedValue({
+        available: true,
+        items: [{ cardId: "c1", adoption: 80 }],
       });
 
-      const mockDeck = {
-        id: 1,
-        cards: [{ card: mockPokemonCard, qty: 4 }],
-      };
+      const result = await service.suggestCards(10, undefined, 8, "fr");
 
-      mockDeckRepo.findOne.mockResolvedValue(mockDeck);
-
-      const result = await service.analyzeDeck({ deckId: 1 });
-
-      expect(result.duplicates).toHaveLength(1);
-      expect(result.duplicates[0].cardId).toBe("card1");
-      expect(result.duplicates[0].count).toBe(4);
-    });
-
-    it("should provide warnings for incomplete deck", async () => {
-      const mockPokemonCard = withPokemonDetails({
-        id: "card1",
-        name: "Eevee",
-        category: PokemonCardsType.Pokemon,
-        types: ["Colorless"],
-      });
-
-      const mockDeck = {
-        id: 1,
-        cards: [{ card: mockPokemonCard, qty: 10 }],
-      };
-
-      mockDeckRepo.findOne.mockResolvedValue(mockDeck);
-
-      const result = await service.analyzeDeck({ deckId: 1 });
-
-      expect(result.warnings).toContain("Deck incomplet: 10/60 cartes");
-    });
-
-    it("should warn when deck has more than 60 cards", async () => {
-      const mockPokemonCard = withPokemonDetails({
-        id: "card1",
-        name: "Pidgey",
-        category: PokemonCardsType.Pokemon,
-        types: ["Colorless"],
-        attacks: [{ cost: [], name: "Call", damage: 0 }],
-      });
-
-      const mockDeck = {
-        id: 1,
-        cards: [{ card: mockPokemonCard, qty: 61 }],
-      };
-
-      mockDeckRepo.findOne.mockResolvedValue(mockDeck);
-
-      const result = await service.analyzeDeck({ deckId: 1 });
-
-      expect(result.warnings).toContain("Deck trop grand: 61/60 cartes");
-      expect(result.energyCostDistribution).toEqual([
-        { cost: 0, count: 61, percentage: 100 },
-      ]);
-    });
-
-    it("should provide recommendations for energy distribution", async () => {
-      const mockPokemonCards = [
-        {
-          id: "card1",
-          name: "Snorlax",
-          category: PokemonCardsType.Pokemon,
-          types: ["Colorless"],
-        },
-        {
-          id: "card2",
-          name: "Colorless Energy",
-          category: PokemonCardsType.Energy,
-        },
-      ].map(withPokemonDetails);
-
-      const mockDeck = {
-        id: 1,
-        cards: [
-          { card: mockPokemonCards[0], qty: 50 },
-          { card: mockPokemonCards[1], qty: 10 },
-        ],
-      };
-
-      mockDeckRepo.findOne.mockResolvedValue(mockDeck);
-
-      const result = await service.analyzeDeck({ deckId: 1 });
-
-      expect(result.recommendations).toEqual(
-        expect.arrayContaining([expect.stringContaining("énergie")]),
+      expect(deckService.findOneWithCards).toHaveBeenCalledWith(10, undefined);
+      expect(deckSimilarityService.refreshDeckEmbedding).toHaveBeenCalledWith(
+        10,
       );
-    });
-
-    it("should detect type synergies", async () => {
-      const mockPokemonCards = [
-        {
-          id: "card1",
-          name: "Blastoise",
-          category: PokemonCardsType.Pokemon,
-          types: ["Water"],
-        },
-        {
-          id: "card2",
-          name: "Squirtle",
-          category: PokemonCardsType.Pokemon,
-          types: ["Water"],
-        },
-        {
-          id: "card3",
-          name: "Wartortle",
-          category: PokemonCardsType.Pokemon,
-          types: ["Water"],
-        },
-      ].map(withPokemonDetails);
-
-      const mockDeck = {
-        id: 1,
-        cards: mockPokemonCards.map((card) => ({ card, qty: 2 })),
-      };
-
-      mockDeckRepo.findOne.mockResolvedValue(mockDeck);
-
-      const result = await service.analyzeDeck({ deckId: 1 });
-
-      const waterSynergy = result.synergies.find(
-        (s) => s.type === "energy-type",
+      expect(deckSimilarityService.suggestCards).toHaveBeenCalledWith(
+        10,
+        8,
+        "fr",
       );
-      expect(waterSynergy).toBeDefined();
-      expect(waterSynergy?.description).toContain("Water");
-    });
-
-    it("should detect evolution synergies", async () => {
-      const mockPokemonCards = [
-        {
-          id: "card1",
-          name: "Charmander",
-          category: PokemonCardsType.Pokemon,
-          types: ["Fire"],
-        },
-        {
-          id: "card2",
-          name: "Charmeleon",
-          category: PokemonCardsType.Pokemon,
-          types: ["Fire"],
-          evolveFrom: "Charmander",
-        },
-      ].map(withPokemonDetails);
-
-      const mockDeck = {
-        id: 1,
-        cards: mockPokemonCards.map((card) => ({ card, qty: 2 })),
-      };
-
-      mockDeckRepo.findOne.mockResolvedValue(mockDeck);
-
-      const result = await service.analyzeDeck({ deckId: 1 });
-
-      const evolutionSynergy = result.synergies.find(
-        (s) => s.type === "evolution",
-      );
-      expect(evolutionSynergy).toBeDefined();
-      expect(evolutionSynergy?.description).toContain("Charmander");
-    });
-
-    it("should detect trainer support synergies", async () => {
-      const mockPokemonCards = [
-        {
-          id: "card1",
-          name: "Professor Oak",
-          category: PokemonCardsType.Trainer,
-        },
-        {
-          id: "card2",
-          name: "Bill",
-          category: PokemonCardsType.Trainer,
-        },
-        {
-          id: "card3",
-          name: "Computer Search",
-          category: PokemonCardsType.Trainer,
-        },
-        {
-          id: "card4",
-          name: "Energy Removal",
-          category: PokemonCardsType.Trainer,
-        },
-        {
-          id: "card5",
-          name: "Gust of Wind",
-          category: PokemonCardsType.Trainer,
-        },
-      ].map(withPokemonDetails);
-
-      const mockDeck = {
-        id: 1,
-        cards: mockPokemonCards.map((card) => ({ card, qty: 2 })),
-      };
-
-      mockDeckRepo.findOne.mockResolvedValue(mockDeck);
-
-      const result = await service.analyzeDeck({ deckId: 1 });
-
-      const trainerSynergy = result.synergies.find(
-        (s) => s.type === "trainer-support",
-      );
-      expect(trainerSynergy).toBeDefined();
-      expect(trainerSynergy?.cardIds).toHaveLength(5);
-    });
-
-    it("should gracefully handle an empty deck without NaN percentages", async () => {
-      mockDeckRepo.findOne.mockResolvedValue({ id: 10, cards: [] });
-
-      const result = await service.analyzeDeck({ deckId: 10 });
-
-      expect(result.totalCards).toBe(0);
-      expect(result.typeDistribution).toEqual([]);
-      expect(result.categoryDistribution).toEqual([]);
-      expect(result.warnings).toContain("Deck incomplet: 0/60 cartes");
-      expect(result.recommendations).toContain(
-        "Considérez ajouter plus de cartes énergie (recommandé: 30-40%)",
-      );
+      expect(result.items).toHaveLength(1);
     });
   });
 });

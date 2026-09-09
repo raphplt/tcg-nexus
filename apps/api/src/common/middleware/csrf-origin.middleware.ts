@@ -21,16 +21,16 @@ function allowedOrigins(): string[] {
 }
 
 /**
- * Refuse les écritures cross-site authentifiées par cookie.
+ * Rejects cross-site mutation requests authenticated via session cookies.
  *
- * CORS n'empêche pas l'envoi d'une requête cross-origin, seulement la lecture
- * de la réponse : sans contrôle d'Origin, un formulaire tiers peut déclencher
- * une mutation avec le cookie de session de la victime.
+ * CORS prevents reading responses across origins, but does not block request
+ * dispatch: without origin verification, an external site could trigger
+ * state mutations carrying the victim's session cookie.
  *
- * On refuse uniquement une origine *présente et non autorisée* : un navigateur
- * envoie toujours Origin sur une requête cross-origin, alors qu'un appel
- * serveur-à-serveur légitime (le middleware Next relaie les cookies vers
- * /auth/profile et /auth/refresh) n'en envoie aucune.
+ * Rejection occurs only when an Origin header is present and disallowed.
+ * Browsers always send Origin on cross-origin mutations, while legitimate
+ * server-to-server proxies (Next.js middleware relaying cookies to /auth/refresh)
+ * omit Origin.
  */
 @Injectable()
 export class CsrfOriginMiddleware implements NestMiddleware {

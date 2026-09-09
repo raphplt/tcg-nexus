@@ -1,5 +1,6 @@
 import { CatalogLocalizationModule } from "src/translation/catalog-localization.module";
 import { Module } from "@nestjs/common";
+import { AiEngineModule } from "../ai/engine/ai-engine.module";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { CollectionItem } from "../collection-item/entities/collection-item.entity";
 import { Listing } from "../marketplace/entities/listing.entity";
@@ -28,6 +29,7 @@ import { SavedDeck } from "./entities/saved-deck.entity";
       Listing,
     ]),
     CatalogLocalizationModule,
+    AiEngineModule,
   ],
   controllers: [DeckController],
   providers: [DeckService, DeckInventoryService],

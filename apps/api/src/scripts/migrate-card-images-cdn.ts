@@ -5,18 +5,17 @@ import { DataSource } from "typeorm";
 dotenv.config();
 
 /**
- * Bascule en base le champ `card.image` des cartes depuis l'origine TCGdex
- * (`https://assets.tcgdex.net/...`) vers le CDN R2
- * (`https://cdn.tcg-nexus.org/cards/...`), en cohérence avec les clés générées
- * par le backfill `apps/fetch/migrate-card-images-r2.ts`.
+ * Migrates database `card.image` paths from legacy TCGdex origin
+ * (`https://assets.tcgdex.net/...`) to Cloudflare R2 CDN
+ * (`https://cdn.tcg-nexus.org/cards/...`), consistent with keys generated
+ * by the backfill script `apps/fetch/migrate-card-images-r2.ts`.
  *
- * ⚠️ À LANCER UNIQUEMENT APRÈS un backfill R2 complet (le script de fetch doit
- * reporter « échecs 0 »), sinon des cartes pointeraient vers des objets R2
- * inexistants. Le backfill est reprenable : relance-le jusqu'à 0 échec.
+ * NOTE: Run ONLY after completing a full R2 backfill (fetch script must
+ * report 0 failures), otherwise card images will point to non-existent objects.
  *
- * Idempotent : ne touche que les lignes encore sur l'hôte TCGdex.
+ * Idempotent: only updates records still pointing to the TCGdex host.
  *
- * Usage : `npm run migrate:card-images-cdn`
+ * Usage: `npm run migrate:card-images-cdn`
  */
 
 const FROM = "https://assets.tcgdex.net/";

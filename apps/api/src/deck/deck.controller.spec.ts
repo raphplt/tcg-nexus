@@ -99,9 +99,9 @@ describe("DeckController", () => {
   it("analyzes a deck", async () => {
     service.analyzeDeck.mockResolvedValue({ deckId: 2 } as any);
 
-    const result = await controller.analyze("2");
+    const result = await controller.analyze("2", "fr");
 
-    expect(service.analyzeDeck).toHaveBeenCalledWith(2, undefined);
+    expect(service.analyzeDeck).toHaveBeenCalledWith(2, undefined, "fr");
     expect(result).toEqual({ deckId: 2 });
   });
 

@@ -1,274 +1,126 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { In, Repository } from "typeorm";
 import { Card } from "../card/entities/card.entity";
-import { PokemonCardsType } from "../common/enums/pokemonCardsType";
-import { Deck } from "../deck/entities/deck.entity";
-import { DeckAnalysisResponseDto } from "./dto/analyze-deck-response.dto";
-import { AnalyzeDeckDto } from "./dto/analyze-deck.dto";
+import { DeckFormat } from "../deck-format/entities/deck-format.entity";
+import { DeckService } from "../deck/deck.service";
+import type { User } from "../user/entities/user.entity";
+import {
+  DEFAULT_LOCALE,
+  type SupportedLocale,
+} from "../translation/supported-locales";
+import type { DeckInsightsDto } from "./dto/deck-insights.dto";
+import type { AnalyzePoolDto } from "./dto/analyze-pool.dto";
+import { DeckMetricsService } from "./engine/deck-metrics.service";
+import {
+  type CardSuggestion,
+  DeckSimilarityService,
+  type SimilarDeck,
+  type SimilarityResult,
+} from "./similarity/deck-similarity.service";
 
 /**
- * Service evaluating deck balance, type curves, and tactical card synergies.
+ * Entry point of the deck intelligence module.
+ *
+ * Deck loading and visibility stay in `DeckService`; this service composes the
+ * deterministic engine and the local similarity index on top of it.
  */
 @Injectable()
 export class AiService {
   constructor(
-    @InjectRepository(Deck)
-    private readonly deckRepo: Repository<Deck>,
     @InjectRepository(Card)
-    private readonly pokemonCardRepo: Repository<Card>,
+    private readonly cardRepository: Repository<Card>,
+    @InjectRepository(DeckFormat)
+    private readonly formatRepository: Repository<DeckFormat>,
+    private readonly deckService: DeckService,
+    private readonly deckMetrics: DeckMetricsService,
+    private readonly similarity: DeckSimilarityService,
   ) {}
 
   /**
-   * Analyzes deck composition (type breakdown, energy curve, duplicates, and synergies).
+   * Analyzes a card pool that is not a persisted deck.
    *
-   * @param dto Deck analysis payload containing either a persisted deckId or a list of cardIds.
-   * @returns Comprehensive analysis response including warnings and deck-building recommendations.
-   * @throws NotFoundException When the requested deckId cannot be found in the database.
-   * @throws BadRequestException When neither deckId nor cardIds are provided, or when no matching cards are found.
+   * @param dto Cards and their quantities, plus an optional format.
+   * @param locale Locale to render diagnostics in.
+   * @returns The same insight payload a persisted deck produces.
+   * @throws BadRequestException If none of the submitted cards exist.
    */
-  async analyzeDeck(dto: AnalyzeDeckDto): Promise<DeckAnalysisResponseDto> {
-    let cards: { card: Card; qty: number }[] = [];
-    let deckId: number | undefined;
+  async analyzePool(
+    dto: AnalyzePoolDto,
+    locale: SupportedLocale = DEFAULT_LOCALE,
+  ): Promise<DeckInsightsDto> {
+    // Quantities are summed per card so a pool that repeats an identifier
+    // instead of setting `qty` is counted the same way.
+    const quantities = new Map<string, number>();
+    for (const entry of dto.cards) {
+      quantities.set(
+        entry.cardId,
+        (quantities.get(entry.cardId) ?? 0) + (entry.qty ?? 1),
+      );
+    }
 
-    if (dto.deckId) {
-      const deck = await this.deckRepo.findOne({
-        where: { id: dto.deckId },
-        relations: ["cards", "cards.card", "cards.card.pokemonDetails"],
-      });
+    const cards = await this.cardRepository.find({
+      where: { id: In([...quantities.keys()]) },
+      relations: ["pokemonDetails"],
+    });
 
-      if (!deck) {
-        throw new NotFoundException("Deck not found");
-      }
-
-      deckId = deck.id;
-      cards =
-        deck.cards
-          ?.filter((dc) => Boolean(dc.card))
-          .map((dc) => ({ card: dc.card, qty: dc.qty || 1 })) || [];
-    } else if (dto.cardIds && dto.cardIds.length > 0) {
-      const pokemonCards = await this.pokemonCardRepo.find({
-        where: { id: In(dto.cardIds) },
-        relations: ["pokemonDetails"],
-      });
-
-      if (pokemonCards.length === 0) {
-        throw new BadRequestException("No cards found");
-      }
-
-      const cardCount = new Map<string, number>();
-      dto.cardIds.forEach((id) => {
-        cardCount.set(id, (cardCount.get(id) || 0) + 1);
-      });
-
-      cards = pokemonCards.map((card) => ({
-        card,
-        qty: cardCount.get(card.id) || 1,
-      }));
-    } else {
+    if (!cards.length) {
       throw new BadRequestException(
-        "Either deckId or cardIds must be provided",
+        "None of the provided cards exist in catalog.",
       );
     }
 
-    return this.performAnalysis(cards, deckId);
+    const format = dto.formatId
+      ? await this.formatRepository.findOneBy({ id: dto.formatId })
+      : null;
+
+    return this.deckMetrics.analyze(
+      cards.map((card) => ({ card, qty: quantities.get(card.id) ?? 1 })),
+      {
+        formatId: format?.id ?? null,
+        formatType: format?.type ?? null,
+        locale,
+      },
+    );
   }
 
   /**
-   * Computes distributions, detects duplicate copies, identifies archetype synergies,
-   * and formulates deck-building recommendations based on standard competitive rules.
+   * Lists the public decks closest to a deck's archetype.
    *
-   * @param cards Array of cards and their respective quantities.
-   * @param deckId Optional identifier of the persisted deck being analyzed.
-   * @returns Complete breakdown of deck statistics and actionable advice.
+   * @param deckId Reference deck.
+   * @param viewer Authenticated user, or undefined for anonymous callers.
+   * @param limit Maximum neighbours to return.
+   * @returns Neighbours, or an explained empty result.
+   * @throws NotFoundException If the deck does not exist or is not visible.
    */
-  private performAnalysis(
-    cards: { card: Card; qty: number }[],
-    deckId?: number,
-  ): DeckAnalysisResponseDto {
-    const totalCards = cards.reduce((sum, c) => sum + c.qty, 0);
-
-    const typeMap = new Map<string, number>();
-    cards.forEach(({ card, qty }) => {
-      const types = card.pokemonDetails?.types;
-      if (types && types.length > 0) {
-        types.forEach((type) => {
-          typeMap.set(type, (typeMap.get(type) || 0) + qty);
-        });
-      }
-    });
-
-    const typeDistribution = Array.from(typeMap.entries()).map(
-      ([type, count]) => ({
-        type,
-        count,
-        percentage: totalCards > 0 ? Math.round((count / totalCards) * 100) : 0,
-      }),
-    );
-
-    const categoryMap = new Map<string, number>();
-    cards.forEach(({ card, qty }) => {
-      const category = card.pokemonDetails?.category || "Unknown";
-      categoryMap.set(category, (categoryMap.get(category) || 0) + qty);
-    });
-
-    const categoryDistribution = Array.from(categoryMap.entries()).map(
-      ([category, count]) => ({
-        category,
-        count,
-        percentage: totalCards > 0 ? Math.round((count / totalCards) * 100) : 0,
-      }),
-    );
-
-    const costMap = new Map<number, number>();
-    cards.forEach(({ card, qty }) => {
-      const attacks = card.pokemonDetails?.attacks;
-      if (attacks && attacks.length > 0) {
-        attacks.forEach((attack) => {
-          const cost = attack.cost?.length || 0;
-          costMap.set(cost, (costMap.get(cost) || 0) + qty);
-        });
-      }
-    });
-
-    const energyCostDistribution = Array.from(costMap.entries())
-      .map(([cost, count]) => ({
-        cost,
-        count,
-        percentage: totalCards > 0 ? Math.round((count / totalCards) * 100) : 0,
-      }))
-      .sort((a, b) => a.cost - b.cost);
-
-    const duplicates = cards
-      .filter((c) => c.qty > 1)
-      .map((c) => ({
-        cardId: c.card.id,
-        cardName: c.card.name || "Unknown",
-        count: c.qty,
-      }));
-
-    const synergies = this.detectSynergies(cards);
-
-    const warnings: string[] = [];
-    const recommendations: string[] = [];
-
-    // Canonical Pokémon TCG deck construction requires exactly 60 cards
-    if (totalCards < 60) {
-      warnings.push(`Deck incomplet: ${totalCards}/60 cartes`);
-    } else if (totalCards > 60) {
-      warnings.push(`Deck trop grand: ${totalCards}/60 cartes`);
-    }
-
-    // Competitive guideline: balanced decks typically feature 30-40% energy cards
-    const energyCount = categoryMap.get(PokemonCardsType.Energy) || 0;
-    const energyPercentage =
-      totalCards > 0 ? (energyCount / totalCards) * 100 : 0;
-
-    if (energyPercentage < 30) {
-      recommendations.push(
-        "Considérez ajouter plus de cartes énergie (recommandé: 30-40%)",
-      );
-    } else if (energyPercentage > 50) {
-      recommendations.push(
-        "Trop de cartes énergie, considérez en retirer quelques-unes",
-      );
-    }
-
-    // A minimal core of 10 trainer cards is recommended to maintain hand flow and consistency
-    const trainerCount = categoryMap.get(PokemonCardsType.Trainer) || 0;
-    if (trainerCount < 10) {
-      recommendations.push(
-        "Ajoutez plus de cartes Trainer pour améliorer la consistance du deck",
-      );
-    }
-
-    return {
-      deckId,
-      totalCards,
-      typeDistribution,
-      categoryDistribution,
-      energyCostDistribution,
-      duplicates,
-      synergies,
-      warnings,
-      recommendations,
-    };
+  async findSimilarDecks(
+    deckId: number,
+    viewer?: User,
+    limit = 10,
+  ): Promise<SimilarityResult<SimilarDeck>> {
+    await this.deckService.findOneWithCards(deckId, viewer);
+    await this.similarity.refreshDeckEmbedding(deckId);
+    return this.similarity.findSimilarDecks(deckId, limit);
   }
 
   /**
-   * Identifies tactical synergies including shared energy types, evolution lines, and trainer cores.
+   * Suggests cards that similar decks play and this one does not.
    *
-   * @param cards Evaluated card pool with quantities.
-   * @returns Detected synergy groupings.
+   * @param deckId Reference deck.
+   * @param viewer Authenticated user, or undefined for anonymous callers.
+   * @param limit Maximum suggestions to return.
+   * @param locale Locale used to resolve card names.
+   * @returns Suggestions, or an explained empty result.
+   * @throws NotFoundException If the deck does not exist or is not visible.
    */
-  private detectSynergies(
-    cards: { card: Card; qty: number }[],
-  ): DeckAnalysisResponseDto["synergies"] {
-    const synergies: DeckAnalysisResponseDto["synergies"] = [];
-
-    const typeGroups = new Map<string, string[]>();
-    cards.forEach(({ card }) => {
-      const types = card.pokemonDetails?.types;
-      if (types && types.length > 0) {
-        types.forEach((type) => {
-          if (!typeGroups.has(type)) {
-            typeGroups.set(type, []);
-          }
-          typeGroups.get(type)!.push(card.id);
-        });
-      }
-    });
-
-    typeGroups.forEach((cardIds, type) => {
-      if (cardIds.length >= 3) {
-        synergies.push({
-          type: "energy-type",
-          description: `${cardIds.length} cartes de type ${type} détectées`,
-          cardIds,
-        });
-      }
-    });
-
-    const evolutionChains = new Map<string, string[]>();
-    cards.forEach(({ card }) => {
-      const evolveFrom = card.pokemonDetails?.evolveFrom;
-      if (evolveFrom) {
-        if (!evolutionChains.has(evolveFrom)) {
-          evolutionChains.set(evolveFrom, []);
-        }
-        evolutionChains.get(evolveFrom)!.push(card.id);
-      }
-    });
-
-    evolutionChains.forEach((evolutions, baseName) => {
-      const baseCards = cards.filter(
-        (c) => c.card.name?.toLowerCase() === baseName.toLowerCase(),
-      );
-
-      if (baseCards.length > 0) {
-        synergies.push({
-          type: "evolution",
-          description: `Chaîne d'évolution détectée: ${baseName}`,
-          cardIds: [...baseCards.map((c) => c.card.id), ...evolutions],
-        });
-      }
-    });
-
-    const trainerCards = cards.filter(
-      (c) => c.card.pokemonDetails?.category === PokemonCardsType.Trainer,
-    );
-    if (trainerCards.length >= 5) {
-      synergies.push({
-        type: "trainer-support",
-        description: `${trainerCards.length} cartes Trainer pour le support`,
-        cardIds: trainerCards.map((c) => c.card.id),
-      });
-    }
-
-    return synergies;
+  async suggestCards(
+    deckId: number,
+    viewer?: User,
+    limit = 12,
+    locale: SupportedLocale = DEFAULT_LOCALE,
+  ): Promise<SimilarityResult<CardSuggestion>> {
+    await this.deckService.findOneWithCards(deckId, viewer);
+    await this.similarity.refreshDeckEmbedding(deckId);
+    return this.similarity.suggestCards(deckId, limit, locale);
   }
 }
