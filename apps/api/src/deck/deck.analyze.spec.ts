@@ -1,9 +1,9 @@
-import { CatalogLocalizationService } from "../card/catalog-localization.service";
 import { NotFoundException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
-import { Card } from "../card/entities/card.entity";
 import { DeckMetricsService } from "../ai/engine/deck-metrics.service";
+import { CatalogLocalizationService } from "../card/catalog-localization.service";
+import { Card } from "../card/entities/card.entity";
 import { DeckCard } from "../deck-card/entities/deck-card.entity";
 import { DeckFormat } from "../deck-format/entities/deck-format.entity";
 import { DeckService } from "./deck.service";

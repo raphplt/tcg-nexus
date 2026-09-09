@@ -63,23 +63,53 @@ export class DeckSimilarityService {
     deckId: number,
   ): Promise<{ stored: boolean; coveredCards: number; cardCount: number }> {
     try {
+      // Recomputing on every read would turn a public GET into a write on a
+      // hot path: the vector is only rebuilt when the deck changed since.
+      const [fresh] = await this.deckRepository.query(
+        `SELECT de.covered_cards, de.card_count
+         FROM deck_embedding de
+         JOIN deck d ON d.id = de.deck_id
+         WHERE de.deck_id = $1
+           AND de.deck_updated_at IS NOT DISTINCT FROM d."updatedAt"`,
+        [deckId],
+      );
+
+      if (fresh) {
+        return {
+          stored: true,
+          coveredCards: Number(fresh.covered_cards ?? 0),
+          cardCount: Number(fresh.card_count ?? 0),
+        };
+      }
+
       const rows = await this.deckRepository.query(
-        `WITH weighted AS (
-           SELECT dc."cardId", dc.qty, ce.embedding
+        `WITH covered AS (
+           SELECT dc.qty, ce.embedding
            FROM deck_card dc
            JOIN card_embedding ce ON ce.card_id = dc."cardId"
+           LEFT JOIN pokemon_card_details p ON p.card_id = dc."cardId"
            WHERE dc."deckId" = $1
+             -- Basic energy sits in almost every list, so averaging it in
+             -- pulls every archetype towards the same point. The vector is
+             -- built from what actually distinguishes a deck.
+             AND NOT (p.category = 'Energy' AND p."energyType" IS NOT NULL)
+         ),
+         -- Each copy contributes one row, so AVG is weighted by quantity:
+         -- four Charizard must pull the archetype harder than a single one.
+         expanded AS (
+           SELECT covered.embedding
+           FROM covered
+           CROSS JOIN LATERAL generate_series(1, GREATEST(covered.qty, 1))
          ),
          totals AS (
            SELECT
              (SELECT COALESCE(SUM(qty), 0) FROM deck_card WHERE "deckId" = $1) AS card_count,
-             COALESCE(SUM(qty), 0) AS covered_cards
-           FROM weighted
+             (SELECT COALESCE(SUM(qty), 0) FROM covered) AS covered_cards
          )
          INSERT INTO deck_embedding (deck_id, embedding, card_count, covered_cards, deck_updated_at, updated_at)
          SELECT
            $1,
-           (SELECT AVG(embedding) FROM weighted),
+           (SELECT AVG(embedding) FROM expanded),
            totals.card_count,
            totals.covered_cards,
            (SELECT "updatedAt" FROM deck WHERE id = $1),
@@ -140,11 +170,7 @@ export class DeckSimilarityService {
       );
 
       if (!rows.length) {
-        return {
-          available: true,
-          reason: "no-neighbours",
-          items: [],
-        };
+        return this.emptyReason(deckId);
       }
 
       return {
@@ -207,7 +233,11 @@ export class DeckSimilarityService {
          JOIN neighbours n ON n.deck_id = dc."deckId"
          LEFT JOIN card_translation ct
            ON ct.card_id = dc."cardId" AND ct.locale = $4
-         WHERE dc."cardId" NOT IN (SELECT "cardId" FROM owned)
+         -- NOT EXISTS, not NOT IN: deck_card."cardId" is nullable, and a
+         -- single NULL would make NOT IN drop every suggestion silently.
+         WHERE NOT EXISTS (
+           SELECT 1 FROM owned WHERE owned."cardId" = dc."cardId"
+         )
          GROUP BY dc."cardId", ct.name, ct.image
          ORDER BY deck_count DESC, average_qty DESC
          LIMIT $3`,
@@ -215,7 +245,7 @@ export class DeckSimilarityService {
       );
 
       if (!rows.length) {
-        return { available: true, reason: "no-neighbours", items: [] };
+        return this.emptyReason(deckId);
       }
 
       const neighbourCount = Number(rows[0].neighbour_count) || 1;
@@ -238,6 +268,24 @@ export class DeckSimilarityService {
     } catch (error) {
       return this.unavailable(deckId, error as Error);
     }
+  }
+
+  /**
+   * Explains an empty result: no neighbour, or no vector for this deck.
+   *
+   * The reference deck is cross-joined into both queries, so a deck without a
+   * vector yields zero rows exactly like a deck with no neighbours. The client
+   * needs to tell them apart to show the right message.
+   */
+  private async emptyReason<T>(deckId: number): Promise<SimilarityResult<T>> {
+    const [vectorized] = await this.deckRepository.query(
+      `SELECT 1 FROM deck_embedding WHERE deck_id = $1`,
+      [deckId],
+    );
+
+    return vectorized
+      ? { available: true, reason: "no-neighbours", items: [] }
+      : { available: false, reason: "deck-not-vectorized", items: [] };
   }
 
   /**

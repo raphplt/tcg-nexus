@@ -5,11 +5,11 @@ import { DeckLegalityStatus } from "../../tournament/entities/tournament-deck-sn
 import { DeckLegalityService } from "../../tournament/services/deck-legality.service";
 import { DeckCardRoleTag } from "./card-roles";
 import { DiagnosticCode, DiagnosticSeverity } from "./deck-diagnostics";
-import { DeckScoreKey } from "./deck-scoring";
 import {
   type AnalyzableDeckCard,
   DeckMetricsService,
 } from "./deck-metrics.service";
+import { DeckScoreKey } from "./deck-scoring";
 
 type CardOverrides = {
   id: string;
@@ -56,9 +56,7 @@ const searchTrainer = (id: string) =>
     category: PokemonCardsType.Trainer,
     parsedEffects: {
       kind: "trainer",
-      playEffects: [
-        { type: "SEARCH_DECK", amount: 1, destination: "HAND" },
-      ],
+      playEffects: [{ type: "SEARCH_DECK", amount: 1, destination: "HAND" }],
     },
   });
 
@@ -151,7 +149,10 @@ describe("DeckMetricsService", () => {
   describe("evolution lines", () => {
     it("flags an evolution whose pre-evolution is absent", async () => {
       const result = await service.analyze([
-        { card: card({ id: "p2", name: "Reptincel", evolveFrom: "Salamèche" }), qty: 2 },
+        {
+          card: card({ id: "p2", name: "Reptincel", evolveFrom: "Salamèche" }),
+          qty: 2,
+        },
       ]);
 
       expect(result.evolutionLines[0]).toMatchObject({
@@ -165,7 +166,10 @@ describe("DeckMetricsService", () => {
     it("flags a line running more evolutions than pre-evolutions", async () => {
       const result = await service.analyze([
         { card: card({ id: "p1", name: "Salamèche" }), qty: 1 },
-        { card: card({ id: "p2", name: "Reptincel", evolveFrom: "Salameche" }), qty: 3 },
+        {
+          card: card({ id: "p2", name: "Reptincel", evolveFrom: "Salameche" }),
+          qty: 3,
+        },
       ]);
 
       expect(result.evolutionLines[0]).toMatchObject({
@@ -173,15 +177,16 @@ describe("DeckMetricsService", () => {
         evolutionQty: 3,
         issue: "under-supported",
       });
-      expect(codesOf(result)).toContain(
-        DiagnosticCode.EvolutionUnderSupported,
-      );
+      expect(codesOf(result)).toContain(DiagnosticCode.EvolutionUnderSupported);
     });
 
     it("accepts a line with enough pre-evolutions", async () => {
       const result = await service.analyze([
         { card: card({ id: "p1", name: "Salamèche" }), qty: 4 },
-        { card: card({ id: "p2", name: "Reptincel", evolveFrom: "Salamèche" }), qty: 3 },
+        {
+          card: card({ id: "p2", name: "Reptincel", evolveFrom: "Salamèche" }),
+          qty: 3,
+        },
       ]);
 
       expect(result.evolutionLines[0].issue).toBeNull();
@@ -210,7 +215,10 @@ describe("DeckMetricsService", () => {
       // Trainers without parsed effects: the engine cannot see a draw engine,
       // so it reports the coverage gap instead of claiming the deck has none.
       const result = await service.analyze([
-        { card: card({ id: "t1", category: PokemonCardsType.Trainer }), qty: 10 },
+        {
+          card: card({ id: "t1", category: PokemonCardsType.Trainer }),
+          qty: 10,
+        },
         { card: basicEnergy("e1"), qty: 10 },
       ]);
 
@@ -227,7 +235,9 @@ describe("DeckMetricsService", () => {
 
   describe("legality", () => {
     it("reports not-checked and drops the dimension when the deck has no format", async () => {
-      const result = await service.analyze([{ card: card({ id: "p1" }), qty: 1 }]);
+      const result = await service.analyze([
+        { card: card({ id: "p1" }), qty: 1 },
+      ]);
 
       expect(legality.validate).not.toHaveBeenCalled();
       expect(result.legality.status).toBe("not-checked");
@@ -307,14 +317,12 @@ describe("DeckMetricsService", () => {
     });
 
     it("renders diagnostics in the requested locale", async () => {
-      const fr = await service.analyze(
-        [{ card: card({ id: "p1" }), qty: 4 }],
-        { locale: "fr" },
-      );
-      const en = await service.analyze(
-        [{ card: card({ id: "p1" }), qty: 4 }],
-        { locale: "en" },
-      );
+      const fr = await service.analyze([{ card: card({ id: "p1" }), qty: 4 }], {
+        locale: "fr",
+      });
+      const en = await service.analyze([{ card: card({ id: "p1" }), qty: 4 }], {
+        locale: "en",
+      });
 
       expect(fr.warnings[0]).toContain("Deck incomplet");
       expect(en.warnings[0]).toContain("Incomplete deck");
@@ -353,7 +361,10 @@ describe("DeckMetricsService", () => {
       ]);
 
       expect(result.missingCards).toContainEqual(
-        expect.objectContaining({ label: "Cartes de pioche", recommendedQty: 4 }),
+        expect.objectContaining({
+          label: "Cartes de pioche",
+          recommendedQty: 4,
+        }),
       );
       expect(result.missingCards).toContainEqual(
         expect.objectContaining({

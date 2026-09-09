@@ -3059,7 +3059,31 @@
     "empty": "Aucune carte ne correspond à ces critères."
   },
   "DeckScores": {
-    "overallScore": "Score global"
+    "overallScore": "Score global",
+    "legality": {
+      "label": "Légalité",
+      "hint": "Conformité au règlement du format"
+    },
+    "consistency": {
+      "label": "Consistance",
+      "hint": "Pioche, recherche, récupération et repli"
+    },
+    "energy": {
+      "label": "Énergie",
+      "hint": "Proportion d'énergies et accélération"
+    },
+    "curve": {
+      "label": "Courbe",
+      "hint": "Coût moyen des attaques et du retrait"
+    },
+    "evolution": {
+      "label": "Évolutions",
+      "hint": "Lignes d'évolution complètes et soutenues"
+    },
+    "focus": {
+      "label": "Focalisation",
+      "hint": "Nombre de types joués"
+    }
   },
   "DeckRadar": {
     "title": "Profil du deck"
@@ -3163,5 +3187,26 @@
       "section3Title": "3. Clause de Non-Affiliation & Disclaimer Pokémon",
       "section3Content": "TCG Nexus est un projet technologique et communautaire indépendant. Pokémon et les noms de personnages Pokémon sont des marques déposées de Nintendo, Creatures Inc. et GAME FREAK inc. TCG Nexus n'est en aucun cas affilié, sponsorisé ou approuvé par Nintendo ou The Pokémon Company."
     }
+  },
+  "DeckLegality": {
+    "status": {
+      "valid": "Deck légal",
+      "invalid": "Deck non légal",
+      "unverified": "Légalité non vérifiable",
+      "not-checked": "Légalité non contrôlée"
+    },
+    "confidence": "Effets connus : {percentage}%",
+    "confidenceHint": "Part des cartes dont les effets ont pu être lus. En dessous de 50%, les indicateurs de consistance ne sont pas affichés.",
+    "more": "et {count} autre(s) point(s)"
+  },
+  "DeckSimilar": {
+    "title": "Ce que jouent les decks similaires",
+    "subtitle": "Cartes absentes de ce deck, classées par taux d'adoption chez ses voisins.",
+    "adoption": "{percentage}% des decks",
+    "averageQty": "×{qty} en moyenne",
+    "neighbours": "Decks les plus proches",
+    "noNeighbours": "Aucun deck public assez proche pour en tirer des suggestions.",
+    "indexMissing": "L'index vectoriel n'est pas installé sur cette base : lancez `npm run embed:cards` puis `npm run embed:decks`.",
+    "deckNotVectorized": "Ce deck n'a pas encore de vecteur : ses cartes ne sont pas vectorisées."
   }
 }

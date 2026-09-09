@@ -25,7 +25,10 @@ describe("Migration chain (PostgreSQL, synchronize disabled)", () => {
   });
 
   const migrationsDir = join(__dirname, "..", "src", "migrations");
-  const databases = { fresh: "tcg_migrations_fresh", legacy: "tcg_migrations_legacy" };
+  const databases = {
+    fresh: "tcg_migrations_fresh",
+    legacy: "tcg_migrations_legacy",
+  };
 
   /** Opens a data source on one of the databases this suite builds. */
   const connect = async (database: string): Promise<DataSource> =>
@@ -71,11 +74,8 @@ describe("Migration chain (PostgreSQL, synchronize disabled)", () => {
     ).RENAMES;
     return renames.flatMap(([table, columns]) =>
       columns.map(
-        ([written, expected]) => [table, written, expected] as [
-          string,
-          string,
-          string,
-        ],
+        ([written, expected]) =>
+          [table, written, expected] as [string, string, string],
       ),
     );
   };
@@ -215,11 +215,20 @@ describe("Migration chain (PostgreSQL, synchronize disabled)", () => {
       await synchronized.destroy();
 
       // The supported upgrade path for an installation built by synchronization.
-      execFileSync("npx", ["ts-node", "-r", "tsconfig-paths/register", "src/scripts/baseline-migrations.ts"], {
-        cwd: join(__dirname, ".."),
-        env: { ...process.env, DATABASE_NAME: adopted },
-        stdio: "pipe",
-      });
+      execFileSync(
+        "npx",
+        [
+          "ts-node",
+          "-r",
+          "tsconfig-paths/register",
+          "src/scripts/baseline-migrations.ts",
+        ],
+        {
+          cwd: join(__dirname, ".."),
+          env: { ...process.env, DATABASE_NAME: adopted },
+          stdio: "pipe",
+        },
+      );
 
       const stamped = await connect(adopted);
       try {

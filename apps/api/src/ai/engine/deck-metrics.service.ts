@@ -1,13 +1,17 @@
 import { Injectable } from "@nestjs/common";
 import { CatalogLocalizationService } from "src/card/catalog-localization.service";
+import type { Card } from "../../card/entities/card.entity";
 import { PokemonCardsType } from "../../common/enums/pokemonCardsType";
-import { DeckLegalityService } from "../../tournament/services/deck-legality.service";
 import { DeckLegalityStatus } from "../../tournament/entities/tournament-deck-snapshot.entity";
+import { DeckLegalityService } from "../../tournament/services/deck-legality.service";
 import {
   DEFAULT_LOCALE,
   type SupportedLocale,
 } from "../../translation/supported-locales";
-import type { Card } from "../../card/entities/card.entity";
+import type {
+  DeckInsightsDto,
+  MissingCardSuggestionDto,
+} from "../dto/deck-insights.dto";
 import {
   DeckCardRoleTag,
   detectCardRoles,
@@ -27,10 +31,6 @@ import {
   scoreDeck,
 } from "./deck-scoring";
 import { buildEvolutionLines, type EvolutionLine } from "./evolution-lines";
-import type {
-  DeckInsightsDto,
-  MissingCardSuggestionDto,
-} from "../dto/deck-insights.dto";
 
 /**
  * Engine revision. Bump it whenever a rule, threshold or weight changes so

@@ -429,9 +429,7 @@ export class OrderService {
       },
     });
 
-    this.logger.warn(
-      `Payment ${payment.id} requires compensation: ${reason}`,
-    );
+    this.logger.warn(`Payment ${payment.id} requires compensation: ${reason}`);
   }
 
   private async reserveStockAndCreateOrder(

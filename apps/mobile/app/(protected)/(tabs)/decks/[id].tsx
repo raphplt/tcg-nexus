@@ -18,10 +18,30 @@ import { colors, radius } from "@/constants/theme";
 import { deckService } from "@/services/deck.service";
 import { useAuth } from "@/contexts/AuthProvider";
 import { toast } from "@/store/useToastStore";
-import type { Deck, DeckCard, DeckAnalysis } from "@/types";
+import type { Deck, DeckCard, DeckAnalysis, DeckLegalityStatus } from "@/types";
 import { getApiErrorMessage } from "@/utils/apiError";
 import { getCardImage } from "@/utils/images";
 import { CardDetailModal } from "@/components/CardDetailModal";
+
+/**
+ * Labels for the legality verdict.
+ *
+ * `unverified` and `not-checked` stay visually distinct from `valid`: a list
+ * whose rules could not be read must never read as legal.
+ */
+const LEGALITY_LABEL: Record<DeckLegalityStatus, string> = {
+  valid: "Légal",
+  invalid: "Non légal",
+  unverified: "Non vérifiable",
+  "not-checked": "Non contrôlé",
+};
+
+const legalityTone = (status: DeckLegalityStatus): string => {
+  if (status === "valid") return colors.success;
+  if (status === "invalid") return colors.destructive;
+  if (status === "unverified") return colors.warning;
+  return colors.mutedForeground;
+};
 
 const normalizeCategory = (cat?: string) =>
   cat
@@ -637,6 +657,31 @@ export default function DeckDetailsScreen() {
 
           {analysis ? (
             <View style={styles.analysisResults}>
+              <View style={styles.scoreRow}>
+                <View>
+                  <Text style={styles.scoreValue}>
+                    {analysis.scores.global}
+                    <Text style={styles.scoreMax}> / 100</Text>
+                  </Text>
+                  <Text style={styles.ratioText}>
+                    Effets connus : {analysis.scores.confidence}%
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    styles.legalityBadge,
+                    { backgroundColor: legalityTone(analysis.legality.status) },
+                  ]}
+                >
+                  <Text style={styles.legalityBadgeText}>
+                    {LEGALITY_LABEL[analysis.legality.status]}
+                    {analysis.legality.format
+                      ? ` · ${analysis.legality.format}`
+                      : ""}
+                  </Text>
+                </View>
+              </View>
+
               <View style={styles.ratioRow}>
                 <Text style={styles.ratioText}>
                   Ratio Énergies/Pokémon :{" "}
@@ -1235,10 +1280,36 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "800",
   },
+  legalityBadge: {
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  legalityBadgeText: {
+    color: "#ffffff",
+    fontSize: 11,
+    fontWeight: "700",
+  },
   ratioRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 8,
+  },
+  scoreMax: {
+    color: colors.mutedForeground,
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  scoreRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+  scoreValue: {
+    color: colors.foreground,
+    fontSize: 26,
+    fontWeight: "800",
   },
   ratioText: {
     color: colors.mutedForeground,

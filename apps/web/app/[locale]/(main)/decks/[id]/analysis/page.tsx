@@ -1,28 +1,30 @@
 "use client";
 
-import { useTranslations } from "next-intl";
-import { useEffect, useMemo } from "react";
-import { Link, useRouter } from "@/i18n/navigation";
-import { useParams } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { ArrowLeft, RefreshCw, Sparkles } from "lucide-react";
+import { useParams } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useEffect, useMemo } from "react";
 import { toast } from "react-hot-toast";
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Link, useRouter } from "@/i18n/navigation";
 import { decksService } from "@/services/decks.service";
 import { Deck } from "@/types/Decks";
 
 import { DeckDistributions } from "./_components/DeckDistributions";
+import { DeckLegalityBadge } from "./_components/DeckLegalityBadge";
 import { DeckOverviewStats } from "./_components/DeckOverviewStats";
 import { DeckRadarChart } from "./_components/DeckRadarChart";
 import { DeckScoresPanel } from "./_components/DeckScoresPanel";
+import { DeckSimilarPanel } from "./_components/DeckSimilarPanel";
 import { DeckSuggestionsPanel } from "./_components/DeckSuggestionsPanel";
-import { computeDeckScores } from "./_utils/scores";
+import { buildScoreSummary, type ScoreLabels } from "./_utils/scores";
 
 export default function DeckAnalysisPage() {
   const t = useTranslations("DeckAnalysisPage");
+  const tScores = useTranslations("DeckScores");
   const { id } = useParams();
   const router = useRouter();
   const deckId = id as string;
@@ -46,9 +48,33 @@ export default function DeckAnalysisPage() {
   }, [deckId]);
 
   const analysis = analyzeMutation.data ?? null;
+  const scoreLabels = useMemo<ScoreLabels>(
+    () =>
+      ({
+        legality: {
+          label: tScores("legality.label"),
+          hint: tScores("legality.hint"),
+        },
+        consistency: {
+          label: tScores("consistency.label"),
+          hint: tScores("consistency.hint"),
+        },
+        energy: {
+          label: tScores("energy.label"),
+          hint: tScores("energy.hint"),
+        },
+        curve: { label: tScores("curve.label"), hint: tScores("curve.hint") },
+        evolution: {
+          label: tScores("evolution.label"),
+          hint: tScores("evolution.hint"),
+        },
+        focus: { label: tScores("focus.label"), hint: tScores("focus.hint") },
+      }) satisfies ScoreLabels,
+    [tScores],
+  );
   const summary = useMemo(
-    () => (analysis ? computeDeckScores(analysis) : null),
-    [analysis],
+    () => (analysis ? buildScoreSummary(analysis, scoreLabels) : null),
+    [analysis, scoreLabels],
   );
 
   const isAnalysisLoading = analyzeMutation.isPending && !analysis;
@@ -109,6 +135,11 @@ export default function DeckAnalysisPage() {
 
         {analysis && summary && (
           <div className="space-y-6">
+            <DeckLegalityBadge
+              legality={analysis.legality}
+              confidence={summary.confidence}
+            />
+
             <DeckOverviewStats analysis={analysis} />
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -119,6 +150,8 @@ export default function DeckAnalysisPage() {
             <DeckDistributions analysis={analysis} />
 
             <DeckSuggestionsPanel analysis={analysis} />
+
+            <DeckSimilarPanel deckId={Number(deckId)} />
           </div>
         )}
       </div>

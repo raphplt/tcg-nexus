@@ -1,5 +1,19 @@
 # Plan — Remise à niveau du module IA
 
+> **Statut au 2026-09-09 : phases 0 à 3, 5 et 6 livrées.** La phase 4 (couche
+> Claude) est écartée — budget nul, tout tourne en local. La documentation du
+> module tel que livré est dans [`doc/module-ia.md`](../module-ia.md).
+>
+> | Phase | Statut |
+> |---|---|
+> | 0 — contrat | ✅ `/ai/analyzeDeck` supprimée, `DeckInsightsDto`, diagnostics codés + i18n |
+> | 1 — déduplication + sécurité | ✅ moteur unique, `assertCanViewDeck` sur toutes les routes |
+> | 2 — moteur déterministe | ✅ rôles via `parsedEffects`, lignes d'évolution, légalité, scores traçables |
+> | 3 — similarité vectorielle | ✅ `deck_embedding`, `embed:decks`, 2 endpoints, dégradation gracieuse |
+> | 4 — couche Claude | ❌ écartée (budget nul, local uniquement) |
+> | 5 — front | ✅ web (légalité, scores serveur, voisins) et mobile (score + légalité) |
+> | 6 — tests | ✅ 49 tests sur le module, aucun appel réseau |
+
 Date : 2026-09-09
 Périmètre : `apps/api/src/ai`, `apps/api/src/deck` (analyse), `packages/effect-parser`, front web/mobile.
 

@@ -21,24 +21,163 @@ export class RepairLegacyColumnNames1789500000000
    * Exposed so the migration suite can rebuild the state these renames repair.
    */
   static readonly RENAMES: Array<[string, Array<[string, string]>]> = [
-  ["collection", [["completion_policy", "completionPolicy"], ["completion_snapshot", "completionSnapshot"]]],
-  ["collection_item", [["acquired_at", "acquiredAt"], ["acquisition_cost", "acquisitionCost"], ["acquisition_currency", "acquisitionCurrency"], ["photo_urls", "photoUrls"], ["quantity_available", "quantityAvailable"], ["quantity_reserved", "quantityReserved"], ["quantity_sold", "quantitySold"], ["storage_location", "storageLocation"]]],
-  ["listing", [["defect_description", "defectDescription"], ["is_inventory_backed", "isInventoryBacked"], ["photo_urls", "photoUrls"]]],
-  ["match", [["confirmed_at", "confirmedAt"], ["disputed_at", "disputedAt"], ["result_status", "resultStatus"], ["table_number", "tableNumber"]]],
-  ["match_result_proposal", [["created_at", "createdAt"], ["dispute_reason", "disputeReason"], ["match_id", "matchId"], ["opponent_response", "opponentResponse"], ["organizer_resolution_reason", "organizerResolutionReason"], ["player_a_score", "playerAScore"], ["player_b_score", "playerBScore"], ["proposer_player_id", "proposerPlayerId"], ["proposer_user_id", "proposerUserId"], ["resolved_by_user_id", "resolvedByUserId"], ["updated_at", "updatedAt"]]],
-  ["order_item", [["listing_defects", "listingDefects"], ["listing_photo_urls", "listingPhotoUrls"]]],
-  ["ranking", [["byes_count", "byesCount"], ["gw_percentage", "gwPercentage"], ["is_provisional", "isProvisional"], ["ogw_percentage", "ogwPercentage"], ["omw_percentage", "omwPercentage"], ["tiebreak_explanation", "tiebreakExplanation"]]],
-  ["seller_allocation", [["commission_amount", "commissionAmount"], ["commission_rate", "commissionRate"], ["created_at", "createdAt"], ["eligible_at", "eligibleAt"], ["gross_amount", "grossAmount"], ["net_amount", "netAmount"], ["refunded_amount", "refundedAmount"], ["shipping_amount", "shippingAmount"], ["updated_at", "updatedAt"]]],
-  ["seller_payout", [["completed_at", "completedAt"], ["created_at", "createdAt"], ["failure_reason", "failureReason"], ["payout_destination_snapshot", "payoutDestinationSnapshot"], ["payout_method", "payoutMethod"], ["processed_at", "processedAt"], ["updated_at", "updatedAt"]]],
-  ["seller_review", [["created_at", "createdAt"], ["updated_at", "updatedAt"], ["verified_purchase", "verifiedPurchase"]]],
-  ["seller_settlement_account", [["balance_available", "balanceAvailable"], ["balance_on_hold", "balanceOnHold"], ["balance_paid_out", "balancePaidOut"], ["balance_pending", "balancePending"], ["created_at", "createdAt"], ["minimum_payout_amount", "minimumPayoutAmount"], ["payout_details", "payoutDetails"], ["payout_method", "payoutMethod"], ["updated_at", "updatedAt"]]],
-  ["tournament", [["deck_submission_deadline", "deckSubmissionDeadline"], ["deck_visibility_policy", "deckVisibilityPolicy"], ["is_round_paused", "isRoundPaused"], ["paused_at", "pausedAt"], ["round_deadline", "roundDeadline"], ["round_duration_minutes", "roundDurationMinutes"], ["round_started_at", "roundStartedAt"]]],
-  ["tournament_deck_snapshot", [["cards_snapshot", "cardsSnapshot"], ["deck_id", "deckId"], ["deck_name", "deckName"], ["format_id", "formatId"], ["is_locked", "isLocked"], ["is_valid", "isValid"], ["locked_at", "lockedAt"], ["player_id", "playerId"], ["rule_version", "ruleVersion"], ["submitted_at", "submittedAt"], ["tournament_id", "tournamentId"], ["user_id", "userId"], ["validation_errors", "validationErrors"]]],
+    [
+      "collection",
+      [
+        ["completion_policy", "completionPolicy"],
+        ["completion_snapshot", "completionSnapshot"],
+      ],
+    ],
+    [
+      "collection_item",
+      [
+        ["acquired_at", "acquiredAt"],
+        ["acquisition_cost", "acquisitionCost"],
+        ["acquisition_currency", "acquisitionCurrency"],
+        ["photo_urls", "photoUrls"],
+        ["quantity_available", "quantityAvailable"],
+        ["quantity_reserved", "quantityReserved"],
+        ["quantity_sold", "quantitySold"],
+        ["storage_location", "storageLocation"],
+      ],
+    ],
+    [
+      "listing",
+      [
+        ["defect_description", "defectDescription"],
+        ["is_inventory_backed", "isInventoryBacked"],
+        ["photo_urls", "photoUrls"],
+      ],
+    ],
+    [
+      "match",
+      [
+        ["confirmed_at", "confirmedAt"],
+        ["disputed_at", "disputedAt"],
+        ["result_status", "resultStatus"],
+        ["table_number", "tableNumber"],
+      ],
+    ],
+    [
+      "match_result_proposal",
+      [
+        ["created_at", "createdAt"],
+        ["dispute_reason", "disputeReason"],
+        ["match_id", "matchId"],
+        ["opponent_response", "opponentResponse"],
+        ["organizer_resolution_reason", "organizerResolutionReason"],
+        ["player_a_score", "playerAScore"],
+        ["player_b_score", "playerBScore"],
+        ["proposer_player_id", "proposerPlayerId"],
+        ["proposer_user_id", "proposerUserId"],
+        ["resolved_by_user_id", "resolvedByUserId"],
+        ["updated_at", "updatedAt"],
+      ],
+    ],
+    [
+      "order_item",
+      [
+        ["listing_defects", "listingDefects"],
+        ["listing_photo_urls", "listingPhotoUrls"],
+      ],
+    ],
+    [
+      "ranking",
+      [
+        ["byes_count", "byesCount"],
+        ["gw_percentage", "gwPercentage"],
+        ["is_provisional", "isProvisional"],
+        ["ogw_percentage", "ogwPercentage"],
+        ["omw_percentage", "omwPercentage"],
+        ["tiebreak_explanation", "tiebreakExplanation"],
+      ],
+    ],
+    [
+      "seller_allocation",
+      [
+        ["commission_amount", "commissionAmount"],
+        ["commission_rate", "commissionRate"],
+        ["created_at", "createdAt"],
+        ["eligible_at", "eligibleAt"],
+        ["gross_amount", "grossAmount"],
+        ["net_amount", "netAmount"],
+        ["refunded_amount", "refundedAmount"],
+        ["shipping_amount", "shippingAmount"],
+        ["updated_at", "updatedAt"],
+      ],
+    ],
+    [
+      "seller_payout",
+      [
+        ["completed_at", "completedAt"],
+        ["created_at", "createdAt"],
+        ["failure_reason", "failureReason"],
+        ["payout_destination_snapshot", "payoutDestinationSnapshot"],
+        ["payout_method", "payoutMethod"],
+        ["processed_at", "processedAt"],
+        ["updated_at", "updatedAt"],
+      ],
+    ],
+    [
+      "seller_review",
+      [
+        ["created_at", "createdAt"],
+        ["updated_at", "updatedAt"],
+        ["verified_purchase", "verifiedPurchase"],
+      ],
+    ],
+    [
+      "seller_settlement_account",
+      [
+        ["balance_available", "balanceAvailable"],
+        ["balance_on_hold", "balanceOnHold"],
+        ["balance_paid_out", "balancePaidOut"],
+        ["balance_pending", "balancePending"],
+        ["created_at", "createdAt"],
+        ["minimum_payout_amount", "minimumPayoutAmount"],
+        ["payout_details", "payoutDetails"],
+        ["payout_method", "payoutMethod"],
+        ["updated_at", "updatedAt"],
+      ],
+    ],
+    [
+      "tournament",
+      [
+        ["deck_submission_deadline", "deckSubmissionDeadline"],
+        ["deck_visibility_policy", "deckVisibilityPolicy"],
+        ["is_round_paused", "isRoundPaused"],
+        ["paused_at", "pausedAt"],
+        ["round_deadline", "roundDeadline"],
+        ["round_duration_minutes", "roundDurationMinutes"],
+        ["round_started_at", "roundStartedAt"],
+      ],
+    ],
+    [
+      "tournament_deck_snapshot",
+      [
+        ["cards_snapshot", "cardsSnapshot"],
+        ["deck_id", "deckId"],
+        ["deck_name", "deckName"],
+        ["format_id", "formatId"],
+        ["is_locked", "isLocked"],
+        ["is_valid", "isValid"],
+        ["locked_at", "lockedAt"],
+        ["player_id", "playerId"],
+        ["rule_version", "ruleVersion"],
+        ["submitted_at", "submittedAt"],
+        ["tournament_id", "tournamentId"],
+        ["user_id", "userId"],
+        ["validation_errors", "validationErrors"],
+      ],
+    ],
   ];
 
   /** Renames misnamed columns and repairs the inventory availability backfill. */
   async up(queryRunner: QueryRunner): Promise<void> {
-    for (const [table, columns] of RepairLegacyColumnNames1789500000000.RENAMES) {
+    for (const [
+      table,
+      columns,
+    ] of RepairLegacyColumnNames1789500000000.RENAMES) {
       for (const [written, expected] of columns) {
         await queryRunner.query(
           `DO $$

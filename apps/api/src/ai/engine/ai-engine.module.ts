@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
-import { CatalogLocalizationModule } from "../../translation/catalog-localization.module";
 import { DeckLegalityModule } from "../../tournament/deck-legality.module";
+import { CatalogLocalizationModule } from "../../translation/catalog-localization.module";
 import { DeckMetricsService } from "./deck-metrics.service";
 
 /**

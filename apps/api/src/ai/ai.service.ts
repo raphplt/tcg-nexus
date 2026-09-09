@@ -2,15 +2,15 @@ import { BadRequestException, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { In, Repository } from "typeorm";
 import { Card } from "../card/entities/card.entity";
-import { DeckFormat } from "../deck-format/entities/deck-format.entity";
 import { DeckService } from "../deck/deck.service";
-import type { User } from "../user/entities/user.entity";
+import { DeckFormat } from "../deck-format/entities/deck-format.entity";
 import {
   DEFAULT_LOCALE,
   type SupportedLocale,
 } from "../translation/supported-locales";
-import type { DeckInsightsDto } from "./dto/deck-insights.dto";
+import type { User } from "../user/entities/user.entity";
 import type { AnalyzePoolDto } from "./dto/analyze-pool.dto";
+import type { DeckInsightsDto } from "./dto/deck-insights.dto";
 import { DeckMetricsService } from "./engine/deck-metrics.service";
 import {
   type CardSuggestion,

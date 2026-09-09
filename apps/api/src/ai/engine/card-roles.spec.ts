@@ -1,10 +1,10 @@
+import { PokemonCardsType } from "../../common/enums/pokemonCardsType";
 import {
   DeckCardRoleTag,
   detectCardRoles,
   expectsEffects,
   hasReadableEffects,
 } from "./card-roles";
-import { PokemonCardsType } from "../../common/enums/pokemonCardsType";
 
 describe("detectCardRoles", () => {
   it("reads draw and search from a trainer's play effects", () => {

@@ -111,13 +111,11 @@ describe("AdminOpsService", () => {
         .mockResolvedValue({ cancelled: 0, compensationRequired: 0 }),
     };
     mockSettlementService = {
-      reconcile: jest
-        .fn()
-        .mockResolvedValue({
-          accountsChecked: 1,
-          consistent: true,
-          discrepancies: [],
-        }),
+      reconcile: jest.fn().mockResolvedValue({
+        accountsChecked: 1,
+        consistent: true,
+        discrepancies: [],
+      }),
     };
     mockRefundFinance = { reconcilePaymentRefunds: jest.fn() };
     mockStripeService = { createRefund: jest.fn() };

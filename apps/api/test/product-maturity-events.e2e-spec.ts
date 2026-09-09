@@ -192,21 +192,19 @@ describe("Domain event delivery (PostgreSQL)", () => {
       })
       .expect(201);
     // A recipient the event cannot name makes its consumer fail.
-    await database
-      .getRepository(OutboxEvent)
-      .update(
-        { eventType: "order.item_claim_created" },
-        {
-          payload: {
-            ticketId: 1,
-            orderId: order.id,
-            orderItemId: item.id,
-            claimCategory: "wrong_item",
-            buyerId: buyer.id,
-            sellerUserId: null as unknown as number,
-          },
+    await database.getRepository(OutboxEvent).update(
+      { eventType: "order.item_claim_created" },
+      {
+        payload: {
+          ticketId: 1,
+          orderId: order.id,
+          orderItemId: item.id,
+          claimCategory: "wrong_item",
+          buyerId: buyer.id,
+          sellerUserId: null as unknown as number,
         },
-      );
+      },
+    );
 
     const failing = await outbox.processPendingEvents();
     expect(failing.failed).toBe(1);
@@ -214,21 +212,19 @@ describe("Domain event delivery (PostgreSQL)", () => {
     expect(await claims()).toHaveLength(0);
 
     // Once the payload names its recipient, the retry delivers it.
-    await database
-      .getRepository(OutboxEvent)
-      .update(
-        { eventType: "order.item_claim_created" },
-        {
-          payload: {
-            ticketId: 1,
-            orderId: order.id,
-            orderItemId: item.id,
-            claimCategory: "wrong_item",
-            buyerId: buyer.id,
-            sellerUserId: seller.id,
-          },
+    await database.getRepository(OutboxEvent).update(
+      { eventType: "order.item_claim_created" },
+      {
+        payload: {
+          ticketId: 1,
+          orderId: order.id,
+          orderItemId: item.id,
+          claimCategory: "wrong_item",
+          buyerId: buyer.id,
+          sellerUserId: seller.id,
         },
-      );
+      },
+    );
     const retried = await outbox.processPendingEvents();
 
     expect(retried.processed).toBe(1);

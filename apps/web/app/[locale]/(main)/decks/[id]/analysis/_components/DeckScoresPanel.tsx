@@ -3,8 +3,8 @@
 import { useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { DeckScoreSummary, scoreTone } from "../_utils/scores";
 import { cn } from "@/lib/utils";
+import { DeckScoreSummary, scoreTone } from "../_utils/scores";
 
 interface DeckScoresPanelProps {
   summary: DeckScoreSummary;

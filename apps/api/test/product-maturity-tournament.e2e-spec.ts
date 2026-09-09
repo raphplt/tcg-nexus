@@ -21,7 +21,12 @@ import {
   TournamentType,
 } from "../src/tournament/entities/tournament.entity";
 import { createE2eApp } from "./helpers/app";
-import { createAdminUser, createUser, getPlayerId, TestUser } from "./helpers/auth";
+import {
+  createAdminUser,
+  createUser,
+  getPlayerId,
+  TestUser,
+} from "./helpers/auth";
 import { ensureCard } from "./helpers/marketplace";
 
 jest.setTimeout(60000);
@@ -68,9 +73,10 @@ describe("Tournament legality and corrections (PostgreSQL)", () => {
         "POKEMON_STANDARD_2026",
       );
       // A catalog card without rule data is unverified, never silently legal.
-      expect(
-        [DeckLegalityStatus.INVALID, DeckLegalityStatus.UNVERIFIED],
-      ).toContain(real.status);
+      expect([
+        DeckLegalityStatus.INVALID,
+        DeckLegalityStatus.UNVERIFIED,
+      ]).toContain(real.status);
       expect(real.status).not.toBe(DeckLegalityStatus.VALID);
     });
 
@@ -102,7 +108,10 @@ describe("Tournament legality and corrections (PostgreSQL)", () => {
       );
       expect(await ranking.getEloForUser(winner.id)).toBe(applied.winnerElo);
 
-      const reversed = await ranking.reverseMatchElo(987654, "Score correction");
+      const reversed = await ranking.reverseMatchElo(
+        987654,
+        "Score correction",
+      );
 
       expect(reversed).toBe(1);
       expect(await ranking.getEloForUser(winner.id)).toBe(before[0]);

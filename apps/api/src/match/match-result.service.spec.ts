@@ -94,7 +94,9 @@ describe("MatchResultService", () => {
       organizerRepository,
       matchService,
       auditService,
-      { transaction: (work: (m: unknown) => Promise<unknown>) => work(manager) } as never,
+      {
+        transaction: (work: (m: unknown) => Promise<unknown>) => work(manager),
+      } as never,
     );
   });
 

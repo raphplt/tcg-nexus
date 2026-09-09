@@ -3059,7 +3059,31 @@
     "empty": "No card matches these filters."
   },
   "DeckScores": {
-    "overallScore": "Overall score"
+    "overallScore": "Overall score",
+    "legality": {
+      "label": "Legality",
+      "hint": "Compliance with the format's rules"
+    },
+    "consistency": {
+      "label": "Consistency",
+      "hint": "Draw, search, recovery and switching"
+    },
+    "energy": {
+      "label": "Energy",
+      "hint": "Energy share and acceleration"
+    },
+    "curve": {
+      "label": "Curve",
+      "hint": "Average attack and retreat cost"
+    },
+    "evolution": {
+      "label": "Evolutions",
+      "hint": "Complete and supported evolution lines"
+    },
+    "focus": {
+      "label": "Focus",
+      "hint": "Number of types played"
+    }
   },
   "DeckRadar": {
     "title": "Deck profile"
@@ -3163,5 +3187,26 @@
       "section3Title": "3. Non-Affiliation Clause & Pokémon Disclaimer",
       "section3Content": "TCG Nexus is an independent community and tech project. Pokémon and Pokémon character names are registered trademarks of Nintendo, Creatures Inc., and GAME FREAK inc. TCG Nexus is not affiliated with, sponsored by, or endorsed by Nintendo or The Pokémon Company."
     }
+  },
+  "DeckLegality": {
+    "status": {
+      "valid": "Legal deck",
+      "invalid": "Illegal deck",
+      "unverified": "Legality unverifiable",
+      "not-checked": "Legality not checked"
+    },
+    "confidence": "Known effects: {percentage}%",
+    "confidenceHint": "Share of cards whose effects could be read. Below 50%, consistency indicators are hidden.",
+    "more": "and {count} more point(s)"
+  },
+  "DeckSimilar": {
+    "title": "What similar decks play",
+    "subtitle": "Cards missing from this deck, ranked by adoption among its neighbours.",
+    "adoption": "{percentage}% of decks",
+    "averageQty": "×{qty} on average",
+    "neighbours": "Closest decks",
+    "noNeighbours": "No public deck is close enough to draw suggestions from.",
+    "indexMissing": "The vector index is not installed on this database: run `npm run embed:cards` then `npm run embed:decks`.",
+    "deckNotVectorized": "This deck has no vector yet: its cards are not vectorized."
   }
 }

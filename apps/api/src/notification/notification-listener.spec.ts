@@ -35,11 +35,13 @@ describe("NotificationListener", () => {
     userService.findById.mockResolvedValue({ id: 1, email: "user@test.com" });
     consumers = {
       claims: [] as string[],
-      runOnce: jest.fn(async (consumer: string, _event, work: () => Promise<void>) => {
-        consumers.claims.push(consumer);
-        await work();
-        return true;
-      }),
+      runOnce: jest.fn(
+        async (consumer: string, _event, work: () => Promise<void>) => {
+          consumers.claims.push(consumer);
+          await work();
+          return true;
+        },
+      ),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -262,9 +264,7 @@ describe("NotificationListener", () => {
       sellerUserId: 2,
     });
 
-    expect(consumers.claims).toEqual([
-      "notification:order.item_claim_created",
-    ]);
+    expect(consumers.claims).toEqual(["notification:order.item_claim_created"]);
     expect(notificationService.createNotification).toHaveBeenCalledWith(
       2,
       expect.any(String),

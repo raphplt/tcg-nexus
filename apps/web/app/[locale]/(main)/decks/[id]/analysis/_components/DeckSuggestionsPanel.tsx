@@ -1,11 +1,11 @@
 "use client";
 
+import { AlertTriangle, Lightbulb, Plus, Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeckAnalysis } from "@/types/deck-analysis";
-import { AlertTriangle, Lightbulb, Plus, Sparkles } from "lucide-react";
 
 interface DeckSuggestionsPanelProps {
   analysis: DeckAnalysis;

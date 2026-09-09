@@ -13,6 +13,7 @@
     "start:dev": "nest start --watch",
     "bench:scan": "ts-node -r tsconfig-paths/register ./src/scripts/scan-bench.ts",
     "embed:cards": "TS_NODE_TRANSPILE_ONLY=1 ts-node -r tsconfig-paths/register ./src/scripts/embed-cards.ts",
+    "embed:decks": "TS_NODE_TRANSPILE_ONLY=1 ts-node -r tsconfig-paths/register ./src/scripts/embed-decks.ts",
     "seed": "ts-node -r tsconfig-paths/register ./src/scripts/importData.ts",
     "demo:prepare": "ts-node -r tsconfig-paths/register ./src/scripts/demo-prepare.ts",
     "demo:reset-tournament": "ts-node -r tsconfig-paths/register ./src/scripts/demo-reset-tournament.ts",

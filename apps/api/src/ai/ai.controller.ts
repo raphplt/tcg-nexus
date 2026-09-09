@@ -8,8 +8,8 @@ import {
   Post,
   Query,
 } from "@nestjs/common";
-import { Throttle } from "@nestjs/throttler";
 import { ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
+import { Throttle } from "@nestjs/throttler";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { Public } from "../auth/decorators/public.decorator";
 import { RequestLocale } from "../translation/request-locale";

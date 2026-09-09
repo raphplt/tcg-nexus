@@ -110,8 +110,10 @@ describe("Checkout recovery and compensation (PostgreSQL, simulated provider)", 
       .set(auth(buyer))
       .send({ listingId, quantity });
 
-  const checkout = (attemptKey?: string, shippingAddress = "12 rue des Cartes")
-    : request.Test =>
+  const checkout = (
+    attemptKey?: string,
+    shippingAddress = "12 rue des Cartes",
+  ): request.Test =>
     request(server)
       .post("/marketplace/checkout")
       .set(auth(buyer))
@@ -159,7 +161,12 @@ describe("Checkout recovery and compensation (PostgreSQL, simulated provider)", 
     });
     // Each test starts from an empty order book so the compensation queue and
     // the expiry sweep only ever see its own candidates.
-    for (const table of ["cart_item", "payment_transaction", "order_item", "order"]) {
+    for (const table of [
+      "cart_item",
+      "payment_transaction",
+      "order_item",
+      "order",
+    ]) {
       await database.query(`DELETE FROM "${table}"`);
     }
   });
@@ -337,8 +344,11 @@ describe("Checkout recovery and compensation (PostgreSQL, simulated provider)", 
     // A second sweep finds nothing: the first one already settled the candidate.
     expect(second.body.expiredCount).toBe(0);
     expect(
-      (await database.getRepository(Order).findOneByOrFail({ id: paid.orderId }))
-        .status,
+      (
+        await database
+          .getRepository(Order)
+          .findOneByOrFail({ id: paid.orderId })
+      ).status,
     ).toBe(OrderStatus.PAID);
     expect(
       (

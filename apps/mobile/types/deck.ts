@@ -71,18 +71,112 @@ export interface MissingCardSuggestion {
   recommendedQty: number;
 }
 
+/** Functional role a card fills, derived from its parsed effects. */
+export type DeckRoleTag =
+  | "draw"
+  | "search"
+  | "energy-acceleration"
+  | "recovery"
+  | "switch"
+  | "disruption"
+  | "healing";
+
+export interface DeckRoleCount {
+  role: DeckRoleTag;
+  /** Copies, not distinct cards. */
+  count: number;
+  cardIds: string[];
+}
+
+export interface DeckEvolutionLine {
+  base: string;
+  evolution: string;
+  baseQty: number;
+  evolutionQty: number;
+  /** Null when the line is correctly supported. */
+  issue: "orphan" | "under-supported" | null;
+  cardIds: string[];
+}
+
+/** `not-checked` when the deck has no format; never presented as valid. */
+export type DeckLegalityStatus =
+  | "valid"
+  | "invalid"
+  | "unverified"
+  | "not-checked";
+
+export interface DeckLegalityReport {
+  status: DeckLegalityStatus;
+  ruleVersion?: string;
+  format?: string;
+  errors: string[];
+  unknowns: string[];
+}
+
+export type DeckScoreKey =
+  | "legality"
+  | "consistency"
+  | "energy"
+  | "curve"
+  | "evolution"
+  | "focus";
+
+export interface DeckScoreDimension {
+  key: DeckScoreKey;
+  /** Null when the dimension could not be evaluated. */
+  value: number | null;
+  weight: number;
+  contributions: { reason: string; delta: number }[];
+}
+
+export interface DeckScoreBoard {
+  global: number;
+  /** Share of cards whose effects the engine could read, 0-100. */
+  confidence: number;
+  breakdown: DeckScoreDimension[];
+}
+
+export interface DeckDiagnostic {
+  code: string;
+  severity: "error" | "warning" | "info";
+  category:
+    | "legality"
+    | "energy"
+    | "consistency"
+    | "evolution"
+    | "focus"
+    | "coverage";
+  params: Record<string, string | number>;
+  /** Already rendered in the request locale by the API. */
+  message: string;
+  cardIds?: string[];
+}
+
 export interface DeckAnalysis {
   deckId: number;
+  /** Engine revision behind this payload. */
+  engineVersion: string;
   totalCards: number;
   pokemonCount: number;
   energyCount: number;
   trainerCount: number;
   energyToPokemonRatio: number;
   averageEnergyCost: number;
+  averageRetreatCost: number;
   typeDistribution: DistributionEntry[];
   categoryDistribution: DistributionEntry[];
   attackCostDistribution: AttackCostDistribution[];
   duplicates: DuplicateCardIssue[];
+  roles: DeckRoleCount[];
+  effectsCoverage: {
+    withEffects: number;
+    expected: number;
+    percentage: number;
+  };
+  evolutionLines: DeckEvolutionLine[];
+  legality: DeckLegalityReport;
+  scores: DeckScoreBoard;
+  diagnostics: DeckDiagnostic[];
   warnings: string[];
   suggestions: string[];
   missingCards: MissingCardSuggestion[];

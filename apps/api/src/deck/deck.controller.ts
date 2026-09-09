@@ -17,19 +17,19 @@ import {
   ApiOperation,
   ApiTags,
 } from "@nestjs/swagger";
+import { DeckInsightsDto } from "../ai/dto/deck-insights.dto";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { Public } from "../auth/decorators/public.decorator";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import { User } from "../user/entities/user.entity";
-import { DeckService } from "./deck.service";
-import { DeckInsightsDto } from "../ai/dto/deck-insights.dto";
 import { RequestLocale } from "../translation/request-locale";
 import type { SupportedLocale } from "../translation/supported-locales";
+import { User } from "../user/entities/user.entity";
+import { DeckService } from "./deck.service";
+import { DeckInventoryService } from "./deck-inventory.service";
 import { CreateDeckDto } from "./dto/create-deck.dto";
 import { FindAllDecksQueryDto } from "./dto/find-all-decks-query.dto";
 import { ImportDeckJsonDto } from "./dto/import-deck-json.dto";
 import { ShareDeckDto } from "./dto/share-deck.dto";
-import { DeckInventoryService } from "./deck-inventory.service";
 import { UpdateDeckDto } from "./dto/update-deck.dto";
 
 @ApiTags("decks")

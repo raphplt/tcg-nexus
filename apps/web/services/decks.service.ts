@@ -1,6 +1,11 @@
 import { usePaginatedQuery } from "@hooks/usePaginatedQuery";
 import { Deck } from "@/types/Decks";
-import { DeckAnalysis } from "@/types/deck-analysis";
+import {
+  DeckAnalysis,
+  SimilarDeck,
+  SimilarityResult,
+  SuggestedCard,
+} from "@/types/deck-analysis";
 import { DeckCard } from "@/types/deck-cards";
 import type { PaginatedResult, PaginationParams } from "@/types/pagination";
 import { authedFetch, fetcher } from "@/utils/fetch";
@@ -87,6 +92,22 @@ export const decksService = {
 
   async analyzeDeck(id: number): Promise<DeckAnalysis> {
     return authedFetch("POST", `/deck/${id}/analyze`);
+  },
+
+  /** Public decks closest to this one, by local vector similarity. */
+  async getSimilarDecks(
+    id: number,
+    limit = 6,
+  ): Promise<SimilarityResult<SimilarDeck>> {
+    return authedFetch("GET", `/ai/decks/${id}/similar?limit=${limit}`);
+  },
+
+  /** Cards similar decks play that this one does not. */
+  async getCardSuggestions(
+    id: number,
+    limit = 8,
+  ): Promise<SimilarityResult<SuggestedCard>> {
+    return authedFetch("GET", `/ai/decks/${id}/suggestions?limit=${limit}`);
   },
 
   useUserDecksPaginated(page: number, filters: any) {
