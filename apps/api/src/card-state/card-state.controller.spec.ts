@@ -1,8 +1,8 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { getRepositoryToken } from "@nestjs/typeorm";
 import { CardStateController } from "./card-state.controller";
 import { CardStateService } from "./card-state.service";
-import { CardState } from "./entities/card-state.entity";
+import { CreateCardStateDto } from "./dto/create-card-state.dto";
+import { CardStateCode } from "./entities/card-state.entity";
 
 describe("CardStateController", () => {
   let controller: CardStateController;
@@ -23,14 +23,14 @@ describe("CardStateController", () => {
           provide: CardStateService,
           useValue: mockCardStateService,
         },
-        {
-          provide: getRepositoryToken(CardState),
-          useValue: {},
-        },
       ],
     }).compile();
 
     controller = module.get<CardStateController>(CardStateController);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it("should be defined", () => {
@@ -38,11 +38,17 @@ describe("CardStateController", () => {
   });
 
   it("should create card state", async () => {
-    mockCardStateService.create.mockResolvedValue({ id: 1 });
-    await expect(controller.create({ name: "NM" } as any)).resolves.toEqual({
+    const dto: CreateCardStateDto = {
+      code: CardStateCode.NM,
+      label: "Near Mint",
+    };
+    mockCardStateService.create.mockResolvedValue({ id: 1, ...dto });
+
+    await expect(controller.create(dto)).resolves.toEqual({
       id: 1,
+      ...dto,
     });
-    expect(mockCardStateService.create).toHaveBeenCalled();
+    expect(mockCardStateService.create).toHaveBeenCalledWith(dto);
   });
 
   it("should list all card states", async () => {
@@ -52,18 +58,19 @@ describe("CardStateController", () => {
 
   it("should get one card state", async () => {
     mockCardStateService.findOne.mockResolvedValue({ id: 2 });
-    await expect(controller.findOne("2")).resolves.toEqual({ id: 2 });
+    await expect(controller.findOne(2)).resolves.toEqual({ id: 2 });
   });
 
   it("should update card state", async () => {
-    mockCardStateService.update.mockResolvedValue({ id: 3, name: "OK" });
-    await expect(
-      controller.update("3", { name: "OK" } as any),
-    ).resolves.toEqual({ id: 3, name: "OK" });
+    mockCardStateService.update.mockResolvedValue({ id: 3, label: "Updated" });
+    await expect(controller.update(3, { label: "Updated" })).resolves.toEqual({
+      id: 3,
+      label: "Updated",
+    });
   });
 
   it("should remove card state", async () => {
     mockCardStateService.remove.mockResolvedValue(undefined);
-    await expect(controller.remove("4")).resolves.toBeUndefined();
+    await expect(controller.remove(4)).resolves.toBeUndefined();
   });
 });

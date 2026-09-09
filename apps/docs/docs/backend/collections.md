@@ -37,7 +37,7 @@ Base path : `/collection-item` — tous les endpoints exigent un JWT, y compris 
 
 ## États de cartes
 
-- `/card-state` : référentiel des états (CRUD, souvent seedé via `npm run seed:cardstates`). Utile pour lier un état à un item ou une annonce marketplace.
+- `/card-state` : référentiel des états d'usure des cartes (NM, EX, GD, LP, PL, Poor). Lecture publique (`GET`), mutations réservées aux administrateurs (`POST`, `PATCH`, `DELETE`). Référentiel initialisé via `npm run seed:cardstates` et utilisé par les inventaires et le marketplace.
 
 ## Affichage des inventaires mixtes
 
