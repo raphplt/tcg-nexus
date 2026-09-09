@@ -70,6 +70,15 @@ export class Order {
   @Column({ type: "varchar", length: 128, nullable: true })
   checkoutAttemptKey: string | null;
 
+  /**
+   * Fingerprint of the cart, address and currency this attempt key was used for.
+   *
+   * A retry under the same key must describe the same checkout; a different
+   * payload is a new intent and is refused rather than silently resumed.
+   */
+  @Column({ type: "varchar", length: 64, nullable: true })
+  checkoutFingerprint: string | null;
+
   /** Guardrail against duplicate webhook events or replay attacks */
   @Column({ type: "boolean", default: false })
   stockReleased: boolean;

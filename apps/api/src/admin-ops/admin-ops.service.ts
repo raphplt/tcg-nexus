@@ -1,6 +1,12 @@
-import { Injectable, Logger } from "@nestjs/common";
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { DataSource, In, LessThan, Repository } from "typeorm";
+import { DataSource, In, IsNull, LessThan, Not, Repository } from "typeorm";
 import { AuditService } from "../audit/audit.service";
 import { AuditEvent } from "../audit/entities/audit-event.entity";
 import { ProposalStatus } from "../common/enums/match-result-status";
@@ -17,6 +23,11 @@ import {
   OutboxEventStatus,
 } from "../outbox/entities/outbox-event.entity";
 import { OutboxService } from "../outbox/outbox.service";
+import { OrderService } from "../marketplace/order.service";
+import { PaymentTransaction } from "../marketplace/entities/payment-transaction.entity";
+import { RefundFinanceService } from "../marketplace/refund-finance.service";
+import { SellerSettlementService } from "../marketplace/seller-settlement.service";
+import { StripeService } from "../marketplace/stripe.service";
 import { SupportTicket } from "../support-ticket/entities/support-ticket.entity";
 import {
   ExpireStaleOrdersDto,
@@ -53,6 +64,12 @@ export class AdminOpsService {
     private readonly proposalRepository: Repository<MatchResultProposal>,
     @InjectRepository(AuditEvent)
     private readonly auditRepository: Repository<AuditEvent>,
+    @InjectRepository(PaymentTransaction)
+    private readonly paymentRepository: Repository<PaymentTransaction>,
+    private readonly orderService: OrderService,
+    private readonly settlementService: SellerSettlementService,
+    private readonly refundFinance: RefundFinanceService,
+    private readonly stripeService: StripeService,
     private readonly auditService: AuditService,
     private readonly outboxService: OutboxService,
     private readonly dataSource: DataSource,
@@ -68,15 +85,22 @@ export class AdminOpsService {
     const staleCutoff = new Date(Date.now() - 15 * 60 * 1000);
 
     // 1. Order metrics
-    const [pendingCheckouts, stalePendingCheckouts] = await Promise.all([
-      this.orderRepository.count({ where: { status: OrderStatus.PENDING } }),
-      this.orderRepository.count({
-        where: {
-          status: OrderStatus.PENDING,
-          createdAt: LessThan(staleCutoff),
-        },
-      }),
-    ]);
+    const [pendingCheckouts, stalePendingCheckouts, awaitingCompensation] =
+      await Promise.all([
+        this.orderRepository.count({ where: { status: OrderStatus.PENDING } }),
+        this.orderRepository.count({
+          where: {
+            status: OrderStatus.PENDING,
+            createdAt: LessThan(staleCutoff),
+          },
+        }),
+        this.paymentRepository.count({
+          where: {
+            compensationRequiredAt: Not(IsNull()),
+            compensatedAt: IsNull(),
+          },
+        }),
+      ]);
 
     // 2. Outbox metrics
     const [pendingEvents, failedEvents, oldestPending] = await Promise.all([
@@ -136,6 +160,7 @@ export class AdminOpsService {
       orders: {
         pendingCheckouts,
         stalePendingCheckouts,
+        paymentsAwaitingCompensation: awaitingCompensation,
       },
       outbox: {
         pendingEvents,
@@ -279,63 +304,108 @@ export class AdminOpsService {
     actorId?: number,
   ): Promise<{ expiredCount: number; restoredReservationsCount: number }> {
     const thresholdMinutes = dto.olderThanMinutes || 15;
-    const cutoff = new Date(Date.now() - thresholdMinutes * 60 * 1000);
 
-    const staleOrders = await this.orderRepository.find({
-      where: {
-        status: OrderStatus.PENDING,
-        stockReleased: false,
-        createdAt: LessThan(cutoff),
-      },
-      relations: ["orderItems", "orderItems.listing"],
-    });
+    // The sweep goes through the order state machine: every candidate is locked
+    // and re-read there, its stock released once, its transition audited and
+    // published, and its provider intent settled. A sweep racing a payment or a
+    // buyer cancellation therefore changes nothing.
+    const expiredCount =
+      await this.orderService.expireStaleReservations(thresholdMinutes);
 
-    let restoredReservationsCount = 0;
-
-    await this.dataSource.transaction(async (manager) => {
-      for (const order of staleOrders) {
-        order.status = OrderStatus.CANCELLED;
-        order.stockReleased = true;
-        await manager.save(order);
-
-        // Restore listing reservations
-        if (order.orderItems) {
-          for (const item of order.orderItems) {
-            const listingId = item.listing?.id;
-            if (listingId) {
-              const listing = await manager.findOne(Listing, {
-                where: { id: listingId },
-                lock: { mode: "pessimistic_write" },
-              });
-              if (listing) {
-                listing.quantityAvailable += item.quantity;
-                await manager.save(listing);
-                restoredReservationsCount++;
-              }
-            }
-          }
-        }
-
-        await this.auditService.record(
-          {
-            actorId,
-            actorRole: "system_ops",
-            targetType: "order",
-            targetId: String(order.id),
-            action: "stale_order_expired",
-            reason: `Order unpaid for >${thresholdMinutes}m expired during operational sweep`,
-            beforeState: { status: OrderStatus.PENDING },
-            afterState: { status: OrderStatus.CANCELLED, stockReleased: true },
-          },
-          manager,
-        );
-      }
-    });
+    if (expiredCount > 0) {
+      await this.auditService.record({
+        actorId,
+        actorRole: "system_ops",
+        targetType: "order",
+        targetId: "sweep",
+        action: "stale_orders_expired",
+        reason: `Operational sweep expired ${expiredCount} order(s) unpaid for more than ${thresholdMinutes}m`,
+        afterState: { expiredCount, thresholdMinutes },
+      });
+    }
 
     return {
-      expiredCount: staleOrders.length,
-      restoredReservationsCount,
+      expiredCount,
+      restoredReservationsCount: expiredCount,
     };
+  }
+
+  /**
+   * Lists captures that are owed back to a buyer and not yet refunded.
+   *
+   * @returns Payments flagged for compensation, oldest first.
+   */
+  async findPaymentsAwaitingCompensation(): Promise<PaymentTransaction[]> {
+    return this.paymentRepository.find({
+      where: { compensationRequiredAt: Not(IsNull()), compensatedAt: IsNull() },
+      relations: ["order", "order.buyer"],
+      order: { compensationRequiredAt: "ASC" },
+    });
+  }
+
+  /**
+   * Refunds a capture that can no longer be honoured, once.
+   *
+   * The provider call is keyed on the payment, so a retried compensation
+   * recovers the same refund instead of returning the money twice; the local
+   * refund record is then reconciled from the provider's own outcome.
+   *
+   * @param paymentId - Payment transaction owing compensation.
+   * @param actorId - Operator performing the compensation.
+   */
+  async compensatePayment(
+    paymentId: number,
+    actorId?: number,
+  ): Promise<{ compensated: boolean; paymentId: number }> {
+    const payment = await this.paymentRepository.findOne({
+      where: { id: paymentId },
+      relations: ["order", "order.buyer"],
+    });
+    if (!payment) {
+      throw new NotFoundException(`Payment ${paymentId} not found`);
+    }
+    if (!payment.compensationRequiredAt) {
+      throw new BadRequestException(
+        `Payment ${paymentId} does not owe a compensation`,
+      );
+    }
+    if (payment.compensatedAt) {
+      return { compensated: false, paymentId };
+    }
+    if (!payment.transactionId) {
+      throw new ConflictException(
+        `Payment ${paymentId} has no provider identity to refund`,
+      );
+    }
+
+    await this.stripeService.createRefund(
+      payment.transactionId,
+      undefined,
+      "requested_by_customer",
+      `late-payment-${payment.id}`,
+    );
+    // The refund record and the order/payment state come from the provider's
+    // authoritative view, not from this call's response.
+    await this.refundFinance.reconcilePaymentRefunds(payment.transactionId);
+
+    payment.compensatedAt = new Date();
+    await this.paymentRepository.save(payment);
+
+    await this.auditService.record({
+      actorId,
+      actorRole: "system_ops",
+      targetType: "payment_transaction",
+      targetId: String(payment.id),
+      action: "payment.compensated",
+      reason: payment.compensationReason,
+      afterState: {
+        orderId: payment.order?.id ?? null,
+        amount: Number(payment.amount),
+        currency: payment.currency,
+      },
+    });
+
+    return { compensated: true, paymentId };
   }
 
   /**
@@ -390,9 +460,44 @@ export class AdminOpsService {
     const discrepancy = Math.abs(
       totalSellerBalancesPaidOut - totalPayoutsDisbursed,
     );
-    const isReconciled = discrepancy < 0.01;
+    // Aggregate totals mix currencies, so they cannot decide reconciliation on
+    // their own: the ledger check compares each account in its own currency.
+    const ledger = await this.settlementService.reconcile();
+    const currencies = [
+      ...new Set(sellerAccounts.map((account) => account.currency)),
+    ];
+    const byCurrency = currencies.map((currency) => {
+      const accounts = sellerAccounts.filter(
+        (account) => account.currency === currency,
+      );
+      const payouts = completedPayouts.filter(
+        (payout) => payout.currency === currency,
+      );
+      const paidOut = accounts.reduce(
+        (sum, account) => sum + Number(account.balancePaidOut || 0),
+        0,
+      );
+      const disbursed = payouts.reduce(
+        (sum, payout) => sum + Number(payout.amount || 0),
+        0,
+      );
+      return {
+        currency,
+        totalSellerBalancesPaidOut: Math.round(paidOut * 100) / 100,
+        totalPayoutsDisbursed: Math.round(disbursed * 100) / 100,
+        isReconciled: Math.abs(paidOut - disbursed) < 0.01,
+      };
+    });
+    const isReconciled =
+      ledger.consistent && byCurrency.every((entry) => entry.isReconciled);
 
     return {
+      byCurrency,
+      ledgerConsistent: ledger.consistent,
+      ledgerDiscrepancies: ledger.discrepancies.map(
+        (entry) =>
+          `account ${entry.accountId} (${entry.currency}): ${entry.mismatches.join("; ")}`,
+      ),
       totalAllocationsGross: Math.round(totalAllocationsGross * 100) / 100,
       totalAllocationsFees: Math.round(totalAllocationsFees * 100) / 100,
       totalAllocationsNet: Math.round(totalAllocationsNet * 100) / 100,

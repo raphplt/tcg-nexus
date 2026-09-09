@@ -2,6 +2,8 @@ import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AuditModule } from "../audit/audit.module";
 import { AuditEvent } from "../audit/entities/audit-event.entity";
+import { MarketplaceModule } from "../marketplace/marketplace.module";
+import { PaymentTransaction } from "../marketplace/entities/payment-transaction.entity";
 import { Listing } from "../marketplace/entities/listing.entity";
 import { Order } from "../marketplace/entities/order.entity";
 import { SellerAllocation } from "../marketplace/entities/seller-allocation.entity";
@@ -30,9 +32,13 @@ import { AdminOpsService } from "./admin-ops.service";
       SupportTicket,
       MatchResultProposal,
       AuditEvent,
+      PaymentTransaction,
     ]),
     AuditModule,
     OutboxModule,
+    // Operational recovery goes through the domain services rather than writing
+    // order, payment and settlement state on its own.
+    MarketplaceModule,
   ],
   controllers: [AdminOpsController],
   providers: [AdminOpsService],

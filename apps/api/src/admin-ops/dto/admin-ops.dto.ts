@@ -108,6 +108,8 @@ export class OpsMetricsResponseDto {
   orders: {
     pendingCheckouts: number;
     stalePendingCheckouts: number;
+    /** Captures owed back to a buyer and not yet refunded. */
+    paymentsAwaitingCompensation: number;
   };
 
   @ApiProperty({ description: "Transactional outbox event telemetry" })
@@ -143,6 +145,29 @@ export class OpsMetricsResponseDto {
  * Financial ledger reconciliation report comparing allocations, balances, and disbursements.
  */
 export class SettlementReconciliationResponseDto {
+  @ApiProperty({
+    description: "Paid-out balances versus disbursed payouts, per currency",
+    isArray: true,
+  })
+  byCurrency: {
+    currency: string;
+    totalSellerBalancesPaidOut: number;
+    totalPayoutsDisbursed: number;
+    isReconciled: boolean;
+  }[];
+
+  @ApiProperty({
+    description:
+      "True when every seller balance equals the sum of its ledger entries",
+  })
+  ledgerConsistent: boolean;
+
+  @ApiProperty({
+    description: "Accounts whose stored balances deviate from their ledger",
+    type: [String],
+  })
+  ledgerDiscrepancies: string[];
+
   @ApiProperty({
     description: "Total gross merchandise sales from all allocations",
   })

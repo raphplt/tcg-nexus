@@ -185,6 +185,13 @@ const PROBES: MigrationProbe[] = [
     probe: `SELECT 1 FROM information_schema.tables
             WHERE table_name = 'collection_bulk_operation'`,
   },
+  {
+    name: "CheckoutRecoveryAndCompensation1789200000000",
+    timestamp: 1789200000000,
+    probe: `SELECT 1 FROM information_schema.columns
+            WHERE table_name = 'payment_transaction'
+              AND column_name = 'compensationRequiredAt'`,
+  },
 ];
 
 /**

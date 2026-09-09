@@ -96,6 +96,20 @@ export class StripeService implements OnModuleInit {
   }
 
   /**
+   * Cancels a payment intent that will never be captured.
+   *
+   * @param paymentIntentId - Stripe payment intent identifier.
+   * @returns The cancelled payment intent.
+   * @throws ServiceUnavailableException If Stripe is not configured.
+   */
+  async cancelPaymentIntent(
+    paymentIntentId: string,
+  ): Promise<Stripe.PaymentIntent> {
+    this.ensureInitialized();
+    return this.stripe!.paymentIntents.cancel(paymentIntentId);
+  }
+
+  /**
    * Validates and parses a Stripe webhook event.
    *
    * @param signature - Stripe webhook signature header.

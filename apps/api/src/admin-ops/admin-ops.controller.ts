@@ -4,6 +4,8 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
+  ParseIntPipe,
   Post,
   Query,
   Request,
@@ -107,6 +109,41 @@ export class AdminOpsController {
     @Request() req: any,
   ) {
     return this.adminOpsService.expireStalePendingOrders(dto, req.user?.id);
+  }
+
+  /**
+   * Lists captures owed back to a buyer that have not been refunded yet.
+   */
+  @Get("payments/compensation")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: "List payments captured against cancelled orders awaiting refund",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Payments owing compensation",
+  })
+  async listPaymentsAwaitingCompensation() {
+    return this.adminOpsService.findPaymentsAwaitingCompensation();
+  }
+
+  /**
+   * Refunds a capture that can no longer be honoured, once.
+   */
+  @Post("payments/:id/compensate")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: "Refund a payment captured against a cancelled order",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Compensation outcome",
+  })
+  async compensatePayment(
+    @Param("id", ParseIntPipe) id: number,
+    @Request() req: any,
+  ) {
+    return this.adminOpsService.compensatePayment(id, req.user?.id);
   }
 
   /**

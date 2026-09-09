@@ -57,6 +57,22 @@ export class PaymentTransaction {
   @Column({ type: "enum", enum: Currency, nullable: true })
   currency: Currency | null;
 
+  /**
+   * Set when money was captured for an order that can no longer be honoured,
+   * typically a payment succeeding after its reservation was cancelled. The
+   * buyer is owed a refund until {@link compensatedAt} is set.
+   */
+  @Column({ type: "timestamp with time zone", nullable: true })
+  compensationRequiredAt: Date | null;
+
+  /** Why the capture needs compensating, for the operator handling it. */
+  @Column({ type: "text", nullable: true })
+  compensationReason: string | null;
+
+  /** Moment the owed refund was issued to the provider. */
+  @Column({ type: "timestamp with time zone", nullable: true })
+  compensatedAt: Date | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

@@ -58,6 +58,7 @@ describe("OrderService", () => {
   beforeEach(async () => {
     manager = {
       findOne: jest.fn(),
+      findOneOrFail: jest.fn(),
       create: jest.fn((_cls, data) => ({ ...data })),
       save: jest.fn(async (_cls, entity) => ({ id: 100, ...entity })),
       decrement: jest.fn(),
@@ -82,6 +83,7 @@ describe("OrderService", () => {
       create: jest.fn((data) => data),
       save: jest.fn(async (p) => p),
       findOne: jest.fn(),
+      find: jest.fn().mockResolvedValue([]),
     };
 
     stripeService = {
@@ -504,7 +506,14 @@ describe("OrderService", () => {
   });
 
   describe("cancelPendingOrderByBuyer", () => {
-    it("cancels pending order, releases stock, and logs audit record", async () => {
+    /** Serves the authorization read, the row lock and the relation load. */
+    const withOrder = (order: Record<string, unknown>) => {
+      orderRepo.findOne.mockResolvedValue(order);
+      manager.findOne.mockResolvedValue(order);
+      manager.findOneOrFail.mockResolvedValue(order);
+    };
+
+    it("cancels a pending order, releases its stock once and audits it", async () => {
       const pendingOrder = {
         id: 555,
         status: OrderStatus.PENDING,
@@ -512,8 +521,7 @@ describe("OrderService", () => {
         orderItems: [{ listing: { id: 10 }, quantity: 2 }],
         stockReleased: false,
       };
-
-      orderRepo.findOne.mockResolvedValueOnce(pendingOrder);
+      withOrder(pendingOrder);
 
       const result = await service.cancelPendingOrderByBuyer(555, buyer);
 
@@ -536,15 +544,26 @@ describe("OrderService", () => {
       );
     });
 
+    it("returns success without releasing stock again when already cancelled", async () => {
+      const cancelledOrder = {
+        id: 555,
+        status: OrderStatus.CANCELLED,
+        buyer,
+        orderItems: [{ listing: { id: 10 }, quantity: 2 }],
+        stockReleased: true,
+      };
+      withOrder(cancelledOrder);
+
+      const result = await service.cancelPendingOrderByBuyer(555, buyer);
+
+      expect(result).toEqual({ success: true, orderId: 555 });
+      expect(manager.increment).not.toHaveBeenCalled();
+      expect(auditService.record).not.toHaveBeenCalled();
+    });
+
     it("refuses cancellation if caller is not the owner", async () => {
       const otherBuyer = { id: 99, role: "user" } as User;
-      const pendingOrder = {
-        id: 555,
-        status: OrderStatus.PENDING,
-        buyer: { id: 1 },
-      };
-
-      orderRepo.findOne.mockResolvedValueOnce(pendingOrder);
+      withOrder({ id: 555, status: OrderStatus.PENDING, buyer: { id: 1 } });
 
       await expect(
         service.cancelPendingOrderByBuyer(555, otherBuyer),
@@ -552,13 +571,7 @@ describe("OrderService", () => {
     });
 
     it("refuses cancellation if order is not pending", async () => {
-      const paidOrder = {
-        id: 555,
-        status: OrderStatus.PAID,
-        buyer,
-      };
-
-      orderRepo.findOne.mockResolvedValueOnce(paidOrder);
+      withOrder({ id: 555, status: OrderStatus.PAID, buyer });
 
       await expect(
         service.cancelPendingOrderByBuyer(555, buyer),

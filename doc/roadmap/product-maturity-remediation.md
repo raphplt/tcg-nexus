@@ -13,7 +13,7 @@ Corrections are delivered as independently tested commits. No block closes an en
 | 3a | Return stock and listing reservation ownership | Implemented; verification below |
 | 3b | Receipt import identity and cumulative received quantities | Implemented; verification below |
 | 3c | Lossless CSV round-trip and compensating bulk undo | Implemented; verification below |
-| 4 | Checkout recovery, cancellation/payment races and safe operational expiration | Pending |
+| 4 | Checkout recovery, cancellation/payment races and safe operational expiration | Implemented; verification below |
 | 5 | Durable event contracts, consumer deduplication and notification failure recovery | Pending |
 | 6 | Tournament legality, score confirmation and downstream correction policy | Pending |
 | 7 | Fresh/legacy database migrations and lossless inventory backfill | Pending |
@@ -154,3 +154,23 @@ the wider client integration and acceptance evidence of block 8.
 ### Verification
 
 The PostgreSQL suite `apps/api/test/product-maturity-collection-bulk.e2e-spec.ts` covers undoing an import over pre-existing stock, removing only created items, replayed imports, provenance stability across operations, a full export/import round trip of quoted multi-line values, `replace` against reserved copies, conflicts from reserved copies, repeated undo, restoring deleted items from their snapshot, and the migration's adoption of legacy provenance. `collection-bulk.service.spec.ts` was rewritten around the same contract (29 tests). Both are part of the CI job.
+
+
+## Block 4 — checkout recovery and capture compensation
+
+This sub-block addresses A10 and A13.
+
+- The order records a fingerprint of the listings, quantities and destination its attempt key was used for. Reusing that key for a different cart returns 409 instead of resuming another purchase; a genuine retry resumes the existing order.
+- A checkout interrupted between order creation and provider setup is recovered: the intent is created under the order's own idempotency key, so the recovered attempt reuses the same intent and returns a usable client secret instead of a null one.
+- Buyer cancellation reads the status under the row lock that also releases the stock. Concurrent cancellations return the copies exactly once, and an already cancelled order answers idempotently instead of releasing again.
+- Cancellation and expiration now settle the provider: an intent still awaiting payment is cancelled, and one that already succeeded is recorded as owing compensation rather than being left as captured money against released stock.
+- A payment webhook for a cancelled order no longer returns silently: it flags the capture for compensation, and does not resurrect the order or re-sell its stock. `payment_transaction` carries `compensationRequiredAt`, `compensationReason` and `compensatedAt`; the queue is visible in the operational metrics, listed by `GET /admin/ops/payments/compensation`, and refunded once by `POST /admin/ops/payments/:id/compensate` under the key `late-payment-{paymentId}`, reconciled from the provider's own view.
+- The operational expiration sweep delegates to the order state machine instead of writing order and stock state itself: every candidate is locked, re-read, released once, audited and published, and only orders still pending are touched. Two sweeps, or a sweep racing a payment or cancellation, change nothing.
+- Settlement reconciliation reports paid-out balances against disbursed payouts per currency and includes the per-account ledger check from block 2b, so a mixed-currency total can no longer declare the platform reconciled on its own.
+
+Out of scope here and still open: provider webhook signature replay and delivery
+guarantees (block 5), and the operational runbook rewrite of block 8.
+
+### Verification
+
+The PostgreSQL suite `apps/api/test/product-maturity-checkout.e2e-spec.ts` covers attempt-key resumption and payload conflict, recovery of an interrupted provider setup, concurrent buyer cancellations, provider intent cancellation, a capture succeeding after cancellation, the compensation endpoint's single refund, an expiry sweep run twice against a stale and a paid order, per-currency and ledger reconciliation, and the migration's up/down DDL. Its provider is simulated; no money moves. Unit coverage was updated for the locked cancellation and the operational service delegating its sweep.

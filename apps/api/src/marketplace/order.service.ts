@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   HttpStatus,
   Injectable,
@@ -11,6 +12,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import {
   DataSource,
   EntityManager,
+  IsNull,
   LessThan,
   MoreThan,
   Repository,
@@ -30,6 +32,7 @@ import { UserCartService } from "../user_cart/user_cart.service";
 import { AuditService } from "../audit/audit.service";
 
 import { OutboxService } from "../outbox/outbox.service";
+import { financeFingerprint } from "./finance/finance.utils";
 import { CardPopularityService } from "./card-popularity.service";
 import { AdminOrderQueryDto } from "./dto/admin-order-query.dto";
 import { PendingCheckoutSessionDto } from "./dto/pending-checkout-session.dto";
@@ -114,6 +117,13 @@ export class OrderService {
     dto: StartCheckoutDto,
     user: User,
   ): Promise<CheckoutResult> {
+    const cart = await this.userCartService.findCartByUserId(user.id);
+    const cartItems = cart?.cartItems ?? [];
+    const fingerprint = this.checkoutFingerprint(
+      cartItems,
+      dto.shippingAddress.trim(),
+    );
+
     if (dto.attemptKey) {
       const existingAttempt = await this.orderRepository.findOne({
         where: {
@@ -124,27 +134,29 @@ export class OrderService {
       });
 
       if (existingAttempt) {
+        // A key identifies one checkout: describing a different one under it is
+        // a new intent, not a retry, and resuming it would charge the wrong cart.
+        if (
+          existingAttempt.checkoutFingerprint &&
+          cartItems.length > 0 &&
+          existingAttempt.checkoutFingerprint !== fingerprint
+        ) {
+          throw new ConflictException(
+            "Cette tentative de paiement correspond à un panier différent",
+          );
+        }
+
         if (
           existingAttempt.status === OrderStatus.PENDING &&
           existingAttempt.reservationExpiresAt &&
           new Date(existingAttempt.reservationExpiresAt) > new Date()
         ) {
-          const payment = await this.paymentTransactionRepository.findOne({
-            where: { order: { id: existingAttempt.id } },
-            order: { createdAt: "DESC" },
-          });
-
-          let clientSecret: string | null = null;
-          if (payment?.transactionId) {
-            try {
-              const intent = await this.stripeService.retrievePaymentIntent(
-                payment.transactionId,
-              );
-              clientSecret = intent.client_secret;
-            } catch {
-              // Ignore provider retrieval issues on idempotent replay
-            }
-          }
+          // Recovers a checkout interrupted between order creation and provider
+          // setup: the intent is created under the order's own idempotency key.
+          const clientSecret = await this.ensureCheckoutIntent(
+            existingAttempt,
+            user,
+          );
 
           return {
             orderId: existingAttempt.id,
@@ -166,9 +178,6 @@ export class OrderService {
         }
       }
     }
-
-    const cart = await this.userCartService.findCartByUserId(user.id);
-    const cartItems = cart?.cartItems ?? [];
 
     if (cartItems.length === 0) {
       const activePending = await this.findPendingCheckoutSession(user.id);
@@ -206,37 +215,17 @@ export class OrderService {
       dto.shippingAddress.trim(),
       user,
       dto.attemptKey,
+      fingerprint,
     );
 
     try {
-      const paymentIntent = await this.stripeService.createPaymentIntent(
-        Number(order.totalAmount),
-        currency,
-        {
-          orderId: String(order.id),
-          userId: String(user.id),
-        },
-        // Keyed on the order: a retried checkout reuses the same intent
-        // instead of creating a second chargeable one.
-        `order-${order.id}`,
-      );
-
-      await this.paymentTransactionRepository.save(
-        this.paymentTransactionRepository.create({
-          order,
-          method: PaymentMethod.CREDIT_CARD,
-          status: PaymentStatus.INITIATED,
-          transactionId: paymentIntent.id,
-          amount: Number(order.totalAmount),
-          currency,
-        }),
-      );
+      const clientSecret = await this.ensureCheckoutIntent(order, user);
 
       await this.userCartService.clearCart(user.id);
 
       return {
         orderId: order.id,
-        clientSecret: paymentIntent.client_secret,
+        clientSecret,
         amount: Number(order.totalAmount),
         shippingAmount: Number(order.shippingAmount),
         currency,
@@ -250,12 +239,207 @@ export class OrderService {
     }
   }
 
+  /**
+   * Identifies the checkout an attempt key was used for.
+   *
+   * Two requests describing the same listings, quantities and destination are
+   * the same checkout; anything else is a different one.
+   */
+  private checkoutFingerprint(
+    cartItems: CartItem[],
+    shippingAddress: string,
+  ): string {
+    return financeFingerprint({
+      shippingAddress,
+      lines: cartItems
+        .map((item) => ({
+          listingId: item.listing?.id ?? null,
+          quantity: item.quantity,
+        }))
+        .sort((a, b) => Number(a.listingId) - Number(b.listingId)),
+    });
+  }
+
+  /**
+   * Returns a usable client secret for a pending order, creating the provider
+   * intent when a previous attempt was interrupted before recording one.
+   *
+   * The provider call is keyed on the order, so a recovered attempt reuses the
+   * same intent instead of creating a second chargeable one.
+   */
+  private async ensureCheckoutIntent(
+    order: Order,
+    user: User,
+  ): Promise<string | null> {
+    const payment = await this.paymentTransactionRepository.findOne({
+      where: { order: { id: order.id } },
+      order: { createdAt: "DESC" },
+    });
+
+    if (payment?.transactionId) {
+      try {
+        const intent = await this.stripeService.retrievePaymentIntent(
+          payment.transactionId,
+        );
+        return intent.client_secret;
+      } catch (err) {
+        this.logger.warn(
+          `Could not retrieve Stripe intent for order ${order.id}: ${(err as Error).message}`,
+        );
+        return null;
+      }
+    }
+
+    const paymentIntent = await this.stripeService.createPaymentIntent(
+      Number(order.totalAmount),
+      order.currency,
+      { orderId: String(order.id), userId: String(user.id) },
+      // Keyed on the order: a retried checkout reuses the same intent
+      // instead of creating a second chargeable one.
+      `order-${order.id}`,
+    );
+
+    await this.paymentTransactionRepository.save(
+      this.paymentTransactionRepository.create({
+        order,
+        method: PaymentMethod.CREDIT_CARD,
+        status: PaymentStatus.INITIATED,
+        transactionId: paymentIntent.id,
+        amount: Number(order.totalAmount),
+        currency: order.currency,
+      }),
+    );
+
+    return paymentIntent.client_secret;
+  }
+
+  /**
+   * Settles the provider side of an order that will never be paid.
+   *
+   * An intent still awaiting payment is cancelled so the buyer cannot be
+   * charged for released stock. One that already succeeded is money captured
+   * against a cancelled reservation: it is recorded as owing compensation
+   * instead of being silently kept.
+   *
+   * @returns Outcome per payment, for the caller's audit trail.
+   */
+  async reconcileCancelledPayment(orderId: number): Promise<{
+    cancelled: number;
+    compensationRequired: number;
+  }> {
+    const payments = await this.paymentTransactionRepository.find({
+      where: { order: { id: orderId } },
+      relations: ["order", "order.buyer"],
+    });
+    let cancelled = 0;
+    let compensationRequired = 0;
+
+    for (const payment of payments) {
+      if (!payment.transactionId) continue;
+      if (
+        payment.status === PaymentStatus.COMPLETED ||
+        payment.status === PaymentStatus.REFUNDED
+      ) {
+        continue;
+      }
+
+      let intentStatus: string | null = null;
+      try {
+        const intent = await this.stripeService.retrievePaymentIntent(
+          payment.transactionId,
+        );
+        intentStatus = intent.status;
+      } catch (err) {
+        this.logger.warn(
+          `Could not read intent ${payment.transactionId} for order ${orderId}: ${(err as Error).message}`,
+        );
+        continue;
+      }
+
+      if (intentStatus === "succeeded") {
+        await this.flagPaymentForCompensation(
+          payment,
+          `Payment captured after order ${orderId} was cancelled`,
+        );
+        compensationRequired++;
+        continue;
+      }
+      if (intentStatus === "canceled") {
+        payment.status = PaymentStatus.FAILED;
+        await this.paymentTransactionRepository.save(payment);
+        continue;
+      }
+
+      try {
+        await this.stripeService.cancelPaymentIntent(payment.transactionId);
+        payment.status = PaymentStatus.FAILED;
+        await this.paymentTransactionRepository.save(payment);
+        cancelled++;
+      } catch (err) {
+        // A racing capture makes the intent uncancelable; the next sweep or the
+        // payment webhook resolves it through the compensation path.
+        this.logger.warn(
+          `Could not cancel intent ${payment.transactionId} for order ${orderId}: ${(err as Error).message}`,
+        );
+      }
+    }
+
+    return { cancelled, compensationRequired };
+  }
+
+  /** Records that captured money is owed back, once per payment. */
+  private async flagPaymentForCompensation(
+    payment: PaymentTransaction,
+    reason: string,
+  ): Promise<void> {
+    if (payment.compensationRequiredAt || payment.compensatedAt) return;
+
+    payment.status = PaymentStatus.COMPLETED;
+    payment.compensationRequiredAt = new Date();
+    payment.compensationReason = reason;
+    await this.paymentTransactionRepository.save(payment);
+
+    await this.auditService.record({
+      actorId: payment.order?.buyer?.id ?? null,
+      actorRole: "system",
+      targetType: "payment_transaction",
+      targetId: String(payment.id),
+      action: "payment.compensation_required",
+      reason,
+      afterState: {
+        orderId: payment.order?.id ?? null,
+        paymentIntentId: payment.transactionId,
+        amount: Number(payment.amount),
+        currency: payment.currency,
+      },
+    });
+
+    await this.outboxService.record({
+      eventType: "payment.compensation_required",
+      aggregateType: "payment_transaction",
+      aggregateId: String(payment.id),
+      payload: {
+        paymentId: payment.id,
+        orderId: payment.order?.id ?? null,
+        buyerUserId: payment.order?.buyer?.id ?? null,
+        amount: Number(payment.amount),
+        currency: payment.currency,
+        reason,
+      },
+    });
+
+    this.logger.warn(
+      `Payment ${payment.id} requires compensation: ${reason}`,
+    );
+  }
+
   private async reserveStockAndCreateOrder(
     cartItems: CartItem[],
     currency: Currency,
     shippingAddress: string,
     user: User,
     attemptKey?: string,
+    checkoutFingerprint?: string,
   ): Promise<Order> {
     return this.dataSource.transaction(async (manager) => {
       let itemsAmount = 0;
@@ -314,6 +498,7 @@ export class OrderService {
         reservationExpiresAt,
         stockReleased: false,
         checkoutAttemptKey: attemptKey ?? null,
+        checkoutFingerprint: checkoutFingerprint ?? null,
         orderItems: cartItems.map((item) => {
           const listing = freshListings.get(item.listing.id);
           if (!listing) {
@@ -540,16 +725,16 @@ export class OrderService {
     orderId: number,
     user: User,
   ): Promise<{ success: boolean; orderId: number }> {
-    const order = await this.orderRepository.findOne({
+    const existing = await this.orderRepository.findOne({
       where: { id: orderId },
-      relations: ORDER_RELATIONS,
+      relations: ["buyer"],
     });
 
-    if (!order) {
+    if (!existing) {
       throw new NotFoundException(`Order ${orderId} not found`);
     }
 
-    const isOwner = order.buyer?.id === user.id;
+    const isOwner = existing.buyer?.id === user.id;
     const isAdmin =
       user.role === UserRole.ADMIN || user.role === UserRole.MODERATOR;
 
@@ -559,13 +744,30 @@ export class OrderService {
       );
     }
 
-    if (order.status !== OrderStatus.PENDING) {
-      throw new BadRequestException(
-        "Seule une commande en attente de paiement peut être annulée",
-      );
-    }
+    const cancelled = await this.dataSource.transaction(async (manager) => {
+      // The status is read under the row lock that also releases the stock, so
+      // two concurrent cancellations cannot both return the same copies.
+      const locked = await manager.findOne(Order, {
+        where: { id: orderId },
+        lock: { mode: "pessimistic_write" },
+      });
+      if (!locked) {
+        throw new NotFoundException(`Order ${orderId} not found`);
+      }
 
-    await this.dataSource.transaction(async (manager) => {
+      if (locked.status === OrderStatus.CANCELLED) {
+        return false; // Already cancelled by a concurrent request or a sweep.
+      }
+      if (locked.status !== OrderStatus.PENDING) {
+        throw new BadRequestException(
+          "Seule une commande en attente de paiement peut être annulée",
+        );
+      }
+
+      const order = await manager.findOneOrFail(Order, {
+        where: { id: orderId },
+        relations: ["buyer", "orderItems", "orderItems.listing"],
+      });
       order.status = OrderStatus.CANCELLED;
       order.reservationExpiresAt = null;
       await this.releaseStock(order, manager);
@@ -594,9 +796,17 @@ export class OrderService {
         },
         manager,
       );
+
+      return true;
     });
 
-    return { success: true, orderId: order.id };
+    if (cancelled) {
+      // Settling the provider outside the transaction keeps a slow or failing
+      // network from holding the stock release open.
+      await this.reconcileCancelledPayment(orderId);
+    }
+
+    return { success: true, orderId };
   }
 
   async confirmOrderPayment(orderId: number, user: User): Promise<Order> {
@@ -655,6 +865,7 @@ export class OrderService {
       metadata?: Record<string, string> | null;
     },
   ): Promise<void> {
+    let lateCapture: number | null = null;
     const paidOrder = await this.dataSource.transaction(async (manager) => {
       // Pessimistic lock without relations: TypeORM refuses locks on joined queries.
       const payment = await manager.findOne(PaymentTransaction, {
@@ -696,6 +907,15 @@ export class OrderService {
       }
 
       if (order.status !== OrderStatus.PENDING) {
+        // Money captured against a reservation that no longer exists: the buyer
+        // is owed it back, and the cancelled order is not resurrected.
+        if (
+          order.status === OrderStatus.CANCELLED &&
+          !payment.compensationRequiredAt &&
+          !payment.compensatedAt
+        ) {
+          lateCapture = payment.id;
+        }
         return null; // Already processed by the concurrent caller
       }
 
@@ -755,6 +975,19 @@ export class OrderService {
 
       return order;
     });
+
+    if (lateCapture) {
+      const payment = await this.paymentTransactionRepository.findOne({
+        where: { id: lateCapture },
+        relations: ["order", "order.buyer"],
+      });
+      if (payment) {
+        await this.flagPaymentForCompensation(
+          payment,
+          `Payment succeeded after order ${payment.order?.id} was cancelled`,
+        );
+      }
+    }
 
     // Side effects run outside the transaction, and only for the winner.
     if (paidOrder) {
@@ -915,7 +1148,7 @@ export class OrderService {
   async transitionOrder(
     orderId: number,
     nextStatus: OrderStatus,
-    options: { allowNoop?: boolean } = {},
+    options: { allowNoop?: boolean; onlyFrom?: OrderStatus[] } = {},
   ): Promise<Order> {
     return this.dataSource.transaction(async (manager) => {
       // Lock without relations: Postgres rejects FOR UPDATE on the nullable side
@@ -936,6 +1169,12 @@ export class OrderService {
 
       if (!order) {
         throw new NotFoundException(`Commande ${orderId} introuvable`);
+      }
+
+      // A recovery sweep only acts on the state it observed; anything else was
+      // resolved by the buyer, the provider or another operator meanwhile.
+      if (options.onlyFrom && !options.onlyFrom.includes(order.status)) {
+        return order;
       }
 
       if (order.status === nextStatus) {
@@ -1045,24 +1284,63 @@ export class OrderService {
     }
   }
 
-  async expireStaleReservations(): Promise<number> {
-    const staleOrders = await this.orderRepository.find({
-      where: {
-        status: OrderStatus.PENDING,
-        reservationExpiresAt: LessThan(new Date()),
-      },
+  /**
+   * Cancels reservations that expired, through the locked order state machine.
+   *
+   * Candidates are re-read and locked by {@link transitionOrder}, so a sweep
+   * racing a payment or a buyer cancellation cannot release stock twice or
+   * cancel an order that has just been paid. Each cancelled order also settles
+   * its provider intent.
+   *
+   * @param olderThanMinutes - Optional age threshold applied to orders whose
+   * reservation carries no expiry date.
+   * @returns Orders actually cancelled by this sweep.
+   */
+  async expireStaleReservations(olderThanMinutes?: number): Promise<number> {
+    const now = new Date();
+    const candidates = await this.orderRepository.find({
+      where: [
+        {
+          status: OrderStatus.PENDING,
+          reservationExpiresAt: LessThan(now),
+        },
+        ...(olderThanMinutes
+          ? [
+              {
+                status: OrderStatus.PENDING,
+                reservationExpiresAt: IsNull(),
+                createdAt: LessThan(
+                  new Date(now.getTime() - olderThanMinutes * 60 * 1000),
+                ),
+              },
+            ]
+          : []),
+      ],
       select: { id: true },
     });
 
-    for (const { id } of staleOrders) {
-      await this.cancelOrder(id, "reservation expired");
+    let expired = 0;
+    for (const { id } of candidates) {
+      try {
+        const order = await this.transitionOrder(id, OrderStatus.CANCELLED, {
+          allowNoop: true,
+          onlyFrom: [OrderStatus.PENDING],
+        });
+        if (order.status !== OrderStatus.CANCELLED) continue;
+        expired++;
+        await this.reconcileCancelledPayment(id);
+      } catch (err) {
+        this.logger.error(
+          `Failed to expire reservation of order ${id}: ${(err as Error).message}`,
+        );
+      }
     }
 
-    if (staleOrders.length > 0) {
-      this.logger.log(`Released ${staleOrders.length} expired reservation(s)`);
+    if (expired > 0) {
+      this.logger.log(`Released ${expired} expired reservation(s)`);
     }
 
-    return staleOrders.length;
+    return expired;
   }
 
   async findOrdersByBuyerId(buyerId: number): Promise<Order[]> {

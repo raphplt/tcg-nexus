@@ -3,6 +3,11 @@ import { getRepositoryToken } from "@nestjs/typeorm";
 import { DataSource } from "typeorm";
 import { AuditService } from "../audit/audit.service";
 import { AuditEvent } from "../audit/entities/audit-event.entity";
+import { PaymentTransaction } from "../marketplace/entities/payment-transaction.entity";
+import { OrderService } from "../marketplace/order.service";
+import { RefundFinanceService } from "../marketplace/refund-finance.service";
+import { SellerSettlementService } from "../marketplace/seller-settlement.service";
+import { StripeService } from "../marketplace/stripe.service";
 import { ProposalStatus } from "../common/enums/match-result-status";
 import { PayoutStatus } from "../common/enums/seller-settlement";
 import { SupportTicketStatusType } from "../common/enums/supportTicketType";
@@ -21,6 +26,11 @@ import { SupportTicket } from "../support-ticket/entities/support-ticket.entity"
 import { AdminOpsService } from "./admin-ops.service";
 
 describe("AdminOpsService", () => {
+  let mockPaymentRepo: any;
+  let mockOrderService: any;
+  let mockSettlementService: any;
+  let mockRefundFinance: any;
+  let mockStripeService: any;
   let service: AdminOpsService;
 
   const mockOrderRepo = {
@@ -88,6 +98,30 @@ describe("AdminOpsService", () => {
   beforeEach(async () => {
     jest.clearAllMocks();
 
+    mockPaymentRepo = {
+      find: jest.fn().mockResolvedValue([]),
+      findOne: jest.fn(),
+      save: jest.fn().mockImplementation(async (entity) => entity),
+      count: jest.fn().mockResolvedValue(0),
+    };
+    mockOrderService = {
+      expireStaleReservations: jest.fn().mockResolvedValue(0),
+      reconcileCancelledPayment: jest
+        .fn()
+        .mockResolvedValue({ cancelled: 0, compensationRequired: 0 }),
+    };
+    mockSettlementService = {
+      reconcile: jest
+        .fn()
+        .mockResolvedValue({
+          accountsChecked: 1,
+          consistent: true,
+          discrepancies: [],
+        }),
+    };
+    mockRefundFinance = { reconcilePaymentRefunds: jest.fn() };
+    mockStripeService = { createRefund: jest.fn() };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AdminOpsService,
@@ -112,6 +146,14 @@ describe("AdminOpsService", () => {
           useValue: mockProposalRepo,
         },
         { provide: getRepositoryToken(AuditEvent), useValue: mockAuditRepo },
+        {
+          provide: getRepositoryToken(PaymentTransaction),
+          useValue: mockPaymentRepo,
+        },
+        { provide: OrderService, useValue: mockOrderService },
+        { provide: SellerSettlementService, useValue: mockSettlementService },
+        { provide: RefundFinanceService, useValue: mockRefundFinance },
+        { provide: StripeService, useValue: mockStripeService },
         { provide: AuditService, useValue: mockAuditService },
         { provide: OutboxService, useValue: mockOutboxService },
         { provide: DataSource, useValue: mockDataSource },
@@ -242,36 +284,69 @@ describe("AdminOpsService", () => {
   });
 
   describe("expireStalePendingOrders", () => {
-    it("should cancel stale unpaid orders, restore listing quantities, and audit", async () => {
-      const staleOrder = {
-        id: 101,
-        status: OrderStatus.PENDING,
-        stockReleased: false,
-        orderItems: [{ listing: { id: 55 }, quantity: 2 }],
-      };
-      mockOrderRepo.find.mockResolvedValueOnce([staleOrder]);
-
-      const listing = { id: 55, quantityAvailable: 3 };
-      mockManager.findOne.mockResolvedValueOnce(listing);
+    it("delegates the sweep to the locked order state machine", async () => {
+      mockOrderService.expireStaleReservations.mockResolvedValue(2);
 
       const result = await service.expireStalePendingOrders(
         { olderThanMinutes: 15 },
         1,
       );
 
-      expect(staleOrder.status).toBe(OrderStatus.CANCELLED);
-      expect(staleOrder.stockReleased).toBe(true);
-      expect(listing.quantityAvailable).toBe(5); // 3 + 2 restored
+      expect(mockOrderService.expireStaleReservations).toHaveBeenCalledWith(15);
+      expect(result.expiredCount).toBe(2);
       expect(mockAuditService.record).toHaveBeenCalledWith(
-        expect.objectContaining({
-          targetType: "order",
-          targetId: "101",
-          action: "stale_order_expired",
-        }),
-        mockManager,
+        expect.objectContaining({ action: "stale_orders_expired" }),
       );
-      expect(result.expiredCount).toBe(1);
-      expect(result.restoredReservationsCount).toBe(1);
+    });
+
+    it("records nothing when the sweep finds no candidate", async () => {
+      mockOrderService.expireStaleReservations.mockResolvedValue(0);
+
+      const result = await service.expireStalePendingOrders({}, 1);
+
+      expect(result.expiredCount).toBe(0);
+      expect(mockAuditService.record).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("compensatePayment", () => {
+    it("refunds a capture owed back exactly once", async () => {
+      const payment = {
+        id: 7,
+        transactionId: "pi_1",
+        amount: "50.00",
+        compensationRequiredAt: new Date(),
+        compensatedAt: null,
+        order: { id: 42, buyer: { id: 3 } },
+      };
+      mockPaymentRepo.findOne.mockResolvedValue(payment);
+
+      const first = await service.compensatePayment(7, 1);
+      expect(first.compensated).toBe(true);
+      expect(mockStripeService.createRefund).toHaveBeenCalledWith(
+        "pi_1",
+        undefined,
+        "requested_by_customer",
+        "late-payment-7",
+      );
+      expect(mockRefundFinance.reconcilePaymentRefunds).toHaveBeenCalledWith(
+        "pi_1",
+      );
+
+      const second = await service.compensatePayment(7, 1);
+      expect(second.compensated).toBe(false);
+      expect(mockStripeService.createRefund).toHaveBeenCalledTimes(1);
+    });
+
+    it("refuses a payment that owes nothing", async () => {
+      mockPaymentRepo.findOne.mockResolvedValue({
+        id: 8,
+        transactionId: "pi_2",
+        compensationRequiredAt: null,
+      });
+
+      await expect(service.compensatePayment(8, 1)).rejects.toThrow();
+      expect(mockStripeService.createRefund).not.toHaveBeenCalled();
     });
   });
 

@@ -120,6 +120,7 @@ import { WebhookController } from "./webhook.controller";
   exports: [
     InventoryLedgerService,
     MarketplaceService,
+    StripeService,
     OrderService,
     RefundService,
     RefundFinanceService,

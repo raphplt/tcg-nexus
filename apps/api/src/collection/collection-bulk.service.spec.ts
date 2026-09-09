@@ -49,7 +49,9 @@ class FakeStore {
         // Mirrors IsNull(): the property must be absent on the row.
         if (criteria._type === "isNull") return current == null;
         if ("id" in criteria) {
-          return !!current && String((current as Row).id) === String(criteria.id);
+          return (
+            !!current && String((current as Row).id) === String(criteria.id)
+          );
         }
         return true;
       }
@@ -156,14 +158,14 @@ describe("CollectionBulkService", () => {
     } as unknown as CollectionItem);
 
   const csv = (rows: string[]) =>
-    [
-      "cardId,variant,language,cardState,quantity,notes",
-      ...rows,
-    ].join("\n");
+    ["cardId,variant,language,cardState,quantity,notes", ...rows].join("\n");
 
   beforeEach(async () => {
     store = new FakeStore();
-    await store.save(Card, { id: "card-1", tcgDexId: "tcg-1" } as unknown as Card);
+    await store.save(Card, {
+      id: "card-1",
+      tcgDexId: "tcg-1",
+    } as unknown as Card);
     await store.save(CardState, {
       id: 1,
       code: CardStateCode.NM,
@@ -224,15 +226,15 @@ describe("CollectionBulkService", () => {
     it("allows an administrator to export a private collection", async () => {
       await seedCollection();
 
-      await expect(
-        service.exportCsv(collectionId, admin),
-      ).resolves.toContain("schemaVersion");
+      await expect(service.exportCsv(collectionId, admin)).resolves.toContain(
+        "schemaVersion",
+      );
     });
 
     it("escapes formula injection and keeps quoted values intact", async () => {
       await seedCollection();
       await seedItem({
-        notes: '=SUM(A1:A2)',
+        notes: "=SUM(A1:A2)",
         storageLocation: 'Binder "A", shelf\n2',
       } as Partial<CollectionItem>);
 
@@ -251,9 +253,9 @@ describe("CollectionBulkService", () => {
         photoUrls: ["https://example.test/a.png"],
       } as Partial<CollectionItem>);
 
-      const [header, row] = (await service.exportCsv(collectionId, owner)).split(
-        "\n",
-      );
+      const [header, row] = (
+        await service.exportCsv(collectionId, owner)
+      ).split("\n");
 
       expect(header).toContain("printing");
       expect(header).toContain("photoUrls");
@@ -507,7 +509,10 @@ describe("CollectionBulkService", () => {
   describe("bulkMove", () => {
     it("throws NotFoundException if target collection does not exist", async () => {
       await expect(
-        service.bulkMove(owner, { itemIds: [1], targetCollectionId: "missing" }),
+        service.bulkMove(owner, {
+          itemIds: [1],
+          targetCollectionId: "missing",
+        }),
       ).rejects.toThrow(NotFoundException);
     });
 

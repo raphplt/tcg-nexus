@@ -267,8 +267,7 @@ export class CollectionBulkService {
         importedCount: Number(previous.summary?.importedCount ?? 0),
         updatedCount: Number(previous.summary?.updatedCount ?? 0),
         skippedCount: Number(previous.summary?.skippedCount ?? 0),
-        errors: (previous.summary?.errors ??
-          []) as ImportResultDto["errors"],
+        errors: (previous.summary?.errors ?? []) as ImportResultDto["errors"],
       };
     }
 
@@ -487,7 +486,8 @@ export class CollectionBulkService {
     const declaredKind = getVal("productkind").toLowerCase();
     const sealedProductId = getVal("sealedproductid");
     const isSealed =
-      declaredKind === ProductKind.SEALED || (!!sealedProductId && !getVal("cardid"));
+      declaredKind === ProductKind.SEALED ||
+      (!!sealedProductId && !getVal("cardid"));
 
     if (isSealed) {
       const sealedProduct = sealedProductId
@@ -808,7 +808,8 @@ export class CollectionBulkService {
           continue;
         }
 
-        const committed = (item.quantityReserved ?? 0) + (item.quantitySold ?? 0);
+        const committed =
+          (item.quantityReserved ?? 0) + (item.quantitySold ?? 0);
         if (committed > 0 && line.created) {
           conflicts.push(
             `L'item #${item.id} est réservé ou vendu : ses copies importées ont été conservées`,
