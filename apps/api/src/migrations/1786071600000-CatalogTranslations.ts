@@ -1,4 +1,5 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
+import { schemaAlreadyHas } from "../common/migration-guard";
 
 /**
  * Pokémon catalog translation tables migration.
@@ -10,6 +11,17 @@ export class CatalogTranslations1786071600000 implements MigrationInterface {
   name = "CatalogTranslations1786071600000";
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // The initial schema baseline already contains this change; the
+    // probe also lets a legacy database re-run the chain safely.
+    if (
+      await schemaAlreadyHas(
+        queryRunner,
+        `SELECT 1 FROM information_schema.tables WHERE table_name = 'card_translation'`,
+      )
+    ) {
+      return;
+    }
+
     // Card search compares accent-insensitive labels (e.g. "pokemon" matches "Pokémon" across catalog languages).
     await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS unaccent`);
     await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS pg_trgm`);

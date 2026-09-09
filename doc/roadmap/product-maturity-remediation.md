@@ -16,7 +16,7 @@ Corrections are delivered as independently tested commits. No block closes an en
 | 4 | Checkout recovery, cancellation/payment races and safe operational expiration | Implemented; verification below |
 | 5 | Durable event contracts, consumer deduplication and notification failure recovery | Implemented; verification below |
 | 6 | Tournament legality, score confirmation and downstream correction policy | Implemented; verification below |
-| 7 | Fresh/legacy database migrations and lossless inventory backfill | Pending |
+| 7 | Fresh/legacy database migrations and lossless inventory backfill | Implemented; verification below |
 | 8 | Remaining inventory semantics, valuation, client integration, localization and acceptance documentation | Pending |
 
 ## Block 1 — authorization boundaries
@@ -212,3 +212,21 @@ listed above, and the tournament acceptance evidence of block 8.
 ### Verification
 
 The PostgreSQL suite `apps/api/test/product-maturity-tournament.e2e-spec.ts` covers the fabricated card, an unknown rule set, rating reversal and its idempotence, concurrent proposals on one match, a confirmation committing with its official result, a rejected result leaving no confirmed proposal, and the migration's up/down DDL. `deck-legality.service.spec.ts` adds 9 unit tests for the rule checks, and the incident suite covers the downstream refusal and the acknowledged correction.
+
+
+## Block 7 — migrations and inventory backfill
+
+This sub-block addresses A07, and the naming defects found while reproducing it.
+
+- `InitialSchema1785000000000`, generated from the entities, creates the complete schema on an empty database. The chain previously began by altering tables it never created, which is why a fresh database could not be built from migrations at all; the baseline does nothing on an installation that already has a schema.
+- Every migration now probes for its own effect and returns early when it finds it, so the chain runs on an empty database, on one built by synchronization, and twice in a row.
+- The result is proven, not assumed: `npm run schema:drift` reports the changes the entities would still require, and that list is empty on a database built by the migrations. The old suite created the schema with synchronization enabled, stamped everything as applied and asserted that nothing happened next — including in a test named for synchronization being off.
+- Reproducing A07 surfaced a systemic naming defect: 84 columns across 13 tables were created in snake_case by the recent migrations while the entities read camelCase, so an installation upgraded through them carried columns no query ever touched. `RepairLegacyColumnNames1789500000000` renames them where the wrong name exists and the right one does not, and the migrations themselves were corrected so a legacy upgrade no longer repeats the defect. The refunds migration also referenced a `users` table that does not exist.
+- The inventory backfill is lossless: the availability column was added with a default of one and its update only matched null or zero, so every stack of more than one copy silently claimed a single available copy. The migration now backfills from the quantity held, and the repair restores stacks that were left at one — while leaving alone any stack whose copies are reserved, sold, or already moved through the inventory ledger. The language the same migration stamped on every existing copy is cleared where nothing else was ever recorded for that copy.
+
+Out of scope here and still open: a production restore rehearsal against real
+data, and the operational runbook rewrite of block 8.
+
+### Verification
+
+`apps/api/test/migrations.e2e-spec.ts` was rewritten and runs with synchronization disabled throughout: it builds a fresh database from the chain and asserts zero pending schema changes, replays the chain against its own result, rebuilds the state the defective migrations produced and asserts the repair renames the columns and restores the lost quantities without touching committed ones, adopts a synchronized database through the baseline script and asserts zero drift, and reverts then re-applies the latest migration. All six checks pass on a disposable PostgreSQL.

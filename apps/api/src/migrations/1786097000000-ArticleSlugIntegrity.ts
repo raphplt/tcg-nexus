@@ -1,10 +1,22 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
+import { schemaAlreadyHas } from "../common/migration-guard";
 
 /** Ensures all articles possess non-null, valid, and unique slugs. */
 export class ArticleSlugIntegrity1786097000000 implements MigrationInterface {
   name = "ArticleSlugIntegrity1786097000000";
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // The initial schema baseline already contains this change; the
+    // probe also lets a legacy database re-run the chain safely.
+    if (
+      await schemaAlreadyHas(
+        queryRunner,
+        `SELECT 1 FROM information_schema.columns WHERE table_name = 'article' AND column_name = 'slug' AND is_nullable = 'NO'`,
+      )
+    ) {
+      return;
+    }
+
     // Backfill any missing or null slugs from title or id
     await queryRunner.query(`
       UPDATE "article"

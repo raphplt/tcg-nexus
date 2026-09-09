@@ -1,4 +1,5 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
+import { schemaAlreadyHas } from "../common/migration-guard";
 
 /**
  * Creates refund_operation, refund_line, return_item tables and adds claim/order linkages to support_ticket.
@@ -7,6 +8,17 @@ export class RefundsReturnsClaims1786100000000 implements MigrationInterface {
   name = "RefundsReturnsClaims1786100000000";
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // The initial schema baseline already contains this change; the
+    // probe also lets a legacy database re-run the chain safely.
+    if (
+      await schemaAlreadyHas(
+        queryRunner,
+        `SELECT 1 FROM information_schema.tables WHERE table_name = 'refund_operation'`,
+      )
+    ) {
+      return;
+    }
+
     // 1. Enums
     await queryRunner.query(`
       DO $$ BEGIN
@@ -48,7 +60,7 @@ export class RefundsReturnsClaims1786100000000 implements MigrationInterface {
         CONSTRAINT "FK_refund_operation_order" FOREIGN KEY ("order_id")
           REFERENCES "order"("id") ON DELETE CASCADE,
         CONSTRAINT "FK_refund_operation_created_by" FOREIGN KEY ("created_by_id")
-          REFERENCES "users"("id") ON DELETE SET NULL
+          REFERENCES "user"("id") ON DELETE SET NULL
       );
     `);
     await queryRunner.query(`

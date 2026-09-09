@@ -1,4 +1,5 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
+import { schemaAlreadyHas } from "../common/migration-guard";
 
 /**
  * Adds indexes for ranking windows and paginated deck access paths.
@@ -12,6 +13,17 @@ export class PerformanceIndexes1786089600000 implements MigrationInterface {
    * @param queryRunner Active migration query runner.
    */
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // The initial schema baseline already contains this change; the
+    // probe also lets a legacy database re-run the chain safely.
+    if (
+      await schemaAlreadyHas(
+        queryRunner,
+        `SELECT 1 FROM information_schema.columns WHERE table_name = 'ranked_match_history' AND column_name = 'matchId'`,
+      )
+    ) {
+      return;
+    }
+
     await queryRunner.query(
       `ALTER TABLE "ranked_match_history" ADD COLUMN IF NOT EXISTS "matchId" integer`,
     );

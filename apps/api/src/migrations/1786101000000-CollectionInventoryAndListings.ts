@@ -1,4 +1,5 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
+import { schemaAlreadyHas } from "../common/migration-guard";
 
 /**
  * Migration 1786101000000:
@@ -12,11 +13,22 @@ export class CollectionInventoryAndListings1786101000000
   name = "CollectionInventoryAndListings1786101000000";
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // The initial schema baseline already contains this change; the
+    // probe also lets a legacy database re-run the chain safely.
+    if (
+      await schemaAlreadyHas(
+        queryRunner,
+        `SELECT 1 FROM information_schema.columns WHERE table_name = 'collection_item' AND column_name = 'quantityAvailable'`,
+      )
+    ) {
+      return;
+    }
+
     // 1. Enhance collection_item
     await queryRunner.query(`
       ALTER TABLE "collection_item"
         ADD COLUMN IF NOT EXISTS "variant" character varying(50),
-        ADD COLUMN IF NOT EXISTS "language" character varying(10) DEFAULT 'fr',
+        ADD COLUMN IF NOT EXISTS "language" character varying(10),
         ADD COLUMN IF NOT EXISTS "printing" character varying(50),
         ADD COLUMN IF NOT EXISTS "acquired_at" TIMESTAMP WITH TIME ZONE,
         ADD COLUMN IF NOT EXISTS "acquisition_cost" numeric(10, 2),
@@ -30,13 +42,14 @@ export class CollectionInventoryAndListings1786101000000
         ADD COLUMN IF NOT EXISTS "provenance" jsonb;
     `);
 
-    // Backfill quantity_available to match quantity for existing items
+    // Backfill availability from the quantity actually held. The column is
+    // added with a default of 1, so a condition on NULL or zero would match no
+    // row and silently reduce every stack of more than one copy to one.
     await queryRunner.query(`
       UPDATE "collection_item"
       SET "quantity_available" = "quantity",
           "quantity_reserved" = 0,
-          "quantity_sold" = 0
-      WHERE "quantity_available" IS NULL OR "quantity_available" = 0;
+          "quantity_sold" = 0;
     `);
 
     // 2. Enhance listing with inventory linkage

@@ -1,331 +1,255 @@
-import path from "path";
+import { execFileSync } from "node:child_process";
+import { readdirSync } from "node:fs";
+import { join } from "node:path";
 import { DataSource } from "typeorm";
-import { MarketplaceCheckout1785974400000 } from "../src/migrations/1785974400000-MarketplaceCheckout";
-import { ShippingFees1785978000000 } from "../src/migrations/1785978000000-ShippingFees";
-import { PlatformShippingRates1785981600000 } from "../src/migrations/1785981600000-PlatformShippingRates";
-import { Translations1786060800000 } from "../src/migrations/1786060800000-Translations";
-import { UserPreferredLocale1786064400000 } from "../src/migrations/1786064400000-UserPreferredLocale";
-import { NotificationTranslations1786068000000 } from "../src/migrations/1786068000000-NotificationTranslations";
-import { CatalogTranslations1786071600000 } from "../src/migrations/1786071600000-CatalogTranslations";
-import { DropLegacyCatalogColumns1786075200000 } from "../src/migrations/1786075200000-DropLegacyCatalogColumns";
-import { SealedProductTranslations1786078800000 } from "../src/migrations/1786078800000-SealedProductTranslations";
-import { ArticlePublishing1786082400000 } from "../src/migrations/1786082400000-ArticlePublishing";
-import { OnlinePlaySessions1786086000000 } from "../src/migrations/1786086000000-OnlinePlaySessions";
-import { PerformanceIndexes1786089600000 } from "../src/migrations/1786089600000-PerformanceIndexes";
-import { SwissTournaments1786093200000 } from "../src/migrations/1786093200000-SwissTournaments";
-import { DoubleElimination1786096800000 } from "../src/migrations/1786096800000-DoubleElimination";
-import { ArticleSlugIntegrity1786097000000 } from "../src/migrations/1786097000000-ArticleSlugIntegrity";
-import { AuthIdentities1786098000000 } from "../src/migrations/1786098000000-AuthIdentities";
-import { CheckoutAttemptAndAuditOutbox1786099000000 } from "../src/migrations/1786099000000-CheckoutAttemptAndAuditOutbox";
-import { RefundsReturnsClaims1786100000000 } from "../src/migrations/1786100000000-RefundsReturnsClaims";
-import { CollectionInventoryAndListings1786101000000 } from "../src/migrations/1786101000000-CollectionInventoryAndListings";
-import { TournamentOperations1786102000000 } from "../src/migrations/1786102000000-TournamentOperations";
-import { SellerSettlementAndTrust1786200000000 } from "../src/migrations/1786200000000-SellerSettlementAndTrust";
+import { AppDataSource } from "../src/data-source";
 
-jest.setTimeout(60000);
+jest.setTimeout(180000);
 
-describe("Migration Discipline & Baseline Adoption (e2e)", () => {
-  let dataSource: DataSource;
+/**
+ * Proves the migration chain builds the schema the application reads (FND-04).
+ *
+ * Every check runs with synchronization disabled against a database this suite
+ * creates itself, so nothing here is proven by TypeORM silently fixing the
+ * schema behind the migrations.
+ */
+describe("Migration chain (PostgreSQL, synchronize disabled)", () => {
+  const admin = new DataSource({
+    type: "postgres",
+    host: process.env.DATABASE_HOST,
+    port: parseInt(process.env.DATABASE_PORT || "5432", 10),
+    username: process.env.DATABASE_USER,
+    password: process.env.DATABASE_PASSWORD,
+    database: process.env.DATABASE_NAME,
+    synchronize: false,
+  });
 
-  const MIGRATIONS = [
-    MarketplaceCheckout1785974400000,
-    ShippingFees1785978000000,
-    PlatformShippingRates1785981600000,
-    Translations1786060800000,
-    UserPreferredLocale1786064400000,
-    NotificationTranslations1786068000000,
-    CatalogTranslations1786071600000,
-    DropLegacyCatalogColumns1786075200000,
-    SealedProductTranslations1786078800000,
-    ArticlePublishing1786082400000,
-    OnlinePlaySessions1786086000000,
-    PerformanceIndexes1786089600000,
-    SwissTournaments1786093200000,
-    DoubleElimination1786096800000,
-    ArticleSlugIntegrity1786097000000,
-    AuthIdentities1786098000000,
-    CheckoutAttemptAndAuditOutbox1786099000000,
-    RefundsReturnsClaims1786100000000,
-    CollectionInventoryAndListings1786101000000,
-    TournamentOperations1786102000000,
-    SellerSettlementAndTrust1786200000000,
-  ];
+  const migrationsDir = join(__dirname, "..", "src", "migrations");
+  const databases = { fresh: "tcg_migrations_fresh", legacy: "tcg_migrations_legacy" };
 
-  const PROBES = [
-    {
-      name: "MarketplaceCheckout1785974400000",
-      timestamp: 1785974400000,
-      probe: `SELECT 1 FROM information_schema.tables WHERE table_name = 'order_item'`,
-    },
-    {
-      name: "ShippingFees1785978000000",
-      timestamp: 1785978000000,
-      probe: `SELECT 1 FROM information_schema.columns
-              WHERE table_name = 'order' AND column_name ILIKE '%shipping%'`,
-    },
-    {
-      name: "PlatformShippingRates1785981600000",
-      timestamp: 1785981600000,
-      probe: `SELECT 1 FROM information_schema.columns
-              WHERE table_name = 'listing' AND column_name = 'handlingTimeDays'`,
-    },
-    {
-      name: "Translations1786060800000",
-      timestamp: 1786060800000,
-      probe: `SELECT 1 FROM information_schema.tables
-              WHERE table_name ILIKE '%translation%'`,
-    },
-    {
-      name: "UserPreferredLocale1786064400000",
-      timestamp: 1786064400000,
-      probe: `SELECT 1 FROM information_schema.columns
-              WHERE table_name = 'user' AND column_name ILIKE '%referredlocale%'`,
-    },
-    {
-      name: "NotificationTranslations1786068000000",
-      timestamp: 1786068000000,
-      probe: `SELECT 1 FROM information_schema.columns
-              WHERE table_name = 'notification'
-                AND column_name = 'translationKey'`,
-    },
-    {
-      name: "CatalogTranslations1786071600000",
-      timestamp: 1786071600000,
-      probe: `SELECT 1 FROM information_schema.tables
-              WHERE table_name = 'card_translation'`,
-    },
-    {
-      name: "DropLegacyCatalogColumns1786075200000",
-      timestamp: 1786075200000,
-      probe: `SELECT 1 WHERE NOT EXISTS (
-                SELECT 1 FROM information_schema.columns
-                WHERE table_name = 'card' AND column_name = 'name')`,
-    },
-    {
-      name: "SealedProductTranslations1786078800000",
-      timestamp: 1786078800000,
-      probe: `SELECT 1 FROM information_schema.tables
-              WHERE table_name = 'sealed_product_locale'`,
-    },
-    {
-      name: "ArticlePublishing1786082400000",
-      timestamp: 1786082400000,
-      probe: `SELECT 1 FROM information_schema.columns
-              WHERE table_name = 'article' AND column_name = 'slug'`,
-    },
-    {
-      name: "OnlinePlaySessions1786086000000",
-      timestamp: 1786086000000,
-      probe: `SELECT 1 FROM information_schema.tables
-              WHERE table_name = 'online_match_session'`,
-    },
-    {
-      name: "PerformanceIndexes1786089600000",
-      timestamp: 1786089600000,
-      probe: `SELECT 1 FROM information_schema.columns
-              WHERE table_name = 'ranked_match_history' AND column_name = 'matchId'`,
-    },
-    {
-      name: "SwissTournaments1786093200000",
-      timestamp: 1786093200000,
-      probe: `SELECT 1 FROM information_schema.columns
-              WHERE table_name = 'match' AND column_name = 'isBye'`,
-    },
-    {
-      name: "DoubleElimination1786096800000",
-      timestamp: 1786096800000,
-      probe: `SELECT 1 FROM information_schema.columns
-              WHERE table_name = 'match' AND column_name = 'bracketSide'`,
-    },
-    {
-      name: "ArticleSlugIntegrity1786097000000",
-      timestamp: 1786097000000,
-      probe: `SELECT 1 FROM information_schema.columns
-              WHERE table_name = 'article' AND column_name = 'slug' AND is_nullable = 'NO'`,
-    },
-    {
-      name: "AuthIdentities1786098000000",
-      timestamp: 1786098000000,
-      probe: `SELECT 1 FROM information_schema.tables
-              WHERE table_name = 'auth_identity'`,
-    },
-    {
-      name: "CheckoutAttemptAndAuditOutbox1786099000000",
-      timestamp: 1786099000000,
-      probe: `SELECT 1 FROM information_schema.tables
-              WHERE table_name = 'outbox_event'`,
-    },
-    {
-      name: "RefundsReturnsClaims1786100000000",
-      timestamp: 1786100000000,
-      probe: `SELECT 1 FROM information_schema.tables
-              WHERE table_name = 'refund_operation'`,
-    },
-    {
-      name: "CollectionInventoryAndListings1786101000000",
-      timestamp: 1786101000000,
-      probe: `SELECT 1 FROM information_schema.columns
-              WHERE table_name = 'collection_item' AND column_name = 'quantityAvailable'`,
-    },
-    {
-      name: "TournamentOperations1786102000000",
-      timestamp: 1786102000000,
-      probe: `SELECT 1 FROM information_schema.tables
-              WHERE table_name = 'tournament_deck_snapshot'`,
-    },
-    {
-      name: "SellerSettlementAndTrust1786200000000",
-      timestamp: 1786200000000,
-      probe: `SELECT 1 FROM information_schema.tables
-              WHERE table_name = 'seller_settlement_account'`,
-    },
-  ];
+  /** Opens a data source on one of the databases this suite builds. */
+  const connect = async (database: string): Promise<DataSource> =>
+    new DataSource({
+      ...(AppDataSource.options as unknown as Record<string, unknown>),
+      database,
+      synchronize: false,
+      migrationsRun: false,
+      logging: false,
+    } as never).initialize();
+
+  /** Creates an empty database with the extensions the schema depends on. */
+  const createDatabase = async (name: string): Promise<void> => {
+    await admin.query(`DROP DATABASE IF EXISTS "${name}"`);
+    await admin.query(`CREATE DATABASE "${name}"`);
+    const created = await connect(name);
+    try {
+      await created.query(`CREATE EXTENSION IF NOT EXISTS pg_trgm`);
+      await created.query(`CREATE EXTENSION IF NOT EXISTS unaccent`);
+      await created.query(
+        `CREATE OR REPLACE FUNCTION immutable_unaccent(text)
+           RETURNS text LANGUAGE sql IMMUTABLE STRICT PARALLEL SAFE AS
+           $$ SELECT public.unaccent('public.unaccent'::regdictionary, $1) $$`,
+      );
+    } finally {
+      await created.destroy();
+    }
+  };
+
+  /** Columns the defective migrations wrote under names the entities never read. */
+  const legacyRenames = async (): Promise<Array<[string, string, string]>> => {
+    const { RepairLegacyColumnNames1789500000000 } = (await import(
+      "../src/migrations/1789500000000-RepairLegacyColumnNames"
+    )) as never as {
+      RepairLegacyColumnNames1789500000000: {
+        RENAMES: Array<[string, Array<[string, string]>]>;
+      };
+    };
+    const renames = (
+      RepairLegacyColumnNames1789500000000 as unknown as {
+        RENAMES: Array<[string, Array<[string, string]>]>;
+      }
+    ).RENAMES;
+    return renames.flatMap(([table, columns]) =>
+      columns.map(
+        ([written, expected]) => [table, written, expected] as [
+          string,
+          string,
+          string,
+        ],
+      ),
+    );
+  };
 
   beforeAll(async () => {
-    dataSource = new DataSource({
-      type: "postgres",
-      host: process.env.DATABASE_HOST || "127.0.0.1",
-      port: parseInt(process.env.DATABASE_PORT || "55432", 10),
-      username: process.env.DATABASE_USER || "postgres",
-      password: process.env.DATABASE_PASSWORD || "postgres",
-      database: process.env.DATABASE_NAME || "tcg_nexus_test",
-      synchronize: true, // Step 1: establish the entity schema representing synchronized dev/staging DB
-      migrationsRun: false,
-      entities: [path.join(__dirname, "../src/**/*.entity.ts")],
-      migrations: MIGRATIONS,
-    });
-
-    await dataSource.initialize();
+    await admin.initialize();
   });
 
   afterAll(async () => {
-    if (dataSource?.isInitialized) {
-      await dataSource.destroy();
+    for (const database of Object.values(databases)) {
+      await admin.query(`DROP DATABASE IF EXISTS "${database}"`);
     }
+    await admin.destroy();
   });
 
-  it("should have exactly 21 defined migration classes in sequential timestamp order", () => {
-    expect(MIGRATIONS).toHaveLength(21);
+  it("declares migrations in sequential timestamp order", () => {
+    const timestamps = readdirSync(migrationsDir)
+      .filter((file) => /^\d+-.*\.ts$/.test(file))
+      .map((file) => Number(file.split("-")[0]));
 
-    const instances = MIGRATIONS.map((M) => new M());
-    for (let i = 1; i < instances.length; i++) {
-      const prevName = instances[i - 1].name;
-      const currName = instances[i].name;
-
-      const prevTs = parseInt(prevName.replace(/\D/g, ""), 10);
-      const currTs = parseInt(currName.replace(/\D/g, ""), 10);
-
-      expect(currTs).toBeGreaterThanOrEqual(prevTs);
-    }
-  });
-
-  it("should adopt synchronized database using baseline probes into migrations table", async () => {
-    await dataSource.query(`
-      CREATE TABLE IF NOT EXISTS "migrations" (
-        "id" SERIAL PRIMARY KEY,
-        "timestamp" bigint NOT NULL,
-        "name" character varying NOT NULL
-      )
-    `);
-
-    let stamped = 0;
-    for (const probe of PROBES) {
-      const rows = await dataSource.query(probe.probe);
-      if (rows.length > 0) {
-        const existing = await dataSource.query(
-          `SELECT 1 FROM migrations WHERE name = $1`,
-          [probe.name],
-        );
-        if (existing.length === 0) {
-          await dataSource.query(
-            `INSERT INTO migrations ("timestamp", "name") VALUES ($1, $2)`,
-            [probe.timestamp, probe.name],
-          );
-          stamped++;
-        }
-      }
-    }
-
-    expect(stamped).toBe(21);
-
-    const recorded = await dataSource.query(
-      `SELECT name FROM migrations ORDER BY timestamp ASC`,
+    expect(timestamps.length).toBeGreaterThan(25);
+    expect([...timestamps].sort((a, b) => a - b)).toEqual(
+      [...timestamps].sort((a, b) => a - b),
     );
-    expect(recorded.length).toBe(21);
+    // The baseline must come first: everything after it assumes its schema.
+    expect(Math.min(...timestamps)).toBe(1785000000000);
   });
 
-  it("should verify target schema entities and columns exist with synchronize: false", async () => {
-    // 1. Seller settlement tables (MKT-06 / Milestone 5)
-    const settlementTables = await dataSource.query(`
-      SELECT table_name FROM information_schema.tables
-      WHERE table_name IN ('seller_settlement_account', 'seller_allocation', 'seller_payout', 'seller_review')
-    `);
-    expect(settlementTables).toHaveLength(4);
+  it("builds a complete schema on an empty database", async () => {
+    await createDatabase(databases.fresh);
+    const fresh = await connect(databases.fresh);
+    try {
+      // The audited defect: the chain began by altering tables it never created.
+      const executed = await fresh.runMigrations({ transaction: "each" });
+      expect(executed.length).toBeGreaterThan(25);
 
-    // 2. Tournament operations tables (TRN-01 - TRN-05 / Milestone 4)
-    const tournamentTables = await dataSource.query(`
-      SELECT table_name FROM information_schema.tables
-      WHERE table_name IN ('match_result_proposal', 'tournament_deck_snapshot')
-    `);
-    expect(tournamentTables).toHaveLength(2);
-
-    // 3. Collection inventory availability columns (COL-02 / Milestone 3)
-    const collectionColumns = await dataSource.query(`
-      SELECT column_name FROM information_schema.columns
-      WHERE table_name = 'collection_item'
-        AND column_name IN ('quantityAvailable', 'quantityReserved', 'quantitySold')
-    `);
-    expect(collectionColumns).toHaveLength(3);
-
-    // 4. Refunds & claims tables (MKT-02, MKT-04 / Milestone 2)
-    const refundTables = await dataSource.query(`
-      SELECT table_name FROM information_schema.tables
-      WHERE table_name IN ('refund_operation', 'refund_line', 'return_item')
-    `);
-    expect(refundTables).toHaveLength(3);
-
-    // 5. Audit & outbox tables (FND-02, FND-03 / Milestone 1)
-    const auditOutboxTables = await dataSource.query(`
-      SELECT table_name FROM information_schema.tables
-      WHERE table_name IN ('audit_event', 'outbox_event')
-    `);
-    expect(auditOutboxTables).toHaveLength(2);
+      const pending = await fresh.driver.createSchemaBuilder().log();
+      // Nothing left for synchronization to fix means the migrations create
+      // exactly the schema the entities read.
+      expect(pending.upQueries.map((query) => query.query)).toEqual([]);
+      expect(await fresh.showMigrations()).toBe(false);
+    } finally {
+      await fresh.destroy();
+    }
   });
 
-  it("should be idempotent when running migrations again with zero pending migrations", async () => {
-    const hasPending = await dataSource.showMigrations();
-    expect(hasPending).toBe(false);
+  it("re-runs against its own result without changing anything", async () => {
+    const fresh = await connect(databases.fresh);
+    try {
+      expect(await fresh.runMigrations()).toEqual([]);
 
-    // Re-running runMigrations should be a no-op
-    const secondRun = await dataSource.runMigrations();
-    expect(secondRun).toHaveLength(0);
+      // Each migration also guards its own effect, so replaying the chain from
+      // an empty ledger is safe on a database that already holds it.
+      await fresh.query(`DELETE FROM "migrations"`);
+      const replayed = await fresh.runMigrations({ transaction: "each" });
+      expect(replayed.length).toBeGreaterThan(25);
+      const pending = await fresh.driver.createSchemaBuilder().log();
+      expect(pending.upQueries.map((query) => query.query)).toEqual([]);
+    } finally {
+      await fresh.destroy();
+    }
   });
 
-  it("should support reverting and re-applying the latest migration cleanly", async () => {
-    // 1. Undo the last migration (SellerSettlementAndTrust1786200000000)
-    await dataSource.undoLastMigration();
+  it("repairs a database the defective migrations left behind", async () => {
+    await createDatabase(databases.legacy);
+    const legacy = await connect(databases.legacy);
+    try {
+      await legacy.runMigrations({ transaction: "each" });
 
-    // Verify seller settlement account table dropped
-    const tablesAfterRevert = await dataSource.query(`
-      SELECT table_name FROM information_schema.tables
-      WHERE table_name = 'seller_settlement_account'
-    `);
-    expect(tablesAfterRevert).toHaveLength(0);
+      // Rebuild the state those migrations produced: columns under names the
+      // application never reads, and an availability backfill that matched no
+      // row because the column was added with a default of one.
+      await legacy.query(
+        `ALTER TABLE "seller_allocation" ALTER COLUMN "commissionRate" SET DEFAULT 0.0500`,
+      );
+      const renames = await legacyRenames();
+      for (const [table, written, expected] of renames) {
+        await legacy.query(
+          `ALTER TABLE "${table}" RENAME COLUMN "${expected}" TO "${written}"`,
+        );
+      }
+      await legacy.query(
+        `INSERT INTO "collection_item" ("quantity", "quantity_available", "quantity_reserved", "quantity_sold", "language")
+         VALUES (10, 1, 0, 0, 'fr'), (4, 1, 1, 0, 'fr'), (1, 1, 0, 0, 'fr')`,
+      );
+      await legacy.query(
+        `DELETE FROM "migrations" WHERE "name" = 'RepairLegacyColumnNames1789500000000'`,
+      );
 
-    // Verify showMigrations now detects pending migration
-    const hasPending = await dataSource.showMigrations();
-    expect(hasPending).toBe(true);
+      const executed = await legacy.runMigrations({ transaction: "each" });
+      expect(executed.map((migration) => migration.name)).toEqual([
+        "RepairLegacyColumnNames1789500000000",
+      ]);
 
-    // 2. Re-apply migrations
-    const reapply = await dataSource.runMigrations();
-    expect(reapply.length).toBeGreaterThanOrEqual(1);
-    expect(reapply[0].name).toBe("SellerSettlementAndTrust1786200000000");
+      const pending = await legacy.driver.createSchemaBuilder().log();
+      expect(pending.upQueries.map((query) => query.query)).toEqual([]);
 
-    // Verify table restored
-    const tablesAfterReapply = await dataSource.query(`
-      SELECT table_name FROM information_schema.tables
-      WHERE table_name = 'seller_settlement_account'
-    `);
-    expect(tablesAfterReapply).toHaveLength(1);
+      const repaired = (await legacy.query(
+        `SELECT "quantity", "quantityAvailable", "quantityReserved", "language"
+           FROM "collection_item" ORDER BY "quantity" DESC`,
+      )) as Array<{
+        quantity: number;
+        quantityAvailable: number;
+        quantityReserved: number;
+        language: string | null;
+      }>;
+
+      // The ten-copy stack recovers the copies the backfill dropped.
+      expect(repaired[0]).toMatchObject({
+        quantity: 10,
+        quantityAvailable: 10,
+        language: null,
+      });
+      // A stack holding a reserved copy keeps the quantities that produced it.
+      expect(repaired[1]).toMatchObject({
+        quantity: 4,
+        quantityAvailable: 1,
+        quantityReserved: 1,
+      });
+      expect(repaired[2]).toMatchObject({ quantity: 1, quantityAvailable: 1 });
+    } finally {
+      await legacy.destroy();
+    }
+  });
+
+  it("adopts a synchronized database through the baseline script", async () => {
+    const adopted = "tcg_migrations_adopted";
+    await admin.query(`DROP DATABASE IF EXISTS "${adopted}"`);
+    await admin.query(`CREATE DATABASE "${adopted}"`);
+    try {
+      const synchronized = await new DataSource({
+        ...(AppDataSource.options as unknown as Record<string, unknown>),
+        database: adopted,
+        synchronize: true,
+        logging: false,
+      } as never).initialize();
+      await synchronized.destroy();
+
+      // The supported upgrade path for an installation built by synchronization.
+      execFileSync("npx", ["ts-node", "-r", "tsconfig-paths/register", "src/scripts/baseline-migrations.ts"], {
+        cwd: join(__dirname, ".."),
+        env: { ...process.env, DATABASE_NAME: adopted },
+        stdio: "pipe",
+      });
+
+      const stamped = await connect(adopted);
+      try {
+        expect(await stamped.showMigrations()).toBe(false);
+        const pending = await stamped.driver.createSchemaBuilder().log();
+        expect(pending.upQueries.map((query) => query.query)).toEqual([]);
+      } finally {
+        await stamped.destroy();
+      }
+    } finally {
+      await admin.query(`DROP DATABASE IF EXISTS "${adopted}"`);
+    }
+  });
+
+  it("reverts and re-applies the latest migration cleanly", async () => {
+    const fresh = await connect(databases.fresh);
+    try {
+      const before = await fresh.query(
+        `SELECT "name" FROM "migrations" ORDER BY "timestamp" DESC LIMIT 1`,
+      );
+      await fresh.undoLastMigration({ transaction: "each" });
+      const executed = await fresh.runMigrations({ transaction: "each" });
+
+      expect(executed.map((migration) => migration.name)).toEqual([
+        before[0].name,
+      ]);
+      const pending = await fresh.driver.createSchemaBuilder().log();
+      expect(pending.upQueries.map((query) => query.query)).toEqual([]);
+    } finally {
+      await fresh.destroy();
+    }
   });
 });

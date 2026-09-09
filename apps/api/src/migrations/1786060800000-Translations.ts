@@ -1,9 +1,21 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
+import { schemaAlreadyHas } from "../common/migration-guard";
 
 export class Translations1786060800000 implements MigrationInterface {
   name = "Translations1786060800000";
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // The initial schema baseline already contains this change; the
+    // probe also lets a legacy database re-run the chain safely.
+    if (
+      await schemaAlreadyHas(
+        queryRunner,
+        `SELECT 1 FROM information_schema.tables WHERE table_name ILIKE '%translation%'`,
+      )
+    ) {
+      return;
+    }
+
     await queryRunner.query(`
       CREATE TABLE "translation" (
         "id" SERIAL NOT NULL,

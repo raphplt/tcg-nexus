@@ -1,4 +1,5 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
+import { schemaAlreadyHas } from "../common/migration-guard";
 
 /**
  * Adds explicit deck legality, submission history and rating reversal (TRN-02, TRN-05).
@@ -13,6 +14,17 @@ export class DeckLegalityAndCorrections1789400000000
 
   /** Extends existing installations; every added column is nullable or defaulted. */
   async up(queryRunner: QueryRunner): Promise<void> {
+    // The initial schema baseline already contains this change; the
+    // probe also lets a legacy database re-run the chain safely.
+    if (
+      await schemaAlreadyHas(
+        queryRunner,
+        `SELECT 1 FROM information_schema.tables WHERE table_name = 'tournament_deck_snapshot_revision'`,
+      )
+    ) {
+      return;
+    }
+
     await queryRunner.query(`ALTER TABLE "tournament_deck_snapshot"
       ADD COLUMN IF NOT EXISTS "legalityStatus" character varying(16) NOT NULL DEFAULT 'unverified',
       ADD COLUMN IF NOT EXISTS "revision" integer NOT NULL DEFAULT 1,

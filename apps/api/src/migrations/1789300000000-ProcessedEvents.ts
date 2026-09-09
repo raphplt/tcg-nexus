@@ -1,4 +1,5 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
+import { schemaAlreadyHas } from "../common/migration-guard";
 
 /**
  * Adds durable consumer claims for delivered domain events (FND-03).
@@ -12,6 +13,17 @@ export class ProcessedEvents1789300000000 implements MigrationInterface {
 
   /** Creates the claim table; no existing row is modified. */
   async up(queryRunner: QueryRunner): Promise<void> {
+    // The initial schema baseline already contains this change; the
+    // probe also lets a legacy database re-run the chain safely.
+    if (
+      await schemaAlreadyHas(
+        queryRunner,
+        `SELECT 1 FROM information_schema.tables WHERE table_name = 'processed_event'`,
+      )
+    ) {
+      return;
+    }
+
     await queryRunner.query(`
       CREATE TABLE IF NOT EXISTS "processed_event" (
         "id" uuid NOT NULL DEFAULT gen_random_uuid(),

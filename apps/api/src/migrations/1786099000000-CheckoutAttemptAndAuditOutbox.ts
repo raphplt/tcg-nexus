@@ -1,4 +1,5 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
+import { schemaAlreadyHas } from "../common/migration-guard";
 
 /**
  * Adds checkoutAttemptKey to order, and creates audit_event and outbox_event tables.
@@ -9,6 +10,17 @@ export class CheckoutAttemptAndAuditOutbox1786099000000
   name = "CheckoutAttemptAndAuditOutbox1786099000000";
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // The initial schema baseline already contains this change; the
+    // probe also lets a legacy database re-run the chain safely.
+    if (
+      await schemaAlreadyHas(
+        queryRunner,
+        `SELECT 1 FROM information_schema.tables WHERE table_name = 'outbox_event'`,
+      )
+    ) {
+      return;
+    }
+
     // 1. Order checkoutAttemptKey
     await queryRunner.query(`
       ALTER TABLE "order"

@@ -1,10 +1,22 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
+import { schemaAlreadyHas } from "../common/migration-guard";
 
 /** Adds auth_identity table for OAuth providers and makes user password nullable. */
 export class AuthIdentities1786098000000 implements MigrationInterface {
   name = "AuthIdentities1786098000000";
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // The initial schema baseline already contains this change; the
+    // probe also lets a legacy database re-run the chain safely.
+    if (
+      await schemaAlreadyHas(
+        queryRunner,
+        `SELECT 1 FROM information_schema.tables WHERE table_name = 'auth_identity'`,
+      )
+    ) {
+      return;
+    }
+
     await queryRunner.query(`
       CREATE TYPE "auth_identity_provider_enum" AS ENUM ('google', 'apple', 'discord')
     `);

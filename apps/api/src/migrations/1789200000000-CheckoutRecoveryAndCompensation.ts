@@ -1,4 +1,5 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
+import { schemaAlreadyHas } from "../common/migration-guard";
 
 /**
  * Adds checkout attempt identity and capture compensation tracking (MKT-01, OPS-01).
@@ -13,6 +14,17 @@ export class CheckoutRecoveryAndCompensation1789200000000
 
   /** Extends existing installations; every added column is nullable. */
   async up(queryRunner: QueryRunner): Promise<void> {
+    // The initial schema baseline already contains this change; the
+    // probe also lets a legacy database re-run the chain safely.
+    if (
+      await schemaAlreadyHas(
+        queryRunner,
+        `SELECT 1 FROM information_schema.columns WHERE table_name = 'payment_transaction' AND column_name = 'compensationRequiredAt'`,
+      )
+    ) {
+      return;
+    }
+
     await queryRunner.query(`ALTER TABLE "order"
       ADD COLUMN IF NOT EXISTS "checkoutFingerprint" character varying(64)`);
     await queryRunner.query(`ALTER TABLE "payment_transaction"

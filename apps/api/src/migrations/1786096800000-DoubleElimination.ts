@@ -1,4 +1,5 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
+import { schemaAlreadyHas } from "../common/migration-guard";
 
 /**
  * Persists the bracket structure instead of recomputing it from the match ids.
@@ -15,6 +16,17 @@ export class DoubleElimination1786096800000 implements MigrationInterface {
   name = "DoubleElimination1786096800000";
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // The initial schema baseline already contains this change; the
+    // probe also lets a legacy database re-run the chain safely.
+    if (
+      await schemaAlreadyHas(
+        queryRunner,
+        `SELECT 1 FROM information_schema.columns WHERE table_name = 'match' AND column_name = 'bracketSide'`,
+      )
+    ) {
+      return;
+    }
+
     await queryRunner.query(`
       DO $$
       BEGIN

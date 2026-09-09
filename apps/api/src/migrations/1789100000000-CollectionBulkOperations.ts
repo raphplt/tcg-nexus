@@ -1,4 +1,5 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
+import { schemaAlreadyHas } from "../common/migration-guard";
 
 /**
  * Adds durable bulk operation records for collection imports and edits (COL-04).
@@ -15,6 +16,17 @@ export class CollectionBulkOperations1789100000000
 
   /** Creates the operation tables and adopts legacy import provenance. */
   async up(queryRunner: QueryRunner): Promise<void> {
+    // The initial schema baseline already contains this change; the
+    // probe also lets a legacy database re-run the chain safely.
+    if (
+      await schemaAlreadyHas(
+        queryRunner,
+        `SELECT 1 FROM information_schema.tables WHERE table_name = 'collection_bulk_operation'`,
+      )
+    ) {
+      return;
+    }
+
     await queryRunner.query(`
       CREATE TABLE IF NOT EXISTS "collection_bulk_operation" (
         "id" uuid NOT NULL DEFAULT gen_random_uuid(),

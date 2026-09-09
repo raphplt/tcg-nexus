@@ -43,7 +43,7 @@ export class SellerAllocation {
   shippingAmount: number;
 
   /** Platform commission percentage (e.g. 0.05 for 5%) */
-  @Column("decimal", { precision: 5, scale: 4, default: 0.05 })
+  @Column("decimal", { precision: 5, scale: 4, default: () => "0.05" })
   commissionRate: number;
 
   /** Calculated commission amount deducted by platform */

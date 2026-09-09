@@ -1,4 +1,5 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
+import { schemaAlreadyHas } from "../common/migration-guard";
 
 /**
  * Adds the append-only inventory movement ledger and explicit listing
@@ -16,6 +17,17 @@ export class InventoryMovementsAndListingReservations1788900000000
 
   /** Extends existing installations; every added column is defaulted. */
   async up(queryRunner: QueryRunner): Promise<void> {
+    // The initial schema baseline already contains this change; the
+    // probe also lets a legacy database re-run the chain safely.
+    if (
+      await schemaAlreadyHas(
+        queryRunner,
+        `SELECT 1 FROM information_schema.tables WHERE table_name = 'inventory_movement'`,
+      )
+    ) {
+      return;
+    }
+
     await queryRunner.query(`ALTER TABLE "listing"
       ADD COLUMN IF NOT EXISTS "inventoryReservedQuantity" integer NOT NULL DEFAULT 0,
       ADD COLUMN IF NOT EXISTS "reservationRevision" integer NOT NULL DEFAULT 0`);

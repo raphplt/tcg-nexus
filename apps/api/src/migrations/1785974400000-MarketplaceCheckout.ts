@@ -1,9 +1,21 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
+import { schemaAlreadyHas } from "../common/migration-guard";
 
 export class MarketplaceCheckout1785974400000 implements MigrationInterface {
   name = "MarketplaceCheckout1785974400000";
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // The initial schema baseline already contains this change; the
+    // probe also lets a legacy database re-run the chain safely.
+    if (
+      await schemaAlreadyHas(
+        queryRunner,
+        `SELECT 1 FROM information_schema.tables WHERE table_name = 'order_item'`,
+      )
+    ) {
+      return;
+    }
+
     await queryRunner.query(`
       DO $$ BEGIN
         CREATE TYPE "listing_status_enum" AS ENUM ('active', 'inactive');

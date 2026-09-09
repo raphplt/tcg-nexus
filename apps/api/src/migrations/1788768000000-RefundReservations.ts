@@ -1,4 +1,5 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
+import { schemaAlreadyHas } from "../common/migration-guard";
 
 /** Adds durable refund identities without rewriting historical financial records. */
 export class RefundReservations1788768000000 implements MigrationInterface {
@@ -6,6 +7,17 @@ export class RefundReservations1788768000000 implements MigrationInterface {
 
   /** Extends existing installations; nullable identities preserve legacy refunds for review. */
   async up(queryRunner: QueryRunner): Promise<void> {
+    // The initial schema baseline already contains this change; the
+    // probe also lets a legacy database re-run the chain safely.
+    if (
+      await schemaAlreadyHas(
+        queryRunner,
+        `SELECT 1 FROM information_schema.columns WHERE table_name = 'refund_operation' AND column_name = 'requestKey'`,
+      )
+    ) {
+      return;
+    }
+
     await queryRunner.query(`ALTER TABLE "refund_operation"
       ADD COLUMN "requestKey" varchar(128),
       ADD COLUMN "fingerprint" varchar(64),

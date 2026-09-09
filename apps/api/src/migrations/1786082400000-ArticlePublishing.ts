@@ -1,10 +1,22 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
+import { schemaAlreadyHas } from "../common/migration-guard";
 
 /** Adds the publishing workflow and editorial metadata to articles. */
 export class ArticlePublishing1786082400000 implements MigrationInterface {
   name = "ArticlePublishing1786082400000";
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // The initial schema baseline already contains this change; the
+    // probe also lets a legacy database re-run the chain safely.
+    if (
+      await schemaAlreadyHas(
+        queryRunner,
+        `SELECT 1 FROM information_schema.columns WHERE table_name = 'article' AND column_name = 'slug'`,
+      )
+    ) {
+      return;
+    }
+
     await queryRunner.query(`
       CREATE TYPE "article_status_enum" AS ENUM ('draft', 'published')
     `);

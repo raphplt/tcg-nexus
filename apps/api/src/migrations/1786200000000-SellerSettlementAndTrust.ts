@@ -1,4 +1,5 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
+import { schemaAlreadyHas } from "../common/migration-guard";
 
 /**
  * Migration 1786200000000:
@@ -13,6 +14,17 @@ export class SellerSettlementAndTrust1786200000000
   name = "SellerSettlementAndTrust1786200000000";
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // The initial schema baseline already contains this change; the
+    // probe also lets a legacy database re-run the chain safely.
+    if (
+      await schemaAlreadyHas(
+        queryRunner,
+        `SELECT 1 FROM information_schema.tables WHERE table_name = 'seller_settlement_account'`,
+      )
+    ) {
+      return;
+    }
+
     // 1. Create seller_settlement_account table
     await queryRunner.query(`
       CREATE TABLE IF NOT EXISTS "seller_settlement_account" (

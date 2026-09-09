@@ -1,4 +1,5 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
+import { schemaAlreadyHas } from "../common/migration-guard";
 
 /**
  * Drops the catalog's localized columns.
@@ -19,6 +20,17 @@ export class DropLegacyCatalogColumns1786075200000
   name = "DropLegacyCatalogColumns1786075200000";
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // The initial schema baseline already contains this change; the
+    // probe also lets a legacy database re-run the chain safely.
+    if (
+      await schemaAlreadyHas(
+        queryRunner,
+        `SELECT 1 WHERE NOT EXISTS ( SELECT 1 FROM information_schema.columns WHERE table_name = 'card' AND column_name = 'name')`,
+      )
+    ) {
+      return;
+    }
+
     await queryRunner.query(`
       ALTER TABLE "card"
         DROP COLUMN IF EXISTS "name",

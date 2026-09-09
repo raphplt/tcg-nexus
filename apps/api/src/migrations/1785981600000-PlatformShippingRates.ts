@@ -1,9 +1,21 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
+import { schemaAlreadyHas } from "../common/migration-guard";
 
 export class PlatformShippingRates1785981600000 implements MigrationInterface {
   name = "PlatformShippingRates1785981600000";
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // The initial schema baseline already contains this change; the
+    // probe also lets a legacy database re-run the chain safely.
+    if (
+      await schemaAlreadyHas(
+        queryRunner,
+        `SELECT 1 FROM information_schema.columns WHERE table_name = 'listing' AND column_name = 'handlingTimeDays'`,
+      )
+    ) {
+      return;
+    }
+
     await queryRunner.query(`
       UPDATE "listing"
       SET "shippingCost" = CASE

@@ -29,6 +29,11 @@ interface MigrationProbe {
 
 const PROBES: MigrationProbe[] = [
   {
+    name: "InitialSchema1785000000000",
+    timestamp: 1785000000000,
+    probe: `SELECT 1 FROM information_schema.tables WHERE table_name = 'user'`,
+  },
+  {
     name: "MarketplaceCheckout1785974400000",
     timestamp: 1785974400000,
     probe: `SELECT 1 FROM information_schema.tables WHERE table_name = 'order_item'`,
@@ -204,6 +209,15 @@ const PROBES: MigrationProbe[] = [
     probe: `SELECT 1 FROM information_schema.tables
             WHERE table_name = 'tournament_deck_snapshot_revision'`,
   },
+  {
+    name: "RepairLegacyColumnNames1789500000000",
+    // A database built by synchronization already carries the column names the
+    // entities read, so the repair has nothing to do on it.
+    timestamp: 1789500000000,
+    probe: `SELECT 1 FROM information_schema.columns
+            WHERE table_name = 'collection_item'
+              AND column_name = 'quantityAvailable'`,
+  },
 ];
 
 /**
@@ -248,13 +262,6 @@ async function main() {
     console.log(`+ ${migration.name} — stamped as applied`);
     stamped++;
   }
-
-  // Ensure unique index for TCGdex IDs exists if catalog translation was applied
-  await AppDataSource.query(`
-    CREATE UNIQUE INDEX IF NOT EXISTS "UQ_card_game_tcgDexId"
-    ON "card" ("game", "tcgDexId")
-    WHERE "tcgDexId" IS NOT NULL
-  `);
 
   console.log(`\n${stamped} migration(s) stamped. Next step:`);
   console.log("  npm run migration:run");

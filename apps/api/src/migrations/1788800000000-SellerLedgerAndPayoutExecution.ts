@@ -1,4 +1,5 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
+import { schemaAlreadyHas } from "../common/migration-guard";
 
 /**
  * Adds the append-only seller ledger and the payout execution identities (MKT-06).
@@ -14,6 +15,17 @@ export class SellerLedgerAndPayoutExecution1788800000000
 
   /** Extends existing installations; every added column is nullable or defaulted. */
   async up(queryRunner: QueryRunner): Promise<void> {
+    // The initial schema baseline already contains this change; the
+    // probe also lets a legacy database re-run the chain safely.
+    if (
+      await schemaAlreadyHas(
+        queryRunner,
+        `SELECT 1 FROM information_schema.tables WHERE table_name = 'seller_ledger_entry'`,
+      )
+    ) {
+      return;
+    }
+
     await queryRunner.query(`ALTER TABLE "seller_payout"
       ADD COLUMN IF NOT EXISTS "requestKey" character varying(128),
       ADD COLUMN IF NOT EXISTS "providerAccountId" character varying(128),

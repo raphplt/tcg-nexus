@@ -1,4 +1,5 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
+import { schemaAlreadyHas } from "../common/migration-guard";
 
 /**
  * Migration 1786102000000:
@@ -12,6 +13,17 @@ export class TournamentOperations1786102000000 implements MigrationInterface {
   name = "TournamentOperations1786102000000";
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // The initial schema baseline already contains this change; the
+    // probe also lets a legacy database re-run the chain safely.
+    if (
+      await schemaAlreadyHas(
+        queryRunner,
+        `SELECT 1 FROM information_schema.tables WHERE table_name = 'tournament_deck_snapshot'`,
+      )
+    ) {
+      return;
+    }
+
     // 1. Create match_result_proposal table
     await queryRunner.query(`
       CREATE TABLE IF NOT EXISTS "match_result_proposal" (

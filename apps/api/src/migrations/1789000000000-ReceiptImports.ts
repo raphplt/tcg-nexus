@@ -1,4 +1,5 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
+import { schemaAlreadyHas } from "../common/migration-guard";
 
 /**
  * Adds durable receipt identity for delivered order lines (INT-03).
@@ -12,6 +13,17 @@ export class ReceiptImports1789000000000 implements MigrationInterface {
 
   /** Extends existing installations; the added column is nullable. */
   async up(queryRunner: QueryRunner): Promise<void> {
+    // The initial schema baseline already contains this change; the
+    // probe also lets a legacy database re-run the chain safely.
+    if (
+      await schemaAlreadyHas(
+        queryRunner,
+        `SELECT 1 FROM information_schema.tables WHERE table_name = 'receipt_import'`,
+      )
+    ) {
+      return;
+    }
+
     await queryRunner.query(`ALTER TABLE "order_item"
       ADD COLUMN IF NOT EXISTS "receiptConfirmedAt" TIMESTAMP`);
 
