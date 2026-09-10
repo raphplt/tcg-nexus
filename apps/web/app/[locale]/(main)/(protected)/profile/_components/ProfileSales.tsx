@@ -10,7 +10,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import Image from "next/image";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { useRouter } from "@/i18n/navigation";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
@@ -187,13 +187,14 @@ export const ProfileSales = () => {
               className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors gap-4"
             >
               <div className="flex items-start gap-4">
-                <Image
-                  src={getCardImage(listing.pokemonCard, "low")}
-                  alt={listing.pokemonCard?.name || "Carte"}
-                  width={64}
-                  height={96}
-                  className="object-contain rounded-sm bg-muted"
-                />
+                <div className="relative w-16 h-24 overflow-hidden rounded-sm bg-muted shrink-0">
+                  <SmartImage
+                    src={getCardImage(listing.pokemonCard, "low")}
+                    fallbackSrc="/images/carte-pokemon-dos.jpg"
+                    alt={listing.pokemonCard?.name || "Carte"}
+                    className="object-contain"
+                  />
+                </div>
                 <div className="space-y-1">
                   <h3 className="font-semibold text-lg">
                     {listing.pokemonCard?.name}

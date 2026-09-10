@@ -121,6 +121,48 @@ describe("images utils", () => {
         "https://cdn.tcg-nexus.org/cards/sv1/1/low.png",
       );
     });
+
+    it("handles URLs already ending in /high.png or /low.png without double extension", () => {
+      const highCard = {
+        image: "https://assets.tcgdex.net/fr/sv/sv01/1/high.png",
+      };
+      expect(getCardImage(highCard, "low")).toBe(
+        "https://assets.tcgdex.net/fr/sv/sv01/1/low.png",
+      );
+      expect(getCardImage(highCard, "high")).toBe(
+        "https://assets.tcgdex.net/fr/sv/sv01/1/high.png",
+      );
+
+      const lowCard = {
+        image: "https://assets.tcgdex.net/fr/sv/sv01/1/low.png",
+      };
+      expect(getCardImage(lowCard, "high")).toBe(
+        "https://assets.tcgdex.net/fr/sv/sv01/1/high.png",
+      );
+    });
+
+    it("handles URLs already ending in /high or /low without extension", () => {
+      const card = {
+        image: "https://assets.tcgdex.net/fr/sv/sv01/1/high",
+      };
+      expect(getCardImage(card, "low")).toBe(
+        "https://assets.tcgdex.net/fr/sv/sv01/1/low.png",
+      );
+    });
+
+    it("strips trailing slashes before appending quality suffix", () => {
+      const card = { image: "https://cdn.tcg-nexus.org/cards/sv1/1/" };
+      expect(getCardImage(card, "high")).toBe(
+        "https://cdn.tcg-nexus.org/cards/sv1/1/high.png",
+      );
+    });
+
+    it("preserves standalone image files with direct extensions", () => {
+      const card = { image: "https://cdn.tcg-nexus.org/uploads/card-custom.webp" };
+      expect(getCardImage(card, "high")).toBe(
+        "https://cdn.tcg-nexus.org/uploads/card-custom.webp",
+      );
+    });
   });
 
   describe("getSetLogo, getSetSymbol, getSetImage, getSeriesLogo", () => {

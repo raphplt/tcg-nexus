@@ -96,9 +96,10 @@ export function CardCard({
                 {getSetSymbol(card.set) && (
                   <Image
                     src={getSetSymbol(card.set) as string}
-                    alt={""}
+                    alt=""
                     width={16}
                     height={16}
+                    unoptimized
                   />
                 )}
                 <p className="text-sm text-muted-foreground line-clamp-1">

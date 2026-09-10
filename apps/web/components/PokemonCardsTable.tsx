@@ -13,7 +13,6 @@ import {
   SlidersHorizontal,
   X,
 } from "lucide-react";
-import Image from "next/image";
 import { Link, useRouter } from "@/i18n/navigation";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -953,13 +952,14 @@ export function PokemonCardsTable({
                       }
                     >
                       <TableCell className="py-2">
-                        <Image
-                          src={getCardImage(card, "low")}
-                          alt={card.name || "Pokemon Card"}
-                          width={44}
-                          height={60}
-                          className="object-cover rounded hover:scale-105 transition-transform duration-200"
-                        />
+                        <div className="relative h-[60px] w-[44px] overflow-hidden rounded">
+                          <SmartImage
+                            src={getCardImage(card, "low")}
+                            fallbackSrc="/images/carte-pokemon-dos.jpg"
+                            alt={card.name || "Pokemon Card"}
+                            className="h-full w-full object-cover hover:scale-105 transition-transform duration-200"
+                          />
+                        </div>
                       </TableCell>
                       <TableCell className="font-semibold text-foreground py-2 hover:text-primary transition-colors">
                         {card.name || "N/A"}

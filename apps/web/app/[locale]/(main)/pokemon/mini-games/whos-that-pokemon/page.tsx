@@ -14,7 +14,7 @@ import {
   Trophy,
   Zap,
 } from "lucide-react";
-import Image from "next/image";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { Link } from "@/i18n/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PageWrapper } from "@/components/Layout/PageWrapper";
@@ -547,10 +547,10 @@ export default function WhosThatPokemonPage() {
                     <div className="relative flex aspect-[5/7] w-full items-center justify-center overflow-hidden rounded-xl border border-border/50 bg-zinc-950/20 shadow-inner dark:bg-zinc-950/40">
                       <div className="absolute inset-0 bg-[radial-gradient(#ffffff03_1px,transparent_1px)] [background-size:12px_12px]" />
                       <div className="relative h-[85%] w-[85%]">
-                        <Image
+                        <SmartImage
                           src={cardImg}
                           alt="Carte mystère"
-                          fill
+                          fallbackSrc="/images/carte-pokemon-dos.jpg"
                           className={`object-contain transition-all duration-700 ${
                             revealed
                               ? "scale-100"

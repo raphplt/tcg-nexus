@@ -11,7 +11,7 @@ import {
   Search,
   Sparkles,
 } from "lucide-react";
-import Image from "next/image";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { Link } from "@/i18n/navigation";
 import React, { useCallback, useEffect, useState } from "react";
 import { PageWrapper } from "@/components/Layout/PageWrapper";
@@ -250,10 +250,10 @@ export default function PokedlePage() {
                 <div className="absolute inset-0 bg-[radial-gradient(#ffffff03_1px,transparent_1px)] [background-size:12px_12px]" />
                 {targetCard && (
                   <div className="relative w-full h-full">
-                    <Image
+                    <SmartImage
                       src={getCardImage(targetCard)}
                       alt="Mystère"
-                      fill
+                      fallbackSrc="/images/carte-pokemon-dos.jpg"
                       className="object-contain transition-all duration-500"
                       style={{
                         filter:

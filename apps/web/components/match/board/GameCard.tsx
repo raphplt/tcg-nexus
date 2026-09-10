@@ -1,7 +1,8 @@
 "use client";
 
-import Image from "next/image";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { cn } from "@/lib/utils";
+import { getCardImage } from "@/utils/images";
 
 const CARD_BACK = "/images/carte-pokemon-dos.jpg";
 
@@ -37,7 +38,11 @@ export function GameCard({
   disabled = false,
   style,
 }: GameCardProps) {
-  const src = faceDown ? CARD_BACK : image ? `${image}/high.png` : null;
+  const src = faceDown
+    ? CARD_BACK
+    : image
+      ? getCardImage({ image }, "high")
+      : null;
 
   return (
     <div
@@ -89,21 +94,11 @@ export function GameCard({
       )}
 
       {src ? (
-        <Image
+        <SmartImage
           src={src}
+          fallbackSrc={CARD_BACK}
           alt={name}
-          fill
           className="object-cover"
-          sizes={
-            size === "xl"
-              ? "160px"
-              : size === "lg"
-                ? "128px"
-                : size === "md"
-                  ? "96px"
-                  : "64px"
-          }
-          unoptimized={src.includes("tcgdex.net")}
         />
       ) : (
         <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-slate-700 to-slate-900 p-1">

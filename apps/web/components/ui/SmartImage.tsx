@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface SmartImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
@@ -10,6 +10,8 @@ interface SmartImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   wrapperClassName?: string;
   /** Disables the loading skeleton, for example for small icons. */
   noSkeleton?: boolean;
+  /** Compatibility prop with next/image (SmartImage fills its parent by default). */
+  fill?: boolean;
 }
 
 /**
@@ -22,10 +24,16 @@ export function SmartImage({
   className,
   wrapperClassName,
   noSkeleton = false,
+  fill: _fill,
   ...rest
 }: SmartImageProps) {
   const [loaded, setLoaded] = useState(false);
   const [errored, setErrored] = useState(false);
+
+  useEffect(() => {
+    setLoaded(false);
+    setErrored(false);
+  }, [src]);
 
   const effectiveSrc = errored && fallbackSrc ? fallbackSrc : src;
 
@@ -49,7 +57,7 @@ export function SmartImage({
           }
         }}
         className={cn(
-          "transition-opacity duration-300",
+          "h-full w-full block transition-opacity duration-300",
           loaded ? "opacity-100" : "opacity-0",
           className,
         )}

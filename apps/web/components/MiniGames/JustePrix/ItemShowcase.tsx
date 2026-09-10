@@ -1,8 +1,8 @@
 "use client";
 
 import { Clock } from "lucide-react";
-import Image from "next/image";
 import { useTranslations } from "next-intl";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import type { JustePrixItem, JustePrixPublicItem } from "@/types/mini-game";
@@ -63,10 +63,14 @@ export function ItemShowcase({
           ) : null}
           <div className="absolute inset-0 bg-[radial-gradient(#ffffff04_1px,transparent_1px)] [background-size:12px_12px]" />
           <div className="relative h-full w-full">
-            <Image
+            <SmartImage
               src={itemImage(item)}
               alt={name}
-              fill
+              fallbackSrc={
+                item.type === "card"
+                  ? "/images/carte-pokemon-dos.jpg"
+                  : SEALED_PLACEHOLDER
+              }
               sizes="256px"
               className="object-contain"
             />

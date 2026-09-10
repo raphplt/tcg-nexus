@@ -2,7 +2,7 @@
 import React from "react";
 import { H2 } from "../Shared/Titles";
 import { Card } from "../ui/card";
-import Image from "next/image";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { Layers } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { decksService } from "@/services/decks.service";
@@ -85,17 +85,16 @@ const TrendingDecks = () => {
                 key={deck.id}
                 className="flex items-center gap-4 p-3 rounded-lg border bg-background hover:shadow-md transition group"
               >
-                <div className="shrink-0">
+                <div className="shrink-0 relative w-12 h-[66px] overflow-hidden rounded border bg-muted">
                   {cover ? (
-                    <Image
+                    <SmartImage
                       src={cover}
+                      fallbackSrc="/images/carte-pokemon-dos.jpg"
                       alt={deck.name}
-                      width={48}
-                      height={66}
-                      className="object-contain rounded border group-hover:scale-105 transition-transform bg-muted"
+                      className="object-contain group-hover:scale-105 transition-transform"
                     />
                   ) : (
-                    <div className="w-12 h-[66px] bg-muted rounded flex items-center justify-center border group-hover:scale-105 transition-transform">
+                    <div className="w-full h-full flex items-center justify-center">
                       <Layers className="w-6 h-6 text-muted-foreground" />
                     </div>
                   )}

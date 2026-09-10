@@ -2,7 +2,7 @@ import React from "react";
 import { H2 } from "../Shared/Titles";
 import { Card } from "../ui/card";
 import { myCollection } from "./homeMocks";
-import Image from "next/image";
+import { SmartImage } from "../ui/SmartImage";
 import { useTranslations } from "next-intl";
 
 const MyCollection = () => {
@@ -17,13 +17,14 @@ const MyCollection = () => {
             key={i}
             className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-background hover:shadow-md transition group"
           >
-            <Image
-              src={card.image}
-              alt={card.name}
-              width={64}
-              height={90}
-              className="object-cover rounded border group-hover:scale-105 transition-transform"
-            />
+            <div className="relative h-[90px] w-16">
+              <SmartImage
+                src={card.image}
+                alt={card.name}
+                fallbackSrc="/images/carte-pokemon-dos.jpg"
+                className="object-cover rounded border group-hover:scale-105 transition-transform"
+              />
+            </div>
             <div className="font-semibold text-center text-sm truncate">
               {card.name}
             </div>

@@ -6,7 +6,7 @@ import {
   Trophy,
   Users,
 } from "lucide-react";
-import Image from "next/image";
+import { SmartImage } from "@/components/ui/SmartImage";
 import type { ReactElement } from "react";
 
 export type SearchItemType = "card" | "tournament" | "player" | "marketplace";
@@ -64,14 +64,17 @@ export function SearchItemButton({
         )}
       </div>
       {image && (
-        <Image
-          src={image}
-          alt={imageAlt ?? title}
-          width={32}
-          height={32}
-          className="w-8 h-8 rounded object-cover"
-          unoptimized
-        />
+        <div className="relative h-8 w-8 flex-shrink-0 overflow-hidden rounded">
+          <SmartImage
+            src={image}
+            alt={imageAlt ?? title}
+            fallbackSrc={
+              type === "card" ? "/images/carte-pokemon-dos.jpg" : undefined
+            }
+            noSkeleton
+            className="h-full w-full rounded object-cover"
+          />
+        </div>
       )}
       {showArrow && (
         <ArrowRight

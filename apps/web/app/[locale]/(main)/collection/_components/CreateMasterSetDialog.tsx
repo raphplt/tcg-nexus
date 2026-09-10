@@ -13,7 +13,8 @@ import {
   Trophy,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import Image from "next/image";
+import { SmartImage } from "@/components/ui/SmartImage";
+import { getSetLogo } from "@/utils/images";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -195,13 +196,13 @@ export function CreateMasterSetDialog({
                         }`}
                       >
                         <div className="flex items-center gap-3 min-w-0 pr-2">
-                          {set.logo ? (
+                          {getSetLogo(set) ? (
                             <div className="w-12 h-8 relative shrink-0">
-                              <Image
-                                src={set.logo}
+                              <SmartImage
+                                src={getSetLogo(set)}
                                 alt={set.name}
-                                fill
                                 className="object-contain"
+                                noSkeleton
                               />
                             </div>
                           ) : (

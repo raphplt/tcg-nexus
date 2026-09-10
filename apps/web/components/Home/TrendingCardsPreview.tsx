@@ -2,7 +2,7 @@ import React from "react";
 import { H2 } from "../Shared/Titles";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
-import Image from "next/image";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { ArrowRight, ShoppingCart, TrendingUp } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { useMarketplaceHome } from "@/hooks/useMarketplace";
@@ -45,13 +45,12 @@ const TrendingCardsPreview = () => {
               href={`/marketplace/cards/${trendingCard.card.id}`}
               className="flex items-center gap-4 flex-1 min-w-0"
             >
-              <div className="flex-shrink-0">
-                <Image
+              <div className="flex-shrink-0 relative w-14 h-20 overflow-hidden rounded border bg-muted/40">
+                <SmartImage
                   src={getCardImage(trendingCard.card, "low")}
+                  fallbackSrc="/images/carte-pokemon-dos.jpg"
                   alt={trendingCard.card.name || t("common.pokemonCard")}
-                  width={56}
-                  height={80}
-                  className="object-cover rounded border"
+                  className="object-contain"
                 />
               </div>
               <div className="flex-1 min-w-0">

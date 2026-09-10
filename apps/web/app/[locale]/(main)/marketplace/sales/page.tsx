@@ -12,7 +12,7 @@ import {
   Plus,
   Truck,
 } from "lucide-react";
-import Image from "next/image";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { Link } from "@/i18n/navigation";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -213,12 +213,12 @@ export default function SellerSalesPage() {
           {sales.map((sale) => (
             <Card key={sale.id}>
               <CardContent className="p-4 flex flex-col sm:flex-row gap-4">
-                <div className="relative h-24 w-16 shrink-0">
-                  <Image
+                <div className="relative h-24 w-16 shrink-0 overflow-hidden rounded bg-muted/40">
+                  <SmartImage
                     src={getOrderItemImage(sale)}
+                    fallbackSrc="/images/carte-pokemon-dos.jpg"
                     alt={sale.productName}
-                    fill
-                    className="object-contain rounded"
+                    className="object-contain"
                   />
                 </div>
 

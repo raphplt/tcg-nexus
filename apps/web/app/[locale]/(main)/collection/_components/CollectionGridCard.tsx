@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { ArrowRight, Eye, Lock, Trophy } from "lucide-react";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Link } from "@/i18n/navigation";
@@ -51,13 +51,13 @@ function MasterSetCard({
     >
       <div className="collection-tile-banner collection-tile-banner--master relative flex h-32 items-center justify-center px-6">
         {logo ? (
-          <Image
-            src={logo}
-            alt={collection.masterSet?.name ?? t("masterSets.title")}
-            width={220}
-            height={90}
-            className="max-h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
-          />
+          <div className="relative h-16 w-44">
+            <SmartImage
+              src={logo}
+              alt={collection.masterSet?.name ?? t("masterSets.title")}
+              className="max-h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+            />
+          </div>
         ) : (
           <Trophy className="h-10 w-10 text-amber-500/70" />
         )}

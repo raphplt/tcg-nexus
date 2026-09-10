@@ -4,7 +4,7 @@ import { H2 } from "../Shared/Titles";
 import { useQuery } from "@tanstack/react-query";
 import { pokemonCardService } from "@/services/pokemonCard.service";
 import type { PokemonCardType } from "@/types/cardPokemon";
-import Image from "next/image";
+import { SmartImage } from "../ui/SmartImage";
 import { Button } from "../ui/button";
 import {
   RefreshCw,
@@ -134,18 +134,17 @@ const RandomCard = () => {
                     <Loader2 className="w-8 h-8 animate-spin text-white" />
                   </div>
                 )}
-                <Image
+                <SmartImage
                   src={getCardImage(card, "low")}
                   alt={card.name || t("common.pokemonCard")}
-                  fill
+                  fallbackSrc="/images/carte-pokemon-dos.jpg"
                   className="object-contain rounded-lg"
                   style={{
                     objectFit: "contain",
                     backfaceVisibility: "hidden",
                   }}
                   sizes="(max-width: 640px) 100vw, 320px"
-                  priority
-                  onLoadingComplete={() => setIsImageLoading(false)}
+                  onLoad={() => setIsImageLoading(false)}
                   onError={() => setIsImageLoading(false)}
                 />
               </div>

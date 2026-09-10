@@ -1,10 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import type { MatchPromptResponseInput } from "@/components/match/board/types";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { cn } from "@/lib/utils";
 import type { PendingPromptView } from "@/types/match-online";
+import { getCardImage } from "@/utils/images";
 
 interface PromptOverlayProps {
   prompt: PendingPromptView;
@@ -102,10 +103,10 @@ export function PromptOverlay({
                   >
                     <div className="relative w-28 h-38.5 rounded-lg overflow-hidden shadow-lg">
                       {option.image ? (
-                        <Image
-                          src={`${option.image}/high.png`}
+                        <SmartImage
+                          src={getCardImage({ image: option.image }, "high")}
                           alt={option.label}
-                          fill
+                          fallbackSrc="/images/carte-pokemon-dos.jpg"
                           className="object-cover"
                           sizes="112px"
                         />

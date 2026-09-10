@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { ShoppingCart, Trash2 } from "lucide-react";
-import Image from "next/image";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { Link } from "@/i18n/navigation";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -79,23 +79,23 @@ const CartDropdown = () => {
                   className="flex items-start gap-3 p-3 cursor-default"
                   onSelect={(e) => e.preventDefault()}
                 >
-                  <div className="relative w-12 h-16 shrink-0">
-                    <Image
+                  <div className="relative w-12 h-16 shrink-0 overflow-hidden rounded bg-muted/40">
+                    <SmartImage
                       src={
                         item.listing.productKind === "sealed" ||
                         item.listing.sealedProduct
                           ? getSealedImageUrl(item.listing.sealedProduct) ||
                             SEALED_PLACEHOLDER
-                          : getCardImage(item.listing.pokemonCard)
+                          : getCardImage(item.listing.pokemonCard, "low")
                       }
+                      fallbackSrc="/images/carte-pokemon-dos.jpg"
                       alt={
                         (item.listing.productKind === "sealed" ||
                         item.listing.sealedProduct
                           ? item.listing.sealedProduct?.name
                           : item.listing.pokemonCard?.name) || "Produit"
                       }
-                      fill
-                      className="object-contain rounded"
+                      className="object-contain"
                     />
                   </div>
                   <div className="flex-1 min-w-0">

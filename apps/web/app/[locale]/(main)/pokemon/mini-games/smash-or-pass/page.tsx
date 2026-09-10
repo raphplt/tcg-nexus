@@ -20,6 +20,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import { FavoriteButton } from "@/components/Home/FavoritesButton";
 import { H1, H3 } from "@/components/Shared/Titles";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -188,14 +189,12 @@ function PokemonCardView({
               </div>
 
               <div className="relative mt-2.5 flex items-center justify-center">
-                <div className="pokemon-card-image relative">
-                  <Image
+                <div className="pokemon-card-image relative aspect-[5/7] h-[220px] w-auto sm:h-[260px] md:h-[300px] lg:h-[340px]">
+                  <SmartImage
                     src={cardImage}
                     alt={card?.name ?? "Carte Pokémon"}
-                    width={400}
-                    height={520}
-                    priority
-                    className="h-[220px] w-auto object-contain drop-shadow-lg sm:h-[260px] md:h-[300px] lg:h-[340px]"
+                    fallbackSrc="/images/carte-pokemon-dos.jpg"
+                    className="object-contain drop-shadow-lg"
                   />
                 </div>
               </div>

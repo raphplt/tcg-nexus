@@ -1,12 +1,12 @@
 "use client";
 
 import { ArrowRight, Package } from "lucide-react";
-import Image from "next/image";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { Link } from "@/i18n/navigation";
 import React from "react";
 import { useTranslations } from "next-intl";
 import { useMarketplaceHome } from "@/hooks/useMarketplace";
-import { getSealedImageUrl } from "@/utils/sealedImage";
+import { getSealedImageUrl, SEALED_PLACEHOLDER } from "@/utils/sealedImage";
 import { H2 } from "../Shared/Titles";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -39,12 +39,11 @@ const SealedProductsPreview = () => {
               >
                 <div className="flex-shrink-0 w-14 h-14 relative rounded border bg-muted/40 overflow-hidden">
                   {imageUrl ? (
-                    <Image
+                    <SmartImage
                       src={imageUrl}
+                      fallbackSrc={SEALED_PLACEHOLDER}
                       alt={product.name}
-                      fill
                       className="object-contain"
-                      sizes="56px"
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center">
