@@ -20,6 +20,7 @@ import { Public } from "../auth/decorators/public.decorator";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
+import { PokemonCardsType } from "../common/enums/pokemonCardsType";
 import { UserRole } from "../common/enums/user";
 import { CardSyncService } from "./card-sync.service";
 import { CreatePokemonCardDto } from "./dto/create-pokemon-card.dto";
@@ -122,6 +123,8 @@ export class PokemonCardController {
    * @param serieId Optional series ID.
    * @param rarity Optional rarity name.
    * @param set Optional set ID.
+   * @param category Optional card category (e.g. Pokemon).
+   * @param excludeIds Comma-separated list of card IDs to exclude.
    * @returns Random card or null.
    */
   @Get("random")
@@ -130,12 +133,45 @@ export class PokemonCardController {
   @ApiQuery({ name: "serieId", required: false, type: String })
   @ApiQuery({ name: "rarity", required: false, type: String })
   @ApiQuery({ name: "set", required: false, type: String })
+  @ApiQuery({ name: "category", required: false, enum: PokemonCardsType })
+  @ApiQuery({ name: "excludeIds", required: false, type: String })
   findRandom(
     @Query("serieId") serieId?: string,
     @Query("rarity") rarity?: string,
     @Query("set") set?: string,
+    @Query("category") category?: PokemonCardsType,
+    @Query("excludeIds") excludeIds?: string,
   ) {
-    return this.pokemonCardService.findRandom(serieId, rarity, set);
+    const parsedExclude = excludeIds
+      ? excludeIds
+          .split(",")
+          .map((id) => id.trim())
+          .filter(Boolean)
+      : undefined;
+    return this.pokemonCardService.findRandom(
+      serieId,
+      rarity,
+      set,
+      category,
+      parsedExclude,
+    );
+  }
+
+  /**
+   * Retrieves a random list of distinct Pokémon species (e.g. for mini-games distractors).
+   *
+   * @param count Number of distinct species to draw.
+   * @returns Array of species items localized in request locale.
+   */
+  @Get("species/random")
+  @Public()
+  @ApiOperation({ summary: "Retrieve random distinct Pokémon species" })
+  @ApiQuery({ name: "count", required: false, type: Number })
+  findRandomSpecies(@Query("count") count?: string) {
+    const parsed = count ? Number.parseInt(count, 10) : 40;
+    return this.pokemonCardService.findRandomSpecies(
+      Number.isFinite(parsed) ? parsed : 40,
+    );
   }
 
   /**

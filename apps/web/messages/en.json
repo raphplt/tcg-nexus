@@ -75,11 +75,70 @@
     "myOrders": "My orders",
     "mySales": "My sales",
     "settings": "Settings",
+    "guidedTour": "Guided tour",
     "faq": "FAQ",
     "blog": "Blog",
     "manageBlog": "Manage blog",
     "admin": "Admin",
     "login": "Sign in"
+  },
+  "Onboarding": {
+    "saveError": "We could not save your choice. The tour will not reopen during this session.",
+    "welcome": {
+      "title": "Welcome to TCG Nexus, {firstName}!",
+      "description": "Your collection, decks, games and the card marketplace all live in one place.",
+      "features": {
+        "collection": "Collect",
+        "decks": "Build",
+        "play": "Play",
+        "marketplace": "Trade"
+      },
+      "start": "Start the tour (1 min)",
+      "skip": "Explore on my own"
+    },
+    "controls": {
+      "previous": "Previous",
+      "next": "Next",
+      "done": "Finish",
+      "close": "Close the tour",
+      "skip": "Skip",
+      "progress": "{current} of {total}"
+    },
+    "steps": {
+      "1": {
+        "title": "Your dashboard",
+        "description": "See your activity, collection and next actions at a glance."
+      },
+      "2": {
+        "title": "Find anything quickly",
+        "description": "Search for a card, player, deck, tournament or product from any page."
+      },
+      "3": {
+        "title": "Manage your collection",
+        "description": "Track your cards, favourites, wishlist and Master Set progress."
+      },
+      "4": {
+        "title": "Build better decks",
+        "description": "Create or import decks, check legality and use strategic deck analysis."
+      },
+      "5": {
+        "title": "Play and compete",
+        "description": "Train, challenge other players, join tournaments and discover mini-games."
+      },
+      "6": {
+        "title": "Explore the marketplace",
+        "description": "Compare prices, buy the cards you need or list your own cards for sale."
+      },
+      "7": {
+        "title": "Need a refresher?",
+        "description": "Open the FAQ, customise your preferences and replay this tour whenever you want."
+      }
+    },
+    "settings": {
+      "title": "Guided tour",
+      "description": "Rediscover the main TCG Nexus features in one minute.",
+      "action": "Replay the guided tour"
+    }
   },
   "Footer": {
     "tagline": "Your complete platform for Pokémon card trading, tournaments and strategic analysis.",
@@ -1867,9 +1926,30 @@
     "hard": "Hard",
     "easyHelp": "Light blur, 20s, type + generation hints. Wrong answers are very different.",
     "mediumHelp": "Medium blur, 15s, type hint. Varied options.",
-    "hardHelp": "Heavy blur, 10s, no hint. Wrong answers are close (same type / generation).",
+    "hardHelp": "Dark silhouette, 10s, no hint. Wrong answers are close (same type / generation).",
     "viewResults": "View results",
-    "pointsIn": "pts · on {difficulty}"
+    "pointsIn": "pts · on {difficulty}",
+    "play": "Play",
+    "playAgain": "Play again",
+    "nextRound": "Next round",
+    "finalScore": "Final score:",
+    "bestStreak": "Best streak: {count} in a row",
+    "timeOut": "Time's up! It was {name}.",
+    "correct": "Well done! It really is {name}!",
+    "wrong": "Wrong! The correct answer was {name}.",
+    "pointsGained": "+{points} pts",
+    "streakFire": "streak x{count} 🔥",
+    "expansion": "Expansion:",
+    "hint": "Hint:",
+    "generation": "Generation {gen}",
+    "clueType": "Type: {type}",
+    "unknownExpansion": "Unknown",
+    "loadError": "Could not load mini-game data.",
+    "retry": "Retry",
+    "mysteryCardAlt": "Mystery card",
+    "secondsSuffix": "{seconds}s",
+    "roundOf": "{current}/{total}",
+    "pointsSuffix": "{points} pts"
   },
   "SmashOrPass": {
     "loginToSave": "Sign in to save this card to your wishlist.",

@@ -12,8 +12,9 @@
 | Socle web (phase 1, hors passe i18n des autres jeux) | **Livré** 2026-09-10 | `useMiniGameSocket`, `useCountdown`, `utils/miniGames/pricing.ts` (miroir de l'API), composants `MiniGames/*` (en-tête, cartes de mode, salon en ligne, résultat, erreur, avis de déconnexion). |
 | Juste Prix (phase 3) | **Livré** 2026-09-10 | Page réécrite en composants, items via `GET /mini-game/juste-prix/items` (1 appel, prix réels, plancher 1 € pour les cartes), reveal qui ne s'efface plus, plus d'`alert`, saisie décimale validée, i18n complète FR/EN, choix du nombre de manches. Tests : reducers solo/local, hook socket, parcours solo complet. |
 | Case Opening (phase 3) | **Livré** 2026-09-10 | Boosters tirés par palier de rareté (`booster.ts` : 6 paliers, labels FR/EN, 3 styles Standard / Premium / Chasse), périmètre au choix : catalogue, série ou set d'une série, en solo, local et en ligne (matchmaking sur options identiques). Endpoint `GET /mini-game/case-opening/packs`. Page réécrite en composants, roulette allégée (23 images basse résolution), handoff local supprimé, hits mis en avant, i18n complète. Tests : règles de booster, reducer de duel, parcours local complet. |
+| Who's That Pokémon (phase 3) | **Livré** 2026-09-10 | Endpoint serveur `GET /pokemon-card/species/random?count=40` dédoublonné par espèce et localisé dans la langue du client. Suppression de `POPULAR_POKEMON` et des noms en dur. Recadrage sur l'illustration seule (nom masqué), silhouette sombre `brightness(0.04)` en difficile, flou en facile/moyen, cibles non répétées, pas de repli Dracaufeu (erreur explicite `LoadError`). Page découpée en composants modulaires, i18n complète FR/EN. Tests unitaires des règles, de la génération des leurres et du parcours de jeu. |
 | Persistance des scores (phase 2, point 7) | À faire | Lot dédié après les jeux solo. |
-| Who's That Pokémon, Pokedle, Hub, Smash or Pass | À faire | — |
+| Pokedle, Hub, Smash or Pass | À faire | — |
 
 ## 1. Constat global
 
@@ -194,17 +195,16 @@ Ordre par sévérité.
 
 Fait au 2026-09-10 : phase 0 (décisions prises telles que recommandées), phase 2
 points 1 à 6 et 8, phase 1 hors passe i18n des jeux restants, phase 3 Juste
-Prix et Case Opening. Détail dans la section 0.
+Prix, Case Opening et Who's That Pokémon. Détail dans la section 0.
 
 Reste, dans cet ordre, un lot par jeu avec bilan à la fin de chacun :
 
-1. **Who's That Pokémon** (M) : leurres tirés côté serveur par espèce et localisés, suppression de la liste de noms français en dur, masque qui cache le nom imprimé, cibles non répétées, score persisté.
-2. **Pokedle** (L) : cible par espèce, recherche dédoublonnée et bornée, image masquée jusqu'à la fin, mode quotidien avec partage et streak, dropdown accessible.
-3. **Persistance des scores** (phase 2, point 7) : entité `MiniGameResult`, endpoints historique et classement, déclencheurs `challenge` / `badge`. Lot dédié, branché ensuite sur les quatre jeux.
-4. **Hub** (S) : enum de modes typé, badge « Connexion requise », record personnel depuis l'historique.
-5. **Smash or Pass** (S) : reclassement en « Découverte » hors hub, préchargement, exclusion des cartes déjà possédées, layout mobile.
-6. **Phase 4** : E2E à deux clients par jeu en ligne, budget perf mobile.
-7. **Phase 5**, optionnelle : Redis adapter, portage mobile.
+1. **Pokedle** (L) : cible par espèce, recherche dédoublonnée et bornée, image masquée jusqu'à la fin, mode quotidien avec partage et streak, dropdown accessible.
+2. **Persistance des scores** (phase 2, point 7) : entité `MiniGameResult`, endpoints historique et classement, déclencheurs `challenge` / `badge`. Lot dédié, branché ensuite sur les quatre jeux.
+3. **Hub** (S) : enum de modes typé, badge « Connexion requise », record personnel depuis l'historique.
+4. **Smash or Pass** (S) : reclassement en « Découverte » hors hub, préchargement, exclusion des cartes déjà possédées, layout mobile.
+5. **Phase 4** : E2E à deux clients par jeu en ligne, budget perf mobile.
+6. **Phase 5**, optionnelle : Redis adapter, portage mobile.
 
 Hors plan mais noté : la formule de score Juste Prix et la table des paliers de
 rareté sont dupliquées web / API, épinglées par des tests identiques des deux

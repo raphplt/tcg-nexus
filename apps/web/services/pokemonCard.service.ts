@@ -8,6 +8,14 @@ import type { PaginatedResult, PaginationParams } from "../types/pagination";
 import { CollectionItemType } from "@/types/collection";
 import { PokemonRarity } from "../types/enums/pokemonCardsType";
 
+export interface PokemonSpecies {
+  id: string;
+  tcgDexId: string;
+  dexId: number;
+  types?: string[];
+  name?: string;
+}
+
 export const pokemonCardService = {
   async getPaginated(
     params: {
@@ -59,11 +67,19 @@ export const pokemonCardService = {
     serieId?: string,
     rarity?: PokemonRarity,
     set?: string,
+    options: {
+      category?: string;
+      excludeIds?: string[];
+    } = {},
   ): Promise<PokemonCardType | null> {
     const params: Record<string, string> = {};
     if (serieId) params.serieId = serieId;
     if (rarity) params.rarity = rarity;
     if (set) params.set = set;
+    if (options.category) params.category = options.category;
+    if (options.excludeIds && options.excludeIds.length > 0) {
+      params.excludeIds = options.excludeIds.join(",");
+    }
 
     const response = await api.get<PokemonCardType | null>(
       "/pokemon-card/random",
@@ -72,6 +88,22 @@ export const pokemonCardService = {
       },
     );
 
+    return response.data;
+  },
+
+  /**
+   * Draws a random sample of distinct Pokémon species for mini-game distractors.
+   *
+   * @param count - Number of distinct species to draw.
+   * @returns Array of localized species items.
+   */
+  async getRandomSpecies(count = 40): Promise<PokemonSpecies[]> {
+    const response = await api.get<PokemonSpecies[]>(
+      "/pokemon-card/species/random",
+      {
+        params: { count },
+      },
+    );
     return response.data;
   },
 

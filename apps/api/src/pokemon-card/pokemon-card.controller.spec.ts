@@ -1,6 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { Card } from "src/card/entities/card.entity";
+import { PokemonCardsType } from "src/common/enums/pokemonCardsType";
 import { PokemonCardController } from "./pokemon-card.controller";
 import { PokemonCardService } from "./pokemon-card.service";
 import { CardSyncService } from "./card-sync.service";
@@ -17,6 +18,7 @@ describe("PokemonCardController", () => {
     findBySearch: jest.fn(),
     findAllPaginated: jest.fn(),
     findRandom: jest.fn(),
+    findRandomSpecies: jest.fn(),
     findByScanMatch: jest.fn(),
   };
 
@@ -101,13 +103,30 @@ describe("PokemonCardController", () => {
 
   it("should find a random card", async () => {
     mockPokemonCardService.findRandom.mockResolvedValue({ id: "c-rand" });
-    const result = await controller.findRandom("serie-1", "Rare", "set-1");
+    const result = await controller.findRandom(
+      "serie-1",
+      "Rare",
+      "set-1",
+      PokemonCardsType.Pokemon,
+      "c-1, c-2",
+    );
     expect(result).toEqual({ id: "c-rand" });
     expect(mockPokemonCardService.findRandom).toHaveBeenCalledWith(
       "serie-1",
       "Rare",
       "set-1",
+      PokemonCardsType.Pokemon,
+      ["c-1", "c-2"],
     );
+  });
+
+  it("should find random species", async () => {
+    mockPokemonCardService.findRandomSpecies.mockResolvedValue([
+      { id: "c-1", dexId: 25, types: ["Lightning"] },
+    ]);
+    const result = await controller.findRandomSpecies("15");
+    expect(result).toEqual([{ id: "c-1", dexId: 25, types: ["Lightning"] }]);
+    expect(mockPokemonCardService.findRandomSpecies).toHaveBeenCalledWith(15);
   });
 
   it("should match cards by OCR scan parameters", async () => {

@@ -3,6 +3,7 @@ import { getRepositoryToken } from "@nestjs/typeorm";
 import { Card } from "src/card/entities/card.entity";
 import { PokemonCardDetails } from "src/card/entities/pokemon-card-details.entity";
 import { CardGame } from "src/common/enums/cardGame";
+import { PokemonCardsType } from "src/common/enums/pokemonCardsType";
 import { PokemonCardService } from "./pokemon-card.service";
 
 describe("PokemonCardService", () => {
@@ -11,6 +12,7 @@ describe("PokemonCardService", () => {
   const mockQueryBuilder = {
     leftJoinAndSelect: jest.fn().mockReturnThis(),
     leftJoin: jest.fn().mockReturnThis(),
+    innerJoinAndSelect: jest.fn().mockReturnThis(),
     where: jest.fn().mockReturnThis(),
     orWhere: jest.fn().mockReturnThis(),
     andWhere: jest.fn().mockReturnThis(),
@@ -253,15 +255,66 @@ describe("PokemonCardService", () => {
       const card = { id: "c-random", pokemonDetails: {} } as Card;
       mockQueryBuilder.getOne.mockResolvedValue(card);
 
-      const result = await service.findRandom("serie-1", "Rare", "set-1");
+      const result = await service.findRandom(
+        "serie-1",
+        "Rare",
+        "set-1",
+        PokemonCardsType.Pokemon,
+        ["c-excluded"],
+      );
       expect(result).toBeDefined();
       expect(result?.id).toBe("c-random");
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        "pokemonDetails.category = :category",
+        { category: PokemonCardsType.Pokemon },
+      );
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        "pokemonCard.id NOT IN (:...excludeIds)",
+        { excludeIds: ["c-excluded"] },
+      );
     });
 
     it("should return null if no card matches random query", async () => {
       mockQueryBuilder.getOne.mockResolvedValue(null);
       const result = await service.findRandom();
       expect(result).toBeNull();
+    });
+  });
+
+  describe("findRandomSpecies", () => {
+    it("should return deduplicated species by primary dexId", async () => {
+      const card1 = {
+        id: "c-1",
+        tcgDexId: "pika-1",
+        pokemonDetails: { dexId: [25], types: ["Lightning"] },
+      } as unknown as Card;
+      const card2 = {
+        id: "c-2",
+        tcgDexId: "pika-2",
+        pokemonDetails: { dexId: [25], types: ["Lightning"] },
+      } as unknown as Card;
+      const card3 = {
+        id: "c-3",
+        tcgDexId: "char-1",
+        pokemonDetails: { dexId: [6], types: ["Fire", "Flying"] },
+      } as unknown as Card;
+
+      mockQueryBuilder.getMany.mockResolvedValue([card1, card2, card3]);
+
+      const species = await service.findRandomSpecies(2);
+      expect(species).toHaveLength(2);
+      expect(species[0]).toEqual({
+        id: "c-1",
+        tcgDexId: "pika-1",
+        dexId: 25,
+        types: ["Lightning"],
+      });
+      expect(species[1]).toEqual({
+        id: "c-3",
+        tcgDexId: "char-1",
+        dexId: 6,
+        types: ["Fire", "Flying"],
+      });
     });
   });
 

@@ -8,6 +8,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Card } from "../card/entities/card.entity";
 import { PokemonCardDetails } from "../card/entities/pokemon-card-details.entity";
 import { CardGame } from "../common/enums/cardGame";
+import { PokemonCardsType } from "../common/enums/pokemonCardsType";
 import { PokemonSet } from "../pokemon-set/entities/pokemon-set.entity";
 import { Repository } from "typeorm";
 import { PaginatedResult, PaginationHelper } from "../helpers/pagination";
@@ -323,10 +324,22 @@ export class PokemonCardService {
     );
   }
 
+  /**
+   * Retrieves a random Pokémon card matching optional criteria.
+   *
+   * @param serieId Optional series identifier.
+   * @param rarity Optional rarity name.
+   * @param setId Optional set identifier.
+   * @param category Optional card category (e.g. Pokemon).
+   * @param excludeIds Optional card IDs to exclude.
+   * @returns Localized card entity or null.
+   */
   async findRandom(
     serieId?: string,
     rarity?: string,
     setId?: string,
+    category?: PokemonCardsType,
+    excludeIds?: string[],
   ): Promise<Record<string, any> | null> {
     const qb = this.pokemonCardRepository
       .createQueryBuilder("pokemonCard")
@@ -347,8 +360,63 @@ export class PokemonCardService {
       qb.andWhere("pokemonSet.id = :setId", { setId });
     }
 
+    if (category) {
+      qb.andWhere("pokemonDetails.category = :category", { category });
+    }
+
+    if (excludeIds && excludeIds.length > 0) {
+      qb.andWhere("pokemonCard.id NOT IN (:...excludeIds)", { excludeIds });
+    }
+
     const card = await qb.orderBy("RANDOM()").limit(1).getOne();
     return card ? this.toPokemonCardResponse(card) : null;
+  }
+
+  /**
+   * Retrieves a random sample of distinct Pokémon species for mini-game distractors.
+   *
+   * Each entry represents a unique Pokémon by primary National Pokédex number,
+   * filtered to Pokémon category. Names are resolved by CatalogLocalizationInterceptor
+   * using the card identifier and tcgDexId.
+   *
+   * @param count Number of distinct species to draw (capped between 1 and 100).
+   * @returns Array of species items with id, tcgDexId, dexId and types.
+   */
+  async findRandomSpecies(count = 40): Promise<Record<string, any>[]> {
+    const validCount = Math.max(1, Math.min(100, count));
+    const qb = this.pokemonCardRepository
+      .createQueryBuilder("card")
+      .innerJoinAndSelect("card.pokemonDetails", "pokemonDetails")
+      .where("card.game = :game", { game: CardGame.Pokemon })
+      .andWhere("pokemonDetails.category = :category", {
+        category: PokemonCardsType.Pokemon,
+      })
+      .andWhere("pokemonDetails.dexId IS NOT NULL")
+      .orderBy("RANDOM()")
+      .limit(validCount * 4);
+
+    const cards = await qb.getMany();
+    const seenDex = new Set<number>();
+    const species: Record<string, any>[] = [];
+
+    for (const card of cards) {
+      const primaryDexId = card.pokemonDetails?.dexId?.[0];
+      if (primaryDexId === undefined || seenDex.has(primaryDexId)) {
+        continue;
+      }
+      seenDex.add(primaryDexId);
+      species.push({
+        id: card.id,
+        tcgDexId: card.tcgDexId,
+        dexId: primaryDexId,
+        types: card.pokemonDetails?.types ?? [],
+      });
+      if (species.length >= validCount) {
+        break;
+      }
+    }
+
+    return species;
   }
 
   /**
