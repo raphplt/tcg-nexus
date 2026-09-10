@@ -4,6 +4,9 @@ import { Repository } from "typeorm";
 import { GetFaqDto } from "./dto/get-faq.dto";
 import { Faq } from "./entities/faq.entity";
 
+/**
+ * Service managing FAQ data retrieval and filtering.
+ */
 @Injectable()
 export class FaqService {
   constructor(
@@ -11,6 +14,12 @@ export class FaqService {
     private readonly faqRepository: Repository<Faq>,
   ) {}
 
+  /**
+   * Retrieves all FAQ entries matching optional category and search filters.
+   *
+   * @param filters - Optional category or search term filter.
+   * @returns List of matching FAQ records ordered by priority.
+   */
   async findAll(filters: GetFaqDto = {}): Promise<Faq[]> {
     const query = this.faqRepository
       .createQueryBuilder("faq")
