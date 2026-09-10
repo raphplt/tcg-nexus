@@ -51,7 +51,7 @@ const SORTS = {
 
 type Sort = keyof typeof SORTS;
 const selectClass =
-  "h-10 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:w-auto";
+  "h-10 min-w-0 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:w-auto";
 
 /** Provides the personal deck library with server-side discovery and management. */
 export default function MyDecksPage() {
@@ -151,13 +151,15 @@ export default function MyDecksPage() {
       <Button asChild variant="outline">
         <Link href="/decks/import">
           <Download />
-          {t("import")}
+          <span className="sm:hidden">{t("importShort")}</span>
+          <span className="hidden sm:inline">{t("import")}</span>
         </Link>
       </Button>
       <Button asChild>
         <Link href="/decks/create">
           <Plus />
-          {t("create")}
+          <span className="sm:hidden">{t("createShort")}</span>
+          <span className="hidden sm:inline">{t("create")}</span>
         </Link>
       </Button>
     </>
@@ -200,7 +202,7 @@ export default function MyDecksPage() {
             </div>
           </div>
           <div className="flex flex-col gap-3 border-t border-border/60 pt-4 text-sm sm:flex-row sm:items-center sm:justify-between">
-            <span className="inline-flex items-center gap-2 text-muted-foreground">
+            <span className="hidden items-center gap-2 text-muted-foreground sm:inline-flex">
               <Layers className="h-4 w-4 text-primary" />
               {t("libraryHint")}
             </span>
@@ -240,7 +242,7 @@ export default function MyDecksPage() {
                 </Button>
               )}
             </div>
-            <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="grid grid-cols-2 gap-3 sm:flex">
               <select
                 aria-label={t("format")}
                 className={selectClass}

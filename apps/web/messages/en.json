@@ -2977,7 +2977,9 @@
     "noResultsHelp": "Try another name or remove the format filter to find your decks.",
     "emptyTitle": "Your next strategy starts here",
     "emptyHelp": "Create your first deck or import an existing list, then refine it with deck analysis.",
-    "login": "Sign in"
+    "login": "Sign in",
+    "createShort": "Create",
+    "importShort": "Import"
   },
   "SellSealed": {
     "loginRequired": "You must be signed in to sell.",

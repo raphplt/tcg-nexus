@@ -2977,7 +2977,9 @@
     "noResultsHelp": "Essayez un autre nom ou retirez le filtre de format pour retrouver vos decks.",
     "emptyTitle": "Votre prochaine stratégie commence ici",
     "emptyHelp": "Créez votre premier deck ou importez une liste existante, puis affinez-la avec l’analyse de deck.",
-    "login": "Se connecter"
+    "login": "Se connecter",
+    "createShort": "Créer",
+    "importShort": "Importer"
   },
   "SellSealed": {
     "loginRequired": "Vous devez être connecté pour vendre.",
