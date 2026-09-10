@@ -1,13 +1,13 @@
 import { ObjectLiteral, SelectQueryBuilder } from "typeorm";
 
 /**
- * Contraint un sens de tri à `ASC`/`DESC`.
+ * Constrains a sort direction to `ASC` or `DESC`.
  *
- * TypeORM concatène le sens directement dans le SQL généré : toute valeur qui
- * atteint `orderBy` doit passer par ici.
+ * TypeORM concatenates the sort direction directly into the generated SQL:
+ * any external value that reaches `orderBy` must pass through here.
  *
- * @param sortOrder Sens brut issu de la requête.
- * @returns `ASC` ou `DESC`, `DESC` par défaut.
+ * @param sortOrder - Raw sort order string from the request.
+ * @returns Standardized `ASC` or `DESC`, defaults to `DESC`.
  */
 export function normalizeSortOrder(sortOrder?: string): "ASC" | "DESC" {
   return String(sortOrder).toUpperCase() === "ASC" ? "ASC" : "DESC";

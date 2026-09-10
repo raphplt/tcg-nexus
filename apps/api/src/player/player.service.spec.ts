@@ -1,8 +1,8 @@
 import { NotFoundException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
-import { Ranking } from "src/ranking/entities/ranking.entity";
-import { TournamentStatus } from "src/tournament/entities/tournament.entity";
+import { Ranking } from "../ranking/entities/ranking.entity";
+import { TournamentStatus } from "../tournament/entities/tournament.entity";
 import { Player } from "./entities/player.entity";
 import { PlayerService } from "./player.service";
 

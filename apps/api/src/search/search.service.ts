@@ -1,14 +1,14 @@
-import { CatalogLocalizationService } from "src/card/catalog-localization.service";
-import { applyCardSearch, cardNameMatchesSql } from "../card/card-search";
-import { DEFAULT_LOCALE } from "../translation/supported-locales";
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
+import { applyCardSearch, cardNameMatchesSql } from "../card/card-search";
+import { CatalogLocalizationService } from "../card/catalog-localization.service";
 import { Card } from "../card/entities/card.entity";
 import { CardGame } from "../common/enums/cardGame";
 import { Listing } from "../marketplace/entities/listing.entity";
 import { Player } from "../player/entities/player.entity";
 import { Tournament } from "../tournament/entities/tournament.entity";
+import { DEFAULT_LOCALE } from "../translation/supported-locales";
 import { User } from "../user/entities/user.entity";
 import {
   GlobalSearchDto,
@@ -22,6 +22,9 @@ import {
   SuggestionsPreviewResult,
 } from "./dto/suggestions.dto";
 
+/**
+ * Service orchestrating multi-entity federated search and autocomplete ranking.
+ */
 @Injectable()
 export class SearchService {
   constructor(

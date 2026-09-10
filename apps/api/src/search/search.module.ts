@@ -1,10 +1,10 @@
-import { CatalogLocalizationModule } from "src/translation/catalog-localization.module";
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { Card } from "../card/entities/card.entity";
 import { Listing } from "../marketplace/entities/listing.entity";
 import { Player } from "../player/entities/player.entity";
 import { Tournament } from "../tournament/entities/tournament.entity";
+import { CatalogLocalizationModule } from "../translation/catalog-localization.module";
 import { User } from "../user/entities/user.entity";
 import { SearchController } from "./search.controller";
 import { SearchService } from "./search.service";

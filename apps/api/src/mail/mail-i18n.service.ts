@@ -3,7 +3,7 @@ import {
   DEFAULT_LOCALE,
   isSupportedLocale,
   type SupportedLocale,
-} from "src/translation/supported-locales";
+} from "../translation/supported-locales";
 import en from "./locales/en.json";
 import fr from "./locales/fr.json";
 
@@ -13,18 +13,41 @@ const DICTIONARIES: Record<SupportedLocale, Dictionary> = { fr, en };
 
 export type MailTexts = Record<string, string>;
 
+/**
+ * Service managing email template internationalization and subject interpolation.
+ */
 @Injectable()
 export class MailI18nService {
+  /**
+   * Resolves a validated locale fallback.
+   *
+   * @param locale - Optional locale string.
+   * @returns Supported locale code.
+   */
   resolveLocale(locale?: string | null): SupportedLocale {
     return isSupportedLocale(locale) ? locale : DEFAULT_LOCALE;
   }
 
-  /** Textes d'un template, fusionnés avec les libellés communs. */
+  /**
+   * Retrieves localized template strings merged with common dictionary labels.
+   *
+   * @param template - Template identifier.
+   * @param locale - Optional target locale.
+   * @returns Dictionary of template texts.
+   */
   texts(template: string, locale?: string | null): MailTexts {
     const dictionary = DICTIONARIES[this.resolveLocale(locale)];
     return { ...dictionary.common, ...(dictionary[template] ?? {}) };
   }
 
+  /**
+   * Formats an email subject line with variable parameter interpolation.
+   *
+   * @param template - Template identifier.
+   * @param locale - Optional target locale.
+   * @param params - Interpolation parameters.
+   * @returns Interpolated subject line.
+   */
   subject(
     template: string,
     locale?: string | null,

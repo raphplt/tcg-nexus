@@ -5,13 +5,16 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Ranking } from "src/ranking/entities/ranking.entity";
-import { TournamentStatus } from "src/tournament/entities/tournament.entity";
 import { Repository } from "typeorm";
+import { Ranking } from "../ranking/entities/ranking.entity";
+import { TournamentStatus } from "../tournament/entities/tournament.entity";
 import { CreatePlayerDto } from "./dto/create-player.dto";
 import { UpdatePlayerDto } from "./dto/update-player.dto";
 import { Player } from "./entities/player.entity";
 
+/**
+ * Service managing player entity lifecycles, ELO calculations, and tournament history tracking.
+ */
 @Injectable()
 export class PlayerService {
   constructor(
@@ -21,15 +24,33 @@ export class PlayerService {
     private readonly rankingRepository: Repository<Ranking>,
   ) {}
 
+  /**
+   * Creates and persists a new player entity.
+   *
+   * @param createPlayerDto - Player creation payload.
+   * @returns Persisted player record.
+   */
   async create(createPlayerDto: CreatePlayerDto) {
     const player = this.playerRepository.create(createPlayerDto as any);
     return this.playerRepository.save(player);
   }
 
+  /**
+   * Retrieves all players with their linked user profiles.
+   *
+   * @returns List of players.
+   */
   async findAll() {
     return this.playerRepository.find({ relations: ["user"] });
   }
 
+  /**
+   * Finds a player by ID.
+   *
+   * @param id - Player unique identifier.
+   * @returns Player entity.
+   * @throws NotFoundException If player does not exist.
+   */
   async findOne(id: number) {
     const player = await this.playerRepository.findOne({
       where: { id },
@@ -39,25 +60,45 @@ export class PlayerService {
     if (!player) {
       throw new NotFoundException({
         code: "PLAYER_NOT_FOUND",
-        message: "Joueur non trouvé",
+        message: "Player not found",
       });
     }
 
     return player;
   }
 
+  /**
+   * Updates an existing player entity.
+   *
+   * @param id - Player unique identifier.
+   * @param updatePlayerDto - Fields to update.
+   * @returns Updated player record.
+   */
   async update(id: number, updatePlayerDto: UpdatePlayerDto) {
     const player = await this.findOne(id);
     Object.assign(player, updatePlayerDto);
     return this.playerRepository.save(player);
   }
 
+  /**
+   * Deletes a player entity.
+   *
+   * @param id - Player unique identifier.
+   * @returns Success confirmation.
+   */
   async remove(id: number) {
     const player = await this.findOne(id);
     await this.playerRepository.remove(player);
     return { success: true };
   }
 
+  /**
+   * Computes tournament history and ELO progression over a specified time period.
+   *
+   * @param playerId - Player unique identifier.
+   * @param period - Period filter string (e.g., '1m', '3m', '1y', 'all').
+   * @returns Aggregated statistics and historical tournament results.
+   */
   async getTournamentHistory(playerId: number, period?: string) {
     const player = await this.playerRepository.findOne({
       where: { id: playerId },
@@ -67,7 +108,7 @@ export class PlayerService {
     if (!player) {
       throw new NotFoundException({
         code: "PLAYER_NOT_FOUND",
-        message: "Joueur non trouvé",
+        message: "Player not found",
       });
     }
 
@@ -123,7 +164,7 @@ export class PlayerService {
     if (tournamentIds.length === 0) {
       throw new NotFoundException({
         code: "NO_VALID_TOURNAMENT",
-        message: "Aucun tournoi valide trouvé",
+        message: "No valid tournament found",
       });
     }
 

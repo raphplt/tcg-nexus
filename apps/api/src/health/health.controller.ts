@@ -12,7 +12,7 @@ import {
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
-import { UserRole } from "src/common/enums/user";
+import { UserRole } from "../common/enums/user";
 import { Public } from "../auth/decorators/public.decorator";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";

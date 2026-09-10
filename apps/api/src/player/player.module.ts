@@ -1,8 +1,8 @@
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { Ranking } from "src/ranking/entities/ranking.entity";
-import { Tournament } from "src/tournament/entities/tournament.entity";
-import { User } from "src/user/entities/user.entity";
+import { Ranking } from "../ranking/entities/ranking.entity";
+import { Tournament } from "../tournament/entities/tournament.entity";
+import { User } from "../user/entities/user.entity";
 import { Player } from "./entities/player.entity";
 import { PlayerController } from "./player.controller";
 import { PlayerService } from "./player.service";
