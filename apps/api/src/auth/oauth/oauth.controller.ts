@@ -24,7 +24,7 @@ import type {
   Request as ExpressRequest,
   Response,
 } from "express";
-import { User } from "src/user/entities/user.entity";
+import { User } from "../../user/entities/user.entity";
 import { AuthService } from "../auth.service";
 import { CurrentUser } from "../decorators/current-user.decorator";
 import { Public } from "../decorators/public.decorator";
@@ -63,6 +63,8 @@ export class OAuthController {
 
   /**
    * Lists all enabled OAuth identity providers.
+   *
+   * @returns List of active OAuth provider identifiers.
    */
   @Public()
   @Get("oauth/providers")
@@ -76,6 +78,11 @@ export class OAuthController {
 
   /**
    * Initiates the Web OAuth authorization code flow with PKCE.
+   *
+   * @param providerStr OAuth provider name (e.g. 'google').
+   * @param returnTo Optional redirect URI after successful sign-in.
+   * @param req Express request.
+   * @param res Express response.
    */
   @Public()
   @Get("oauth/:provider/start")
@@ -126,6 +133,13 @@ export class OAuthController {
 
   /**
    * Handles Web OAuth callback from provider.
+   *
+   * @param providerStr OAuth provider name.
+   * @param code Authorization code from identity provider.
+   * @param state CSRF mitigation state parameter.
+   * @param error Error description if user rejected authorization.
+   * @param req Express request.
+   * @param res Express response.
    */
   @Public()
   @Get("oauth/:provider/callback")
@@ -211,6 +225,10 @@ export class OAuthController {
 
   /**
    * Mobile OAuth authorization code exchange endpoint returning JSON session tokens.
+   *
+   * @param providerStr OAuth provider name.
+   * @param body Mobile OAuth exchange payload including PKCE verifier.
+   * @returns User profile and session tokens.
    */
   @Public()
   @Post("oauth/:provider/mobile/exchange")
@@ -253,6 +271,9 @@ export class OAuthController {
 
   /**
    * Retrieves linked OAuth identities for authenticated user.
+   *
+   * @param user Authenticated user.
+   * @returns Array of linked identity records.
    */
   @Get("identities")
   @ApiBearerAuth()
@@ -265,6 +286,10 @@ export class OAuthController {
 
   /**
    * Unlinks an OAuth identity provider from the current user account.
+   *
+   * @param user Authenticated user.
+   * @param providerStr Provider name to unlink.
+   * @returns Success status and confirmation message.
    */
   @Delete("oauth/:provider/link")
   @ApiBearerAuth()

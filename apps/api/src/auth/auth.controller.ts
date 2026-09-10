@@ -10,9 +10,8 @@ import {
   SerializeOptions,
   UnauthorizedException,
   UseGuards,
-  UseGuards as UseGuardsDecorator,
 } from "@nestjs/common";
-import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { Throttle, ThrottlerGuard } from "@nestjs/throttler";
 import type { CookieOptions } from "express";
 import { Request as ExpressRequest, Response } from "express";
@@ -115,11 +114,12 @@ export class AuthController {
    * @param req Express request.
    */
   @UseGuards(LocalAuthGuard)
-  @UseGuardsDecorator(ThrottlerGuard)
+  @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post("login")
   @Public()
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Authenticate user and set session cookies" })
   async login(
     @Body() loginDto: LoginDto,
     @Res() res: Response,
@@ -150,13 +150,20 @@ export class AuthController {
 
   /**
    * Dedicated Web login endpoint: sets HttpOnly cookies and returns user profile without JWT tokens in JSON.
+   *
+   * @param loginDto User credentials.
+   * @param res Express response.
+   * @param req Express request.
    */
   @UseGuards(LocalAuthGuard)
-  @UseGuardsDecorator(ThrottlerGuard)
+  @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post("web/login")
   @Public()
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: "Dedicated web login returning HttpOnly session cookies",
+  })
   async webLogin(
     @Body() loginDto: LoginDto,
     @Res() res: Response,
@@ -186,13 +193,20 @@ export class AuthController {
 
   /**
    * Dedicated Mobile login endpoint: returns JSON JWT tokens for SecureStore.
+   *
+   * @param loginDto User credentials.
+   * @param req Express request.
+   * @returns User profile and JWT token pair.
    */
   @UseGuards(LocalAuthGuard)
-  @UseGuardsDecorator(ThrottlerGuard)
+  @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post("mobile/login")
   @Public()
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: "Dedicated mobile login returning JWT tokens in payload",
+  })
   async mobileLogin(
     @Body() loginDto: LoginDto,
     @Request() req: ExpressRequest & { user: User },
@@ -211,11 +225,12 @@ export class AuthController {
    * @param res Express response.
    * @param req Express request.
    */
-  @UseGuardsDecorator(ThrottlerGuard)
+  @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 3, ttl: 300_000 } })
   @Post("register")
   @Public()
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: "Register new user and set session cookies" })
   async register(
     @Body() registerDto: RegisterDto,
     @Res() res: Response,
@@ -246,12 +261,19 @@ export class AuthController {
 
   /**
    * Dedicated Web register endpoint: sets HttpOnly cookies and returns user profile without JWT tokens in JSON.
+   *
+   * @param registerDto User registration data.
+   * @param res Express response.
+   * @param req Express request.
    */
-  @UseGuardsDecorator(ThrottlerGuard)
+  @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 3, ttl: 300_000 } })
   @Post("web/register")
   @Public()
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: "Dedicated web register returning HttpOnly session cookies",
+  })
   async webRegister(
     @Body() registerDto: RegisterDto,
     @Res() res: Response,
@@ -281,12 +303,18 @@ export class AuthController {
 
   /**
    * Dedicated Mobile register endpoint: returns JSON JWT tokens for SecureStore.
+   *
+   * @param registerDto User registration data.
+   * @returns User profile and JWT token pair.
    */
-  @UseGuardsDecorator(ThrottlerGuard)
+  @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 3, ttl: 300_000 } })
   @Post("mobile/register")
   @Public()
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: "Dedicated mobile register returning JWT tokens in payload",
+  })
   async mobileRegister(@Body() registerDto: RegisterDto) {
     const result = await this.authService.register(registerDto);
     return {
@@ -303,12 +331,15 @@ export class AuthController {
    * @param req Express request.
    */
   @UseGuards(JwtRefreshGuard)
-  @UseGuardsDecorator(ThrottlerGuard)
+  @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 10, ttl: 300_000 } })
   @ApiBearerAuth()
   @Post("refresh")
   @Public()
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: "Refresh JWT token pair using cookie or bearer token",
+  })
   async refreshTokens(
     @CurrentUser() user: User,
     @Res() res: Response,
@@ -345,14 +376,21 @@ export class AuthController {
 
   /**
    * Dedicated Web refresh endpoint: sets updated HttpOnly cookies and returns success without raw tokens.
+   *
+   * @param user Authenticated user from refresh guard.
+   * @param res Express response.
+   * @param req Express request.
    */
   @UseGuards(JwtRefreshGuard)
-  @UseGuardsDecorator(ThrottlerGuard)
+  @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 10, ttl: 300_000 } })
   @ApiBearerAuth()
   @Post("web/refresh")
   @Public()
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: "Dedicated web refresh updating HttpOnly session cookies",
+  })
   async webRefreshTokens(
     @CurrentUser() user: User,
     @Res() res: Response,
@@ -388,14 +426,20 @@ export class AuthController {
 
   /**
    * Dedicated Mobile refresh endpoint: returns updated JWT tokens in JSON.
+   *
+   * @param user Authenticated user from refresh guard.
+   * @returns Updated JWT token pair.
    */
   @UseGuards(JwtRefreshGuard)
-  @UseGuardsDecorator(ThrottlerGuard)
+  @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 10, ttl: 300_000 } })
   @ApiBearerAuth()
   @Post("mobile/refresh")
   @Public()
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: "Dedicated mobile refresh returning updated JWT tokens",
+  })
   async mobileRefreshTokens(@CurrentUser() user: User) {
     if (!user.refreshToken) {
       throw new UnauthorizedException("No refresh token provided");
@@ -421,6 +465,9 @@ export class AuthController {
   @ApiBearerAuth()
   @Post("logout")
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: "Log out current user and invalidate cookies",
+  })
   async logout(
     @CurrentUser() user: User,
     @Res() res: Response,
@@ -437,11 +484,18 @@ export class AuthController {
 
   /**
    * Dedicated Web logout endpoint.
+   *
+   * @param user Current authenticated user.
+   * @param res Express response.
+   * @param req Express request.
    */
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Post("web/logout")
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: "Dedicated web logout clearing HttpOnly cookies",
+  })
   async webLogout(
     @CurrentUser() user: User,
     @Res() res: Response,
@@ -452,11 +506,17 @@ export class AuthController {
 
   /**
    * Dedicated Mobile logout endpoint.
+   *
+   * @param user Current authenticated user.
+   * @returns Status confirmation message.
    */
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Post("mobile/logout")
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: "Dedicated mobile logout invalidating refresh token",
+  })
   async mobileLogout(@CurrentUser() user: User) {
     await this.authService.logout(user.id);
     return { message: "Logged out successfully" };
@@ -473,6 +533,7 @@ export class AuthController {
   @Post("profile")
   @HttpCode(HttpStatus.OK)
   @SerializeOptions({ groups: [SELF_SERIALIZATION_GROUP] })
+  @ApiOperation({ summary: "Get current user profile (POST)" })
   getProfilePost(@CurrentUser() user: User) {
     return this.userService.findOne(user.id);
   }
@@ -487,6 +548,7 @@ export class AuthController {
   @ApiBearerAuth()
   @Get("profile")
   @SerializeOptions({ groups: [SELF_SERIALIZATION_GROUP] })
+  @ApiOperation({ summary: "Get current user profile (GET)" })
   getProfile(@CurrentUser() user: User) {
     return this.userService.findOne(user.id);
   }
