@@ -32,6 +32,10 @@ function deduplicateSpecies(cards: PokemonCardType[]): PokemonCardType[] {
   const unique: PokemonCardType[] = [];
 
   for (const card of cards) {
+    if (!card.name || (!card.dexId?.length && !card.image)) {
+      continue;
+    }
+
     const dexId = card.dexId?.[0];
     const normalized = normalizeSpeciesName(card.name);
 

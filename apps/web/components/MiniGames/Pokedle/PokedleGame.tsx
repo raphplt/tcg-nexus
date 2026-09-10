@@ -126,15 +126,30 @@ export function PokedleGame() {
     setGameState("playing");
 
     try {
-      let card = await pokemonCardService.getRandom(undefined, undefined, undefined, {
-        category: "Pokemon",
-      });
+      let card = await pokemonCardService.getRandom(
+        undefined,
+        undefined,
+        undefined,
+        {
+          category: "Pokemon",
+          hasImage: true,
+        },
+      );
 
       let attempts = 0;
-      while (attempts < 5 && (!card || !card.dexId || card.dexId.length === 0)) {
-        card = await pokemonCardService.getRandom(undefined, undefined, undefined, {
-          category: "Pokemon",
-        });
+      while (
+        attempts < 5 &&
+        (!card || !card.dexId || card.dexId.length === 0 || !card.image)
+      ) {
+        card = await pokemonCardService.getRandom(
+          undefined,
+          undefined,
+          undefined,
+          {
+            category: "Pokemon",
+            hasImage: true,
+          },
+        );
         attempts++;
       }
 
@@ -307,7 +322,7 @@ export function PokedleGame() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start mt-5">
           {/* Left Column: Mystery Card */}
           <div className="lg:col-span-4 w-full">
             <PokedleCard

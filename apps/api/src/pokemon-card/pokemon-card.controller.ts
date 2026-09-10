@@ -141,12 +141,14 @@ export class PokemonCardController {
   @ApiQuery({ name: "set", required: false, type: String })
   @ApiQuery({ name: "category", required: false, enum: PokemonCardsType })
   @ApiQuery({ name: "excludeIds", required: false, type: String })
+  @ApiQuery({ name: "hasImage", required: false, type: Boolean })
   findRandom(
     @Query("serieId") serieId?: string,
     @Query("rarity") rarity?: string,
     @Query("set") set?: string,
     @Query("category") category?: PokemonCardsType,
     @Query("excludeIds") excludeIds?: string,
+    @Query("hasImage") hasImage?: string,
   ) {
     const parsedExclude = excludeIds
       ? excludeIds
@@ -154,12 +156,14 @@ export class PokemonCardController {
           .map((id) => id.trim())
           .filter(Boolean)
       : undefined;
+    const parsedHasImage = hasImage === "true" || hasImage === "1";
     return this.pokemonCardService.findRandom(
       serieId,
       rarity,
       set,
       category,
       parsedExclude,
+      parsedHasImage,
     );
   }
 

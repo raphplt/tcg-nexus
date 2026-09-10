@@ -34,7 +34,10 @@ export function PokedleCard({
   const safeBlur = isRevealed ? 0 : Math.max(14, 28 - guessCount * 2.5);
   const dexId = card?.dexId?.[0];
   const officialArtwork = getOfficialArtworkUrl(dexId);
-  const cardImage = card ? getCardImage(card) : "/images/carte-pokemon-dos.jpg";
+  const rawCardImage = card ? getCardImage(card) : "";
+  const hasCardImage =
+    Boolean(rawCardImage) && !rawCardImage.includes("carte-pokemon-dos");
+  const cardImage = hasCardImage ? rawCardImage : officialArtwork;
 
   return (
     <div className="flex flex-col items-center gap-3 w-full max-w-64 mx-auto">

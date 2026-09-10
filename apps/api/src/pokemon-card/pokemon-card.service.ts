@@ -354,6 +354,7 @@ export class PokemonCardService {
     setId?: string,
     category?: PokemonCardsType,
     excludeIds?: string[],
+    hasImage = false,
   ): Promise<Record<string, any> | null> {
     const qb = this.pokemonCardRepository
       .createQueryBuilder("pokemonCard")
@@ -382,6 +383,15 @@ export class PokemonCardService {
       qb.andWhere("pokemonCard.id NOT IN (:...excludeIds)", { excludeIds });
     }
 
+    if (hasImage) {
+      qb.andWhere(`EXISTS (
+        SELECT 1 FROM card_translation ct
+        WHERE ct.card_id = "pokemonCard"."id"
+          AND ct.image IS NOT NULL
+          AND ct.image != ''
+      )`);
+    }
+
     const card = await qb.orderBy("RANDOM()").limit(1).getOne();
     return card ? this.toPokemonCardResponse(card) : null;
   }
@@ -406,6 +416,12 @@ export class PokemonCardService {
         category: PokemonCardsType.Pokemon,
       })
       .andWhere("pokemonDetails.dexId IS NOT NULL")
+      .andWhere(`EXISTS (
+        SELECT 1 FROM card_translation ct
+        WHERE ct.card_id = "card"."id"
+          AND ct.image IS NOT NULL
+          AND ct.image != ''
+      )`)
       .orderBy("RANDOM()")
       .limit(validCount * 4);
 
@@ -457,7 +473,13 @@ export class PokemonCardService {
       .andWhere("pokemonDetails.category = :category", {
         category: PokemonCardsType.Pokemon,
       })
-      .andWhere("pokemonDetails.dexId IS NOT NULL");
+      .andWhere("pokemonDetails.dexId IS NOT NULL")
+      .andWhere(`EXISTS (
+        SELECT 1 FROM card_translation ct
+        WHERE ct.card_id = "card"."id"
+          AND ct.image IS NOT NULL
+          AND ct.image != ''
+      )`);
 
     const total = await qb.getCount();
     if (total === 0) {

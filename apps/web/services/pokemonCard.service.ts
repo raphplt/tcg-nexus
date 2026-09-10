@@ -72,6 +72,7 @@ export const pokemonCardService = {
     options: {
       category?: string;
       excludeIds?: string[];
+      hasImage?: boolean;
     } = {},
   ): Promise<PokemonCardType | null> {
     const params: Record<string, string> = {};
@@ -81,6 +82,9 @@ export const pokemonCardService = {
     if (options.category) params.category = options.category;
     if (options.excludeIds && options.excludeIds.length > 0) {
       params.excludeIds = options.excludeIds.join(",");
+    }
+    if (options.hasImage !== undefined) {
+      params.hasImage = options.hasImage.toString();
     }
 
     const response = await api.get<PokemonCardType | null>(
