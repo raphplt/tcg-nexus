@@ -11,7 +11,7 @@ coverage
 dist
 build
 out
-.next
+**/.next
 
 *.log
 npm-debug.log*

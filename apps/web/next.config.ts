@@ -1,10 +1,18 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 import { remotePatterns } from "./utils/images";
 
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
+const repositoryRoot = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "../..",
+);
 
 const nextConfig: NextConfig = {
+  output: "standalone",
+  outputFileTracingRoot: repositoryRoot,
   images: {
     remotePatterns: remotePatterns,
     formats: ["image/avif", "image/webp"],
