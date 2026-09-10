@@ -9,16 +9,16 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
-import { CurrentUser } from "src/auth/decorators/current-user.decorator";
-import { JwtAuthGuard } from "src/auth/guards/jwt-auth.guard";
-import { User } from "src/user/entities/user.entity";
+import { CurrentUser } from "../auth/decorators/current-user.decorator";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { User } from "../user/entities/user.entity";
 import { CreateRefundDto } from "./dto/create-refund.dto";
 import { CreateReturnDto } from "./dto/create-return.dto";
 import { UpdateDispositionDto } from "./dto/update-disposition.dto";
 import { RefundService } from "./refund.service";
 
 /**
- * Controller exposing endpoints for order refunds, returns and inventory dispositions.
+ * Controller exposing endpoints for order refunds, physical returns, and inventory dispositions.
  */
 @ApiTags("refunds")
 @Controller("marketplace")
@@ -29,6 +29,10 @@ export class RefundController {
 
   /**
    * Retrieves remaining refundable balance for an order.
+   *
+   * @param id - Order unique identifier.
+   * @param user - Current authenticated user.
+   * @returns Remaining authorized refundable amount.
    */
   @Get("orders/:id/refunds/remaining")
   @ApiOperation({ summary: "Calculates remaining refundable balance on order" })
@@ -41,6 +45,10 @@ export class RefundController {
 
   /**
    * Lists all refund operations recorded for an order.
+   *
+   * @param id - Order unique identifier.
+   * @param user - Current authenticated user.
+   * @returns Array of refund operations.
    */
   @Get("orders/:id/refunds")
   @ApiOperation({ summary: "Lists refund operations for an order" })
@@ -53,6 +61,11 @@ export class RefundController {
 
   /**
    * Creates a partial or full refund on an order.
+   *
+   * @param id - Order unique identifier.
+   * @param dto - Refund payload specifying lines and amount.
+   * @param user - Current authenticated user.
+   * @returns Newly created refund record.
    */
   @Post("orders/:id/refund")
   @ApiOperation({ summary: "Creates a partial or full refund for an order" })
@@ -65,7 +78,11 @@ export class RefundController {
   }
 
   /**
-   * Lists returns for an order.
+   * Lists physical returns requested for an order.
+   *
+   * @param id - Order unique identifier.
+   * @param user - Current authenticated user.
+   * @returns Array of return requests.
    */
   @Get("orders/:id/returns")
   @ApiOperation({ summary: "Lists physical returns requested for an order" })
@@ -77,7 +94,12 @@ export class RefundController {
   }
 
   /**
-   * Submits a return request on an order item.
+   * Submits a physical return request on an order item.
+   *
+   * @param itemId - Order item line unique identifier.
+   * @param dto - Return request payload.
+   * @param user - Current authenticated user.
+   * @returns Newly created return request.
    */
   @Post("orders/:orderId/items/:itemId/returns")
   @ApiOperation({ summary: "Creates a return request for an order item" })
@@ -90,7 +112,12 @@ export class RefundController {
   }
 
   /**
-   * Sets inspected inventory disposition for a returned item.
+   * Sets inspected inventory disposition (restock, discard, damaged) for a returned item.
+   *
+   * @param returnId - Return identifier.
+   * @param dto - Disposition payload.
+   * @param user - Current authenticated user.
+   * @returns Updated return record.
    */
   @Patch("returns/:returnId/disposition")
   @ApiOperation({

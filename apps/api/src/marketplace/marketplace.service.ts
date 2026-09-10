@@ -1011,8 +1011,8 @@ export class MarketplaceService {
   }
 
   /**
-   * Record price history when listing is created/updated.
-   * Supporte les listings card ET sealed (l'un des deux est renseigné).
+   * Records price history when a listing is created or updated.
+   * Supports both card and sealed product listings (mutually exclusive).
    */
   async recordPriceHistory(listing: Listing): Promise<void> {
     if (!listing.pokemonCard && !listing.sealedProduct) return;

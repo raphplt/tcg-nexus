@@ -104,7 +104,7 @@ describe("MarketplaceController", () => {
 
   it("should get listing by id", async () => {
     mockMarketplaceService.findOne.mockResolvedValue({ id: 3 });
-    await expect(controller.getListingById("3")).resolves.toEqual({ id: 3 });
+    await expect(controller.getListingById(3)).resolves.toEqual({ id: 3 });
   });
 
   describe("updateListing", () => {
@@ -113,7 +113,7 @@ describe("MarketplaceController", () => {
       const user = { id: 1 } as User;
       mockMarketplaceService.update.mockResolvedValue({ id: 1, ...dto });
 
-      const result = await controller.updateListing("1", dto, user);
+      const result = await controller.updateListing(1, dto, user);
 
       expect(result).toEqual({ id: 1, ...dto });
       expect(service.update).toHaveBeenCalledWith(1, dto, user);
@@ -125,7 +125,7 @@ describe("MarketplaceController", () => {
       const user = { id: 1 } as User;
       mockMarketplaceService.delete.mockResolvedValue(undefined);
 
-      await controller.deleteListing("1", user);
+      await controller.deleteListing(1, user);
 
       expect(service.delete).toHaveBeenCalledWith(1, user);
     });

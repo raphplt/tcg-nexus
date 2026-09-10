@@ -22,7 +22,7 @@ export class PriceHistory {
   id: number;
 
   /**
-   * Soit `pokemonCard`, soit `sealedProduct` est renseigné (jamais les deux).
+   * Either `pokemonCard` or `sealedProduct` is populated (mutually exclusive).
    */
   @ManyToOne(() => Card, { nullable: true, onDelete: "CASCADE" })
   @JoinColumn({ name: "card_id" })

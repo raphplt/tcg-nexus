@@ -11,12 +11,12 @@ import {
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { ThrottlerGuard } from "@nestjs/throttler";
-import { CurrentUser } from "src/auth/decorators/current-user.decorator";
-import { UserRole } from "src/common/enums/user";
-import { User } from "src/user/entities/user.entity";
+import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
+import { UserRole } from "../common/enums/user";
+import { User } from "../user/entities/user.entity";
 import { AdminOrderQueryDto } from "./dto/admin-order-query.dto";
 import { CreateClaimDto } from "./dto/create-claim.dto";
 import { SellerSalesQueryDto } from "./dto/seller-sales-query.dto";
@@ -25,6 +25,9 @@ import { UpdateFulfillmentDto } from "./dto/update-fulfillment.dto";
 import { UpdateOrderStatusDto } from "./dto/update-order-status.dto";
 import { OrderService } from "./order.service";
 
+/**
+ * Controller managing marketplace orders, checkout workflows, fulfillment, and claims.
+ */
 @ApiTags("orders")
 @Controller("marketplace")
 @UseGuards(ThrottlerGuard)
@@ -33,6 +36,10 @@ export class OrderController {
 
   /**
    * Initiates checkout by reserving stock and creating a Stripe PaymentIntent.
+   *
+   * @param dto - Checkout initiation payload with listings and quantities.
+   * @param user - Authenticated buyer.
+   * @returns Checkout session details and payment client secret.
    */
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -47,6 +54,9 @@ export class OrderController {
 
   /**
    * Retrieves active pending checkout session for the authenticated buyer.
+   *
+   * @param user - Authenticated buyer.
+   * @returns Active checkout session with reserved items and expiration countdown.
    */
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -61,6 +71,10 @@ export class OrderController {
 
   /**
    * Confirms order completion using Stripe payment intent status verification.
+   *
+   * @param id - Order unique identifier.
+   * @param user - Authenticated buyer.
+   * @returns Confirmed order details.
    */
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -78,6 +92,10 @@ export class OrderController {
 
   /**
    * Cancels a pending order and releases reserved stock immediately.
+   *
+   * @param id - Order unique identifier.
+   * @param user - Authenticated buyer.
+   * @returns Cancellation confirmation.
    */
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -95,6 +113,11 @@ export class OrderController {
 
   /**
    * Confirms delivery of an order item by the buyer (MKT-05).
+   *
+   * @param orderId - Order unique identifier.
+   * @param itemId - Order item line identifier.
+   * @param user - Authenticated buyer.
+   * @returns Updated order item entity.
    */
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -112,6 +135,12 @@ export class OrderController {
 
   /**
    * Opens an item-specific claim or dispute (MKT-04).
+   *
+   * @param orderId - Order unique identifier.
+   * @param itemId - Order item line identifier.
+   * @param dto - Claim payload detailing dispute reason.
+   * @param user - Authenticated buyer.
+   * @returns Created claim resolution record.
    */
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -130,16 +159,24 @@ export class OrderController {
 
   /**
    * Retrieves all orders placed by the current user.
+   *
+   * @param user - Authenticated buyer.
+   * @returns Array of orders placed by the user.
    */
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Get("orders")
+  @ApiOperation({ summary: "List all orders placed by authenticated user" })
   getMyOrders(@CurrentUser() user: User) {
     return this.orderService.findOrdersByBuyerId(user.id);
   }
 
   /**
    * Retrieves pending sales and fulfillment tasks for the authenticated seller.
+   *
+   * @param query - Sales filter query.
+   * @param user - Authenticated seller.
+   * @returns Sold items requiring packaging and shipping.
    */
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -154,16 +191,25 @@ export class OrderController {
 
   /**
    * Retrieves revenue metrics for the authenticated seller.
+   *
+   * @param user - Authenticated seller.
+   * @returns Revenue breakdown and pending payout calculations.
    */
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Get("sales/revenue")
+  @ApiOperation({ summary: "Get seller sales and revenue summary" })
   getMyRevenue(@CurrentUser() user: User) {
     return this.orderService.getSellerRevenue(user.id);
   }
 
   /**
    * Updates fulfillment status and tracking info for an order item.
+   *
+   * @param id - Order item line identifier.
+   * @param dto - Fulfillment update payload (tracking number, carrier).
+   * @param user - Authenticated seller.
+   * @returns Updated order item line.
    */
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -182,10 +228,15 @@ export class OrderController {
 
   /**
    * Retrieves details of a specific order owned by the user.
+   *
+   * @param id - Order unique identifier.
+   * @param user - Authenticated buyer.
+   * @returns Order entity with item lines.
    */
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Get("orders/:id")
+  @ApiOperation({ summary: "Get order details by ID for authenticated buyer" })
   getOrderById(
     @Param("id", ParseIntPipe) id: number,
     @CurrentUser() user: User,
@@ -195,33 +246,48 @@ export class OrderController {
 
   /**
    * Administrative search for platform orders across buyers and sellers.
+   *
+   * @param query - Administrative order filter parameters.
+   * @returns Paginated platform orders.
    */
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiBearerAuth()
   @Roles(UserRole.ADMIN, UserRole.MODERATOR)
   @Get("admin/orders")
+  @ApiOperation({
+    summary: "List platform orders across all users (Admin only)",
+  })
   getAllOrders(@Query() query: AdminOrderQueryDto) {
     return this.orderService.findAllOrders(query);
   }
 
   /**
    * Administrative retrieval of any order details.
+   *
+   * @param id - Order unique identifier.
+   * @returns Complete order entity.
    */
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiBearerAuth()
   @Roles(UserRole.ADMIN, UserRole.MODERATOR)
   @Get("admin/orders/:id")
+  @ApiOperation({ summary: "Get complete order details as administrator" })
   getOrderAsAdmin(@Param("id", ParseIntPipe) id: number) {
     return this.orderService.findOrderByIdAsAdmin(id);
   }
 
   /**
    * Administrative order status override.
+   *
+   * @param id - Order unique identifier.
+   * @param dto - Status update payload.
+   * @returns Updated order entity.
    */
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiBearerAuth()
   @Roles(UserRole.ADMIN, UserRole.MODERATOR)
   @Patch("admin/orders/:id/status")
+  @ApiOperation({ summary: "Override order status as administrator" })
   updateOrderStatus(
     @Param("id", ParseIntPipe) id: number,
     @Body() dto: UpdateOrderStatusDto,
