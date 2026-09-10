@@ -170,7 +170,17 @@ export class PokemonCardService {
     return this.toPokemonCardResponse(card);
   }
 
-  async findBySearch(search: string): Promise<Record<string, any>[]> {
+  /**
+   * Searches Pokémon cards by matching names or keywords.
+   *
+   * @param search - Search query term.
+   * @param limit - Optional upper bound on results returned.
+   * @returns Array of serialized card responses.
+   */
+  async findBySearch(
+    search: string,
+    limit?: number,
+  ): Promise<Record<string, any>[]> {
     const qb = this.pokemonCardRepository
       .createQueryBuilder("card")
       .leftJoinAndSelect("card.set", "set")
@@ -182,6 +192,10 @@ export class PokemonCardService {
     }
 
     applyCardSearch(qb, search);
+
+    if (limit !== undefined && limit > 0) {
+      qb.limit(Math.min(limit, 100));
+    }
 
     const cards = await qb.getMany();
     return cards.map((card) => this.toPokemonCardResponse(card));
@@ -417,6 +431,47 @@ export class PokemonCardService {
     }
 
     return species;
+  }
+
+  /**
+   * Retrieves the deterministic daily Pokémon species card for Pokedle.
+   *
+   * @param dateStr - Target date string (YYYY-MM-DD). Defaults to current UTC date.
+   * @returns Serialized card response or null if unavailable.
+   */
+  async getDailySpecies(dateStr?: string): Promise<Record<string, any> | null> {
+    const targetDate = dateStr || new Date().toISOString().split("T")[0];
+
+    let hash = 0;
+    for (let i = 0; i < targetDate.length; i++) {
+      hash = (hash << 5) - hash + targetDate.charCodeAt(i);
+      hash |= 0;
+    }
+    const seed = Math.abs(hash);
+
+    const qb = this.pokemonCardRepository
+      .createQueryBuilder("card")
+      .innerJoinAndSelect("card.pokemonDetails", "pokemonDetails")
+      .leftJoinAndSelect("card.set", "set")
+      .where("card.game = :game", { game: CardGame.Pokemon })
+      .andWhere("pokemonDetails.category = :category", {
+        category: PokemonCardsType.Pokemon,
+      })
+      .andWhere("pokemonDetails.dexId IS NOT NULL");
+
+    const total = await qb.getCount();
+    if (total === 0) {
+      return null;
+    }
+
+    const offset = seed % total;
+    const card = await qb
+      .orderBy("card.id", "ASC")
+      .skip(offset)
+      .take(1)
+      .getOne();
+
+    return card ? this.toPokemonCardResponse(card) : null;
   }
 
   /**

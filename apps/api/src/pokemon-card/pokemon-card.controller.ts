@@ -107,14 +107,20 @@ export class PokemonCardController {
    * Searches Pokémon cards by name or keywords.
    *
    * @param search Search keyword.
+   * @param limit Optional maximum number of cards to return.
    * @returns Matching cards.
    */
   @Public()
   @Get("search/:search")
   @ApiOperation({ summary: "Search Pokémon cards by text" })
   @ApiParam({ name: "search", description: "Search query text" })
-  findBySearch(@Param("search") search: string) {
-    return this.pokemonCardService.findBySearch(search);
+  @ApiQuery({ name: "limit", required: false, type: Number })
+  findBySearch(
+    @Param("search") search: string,
+    @Query("limit") limit?: string,
+  ) {
+    const parsedLimit = limit ? Number.parseInt(limit, 10) : undefined;
+    return this.pokemonCardService.findBySearch(search, parsedLimit);
   }
 
   /**
@@ -155,6 +161,27 @@ export class PokemonCardController {
       category,
       parsedExclude,
     );
+  }
+
+  /**
+   * Retrieves the deterministic daily Pokémon species card for Pokedle.
+   *
+   * @param date Optional target date formatted as YYYY-MM-DD.
+   * @returns Daily Pokémon card response.
+   */
+  @Get("species/daily")
+  @Public()
+  @ApiOperation({
+    summary: "Retrieve deterministic daily Pokémon card for Pokedle",
+  })
+  @ApiQuery({
+    name: "date",
+    required: false,
+    type: String,
+    description: "YYYY-MM-DD",
+  })
+  getDailySpecies(@Query("date") date?: string) {
+    return this.pokemonCardService.getDailySpecies(date);
   }
 
   /**
