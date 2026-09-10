@@ -13,29 +13,35 @@ import {
 } from "class-validator";
 import { DeckCardRole } from "../../common/enums/deckCardRole";
 
-class ImportDeckCardDto {
-  @ApiProperty({ example: "swsh4-185" })
+/**
+ * Card entry payload for JSON deck import.
+ */
+export class ImportDeckCardDto {
+  @ApiProperty({ example: "swsh4-185", description: "Card catalog identifier" })
   @IsString()
   @IsNotEmpty()
   tcgDexId: string;
 
-  @ApiProperty({ example: "Dame du Centre Pokémon", required: false })
+  @ApiProperty({ example: "Pokémon Center Lady", required: false, description: "Card name hint" })
   @IsString()
   @IsOptional()
   name?: string;
 
-  @ApiProperty({ example: 2 })
+  @ApiProperty({ example: 2, description: "Quantity of this card" })
   @IsInt()
   @Min(1)
   qty: number;
 
-  @ApiProperty({ enum: DeckCardRole, example: DeckCardRole.main })
+  @ApiProperty({ enum: DeckCardRole, example: DeckCardRole.main, description: "Card role in deck" })
   @IsEnum(DeckCardRole)
   role: DeckCardRole;
 }
 
+/**
+ * Payload for importing a complete deck from exported JSON.
+ */
 export class ImportDeckJsonDto {
-  @ApiProperty({ example: "Mon deck compétitif" })
+  @ApiProperty({ example: "Competitive Lugia VSTAR", description: "Deck display name" })
   @IsString()
   @IsNotEmpty()
   name: string;
