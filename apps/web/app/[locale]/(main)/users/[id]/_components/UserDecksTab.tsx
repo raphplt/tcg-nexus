@@ -3,7 +3,8 @@
 import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { Layers } from "lucide-react";
-import Image from "next/image";
+import { SmartImage } from "@/components/ui/SmartImage";
+import { getCardImage } from "@/utils/images";
 import { Link } from "@/i18n/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -69,10 +70,10 @@ function PublicDeckCard({ deck }: { deck: Deck }) {
                   }}
                 >
                   {deckCard.card?.image ? (
-                    <Image
-                      src={`${deckCard.card.image}/high.webp`}
+                    <SmartImage
+                      src={getCardImage(deckCard.card, "low")}
+                      fallbackSrc="/images/carte-pokemon-dos.jpg"
                       alt={deckCard.card.name || t("cardAlt")}
-                      fill
                       className="object-contain drop-shadow-lg"
                     />
                   ) : (

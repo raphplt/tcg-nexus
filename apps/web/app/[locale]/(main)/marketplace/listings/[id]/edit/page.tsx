@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { ArrowLeft, Loader2 } from "lucide-react";
-import Image from "next/image";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -158,7 +158,7 @@ export default function EditListingPage() {
     : (listing.pokemonCard?.name ?? "Carte");
   const productImage = isSealed
     ? getSealedImageUrl(listing.sealedProduct) || SEALED_PLACEHOLDER
-    : getCardImage(listing.pokemonCard);
+    : getCardImage(listing.pokemonCard, "low");
 
   return (
     <div className="container mx-auto max-w-2xl py-10 space-y-6">
@@ -177,10 +177,10 @@ export default function EditListingPage() {
         <CardContent className="space-y-6">
           <div className="flex items-center gap-4">
             <div className="relative w-16 h-24 shrink-0">
-              <Image
+              <SmartImage
                 src={productImage}
+                fallbackSrc={SEALED_PLACEHOLDER}
                 alt={productName}
-                fill
                 className="object-contain rounded"
               />
             </div>

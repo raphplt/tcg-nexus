@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { AlertCircle, Clock, Loader2, XCircle } from "lucide-react";
-import Image from "next/image";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { useRouter } from "@/i18n/navigation";
 import { useEffect, useRef, useState } from "react";
 import { getConditionLabel } from "@/app/[locale]/(main)/marketplace/utils";
@@ -253,15 +253,15 @@ export default function CheckoutPage() {
                   ? pendingSession.items.map((item) => (
                       <div key={item.id} className="flex gap-4">
                         <div className="relative w-16 h-24 shrink-0">
-                          <Image
+                          <SmartImage
                             src={
                               item.productImage ||
                               (item.productKind === "sealed"
                                 ? SEALED_PLACEHOLDER
-                                : "/images/card-placeholder.png")
+                                : "/images/carte-pokemon-dos.jpg")
                             }
+                            fallbackSrc={SEALED_PLACEHOLDER}
                             alt={item.productName || "Produit"}
-                            fill
                             className="object-contain rounded"
                           />
                         </div>
@@ -293,7 +293,7 @@ export default function CheckoutPage() {
                       const imageUrl = isSealed
                         ? getSealedImageUrl(item.listing.sealedProduct) ||
                           SEALED_PLACEHOLDER
-                        : getCardImage(item.listing.pokemonCard);
+                        : getCardImage(item.listing.pokemonCard, "low");
                       const productName = isSealed
                         ? item.listing.sealedProduct?.name || t("sealedProduct")
                         : item.listing.pokemonCard?.name;
@@ -305,10 +305,10 @@ export default function CheckoutPage() {
                       return (
                         <div key={item.id} className="flex gap-4">
                           <div className="relative w-16 h-24 shrink-0">
-                            <Image
+                            <SmartImage
                               src={imageUrl}
+                              fallbackSrc={SEALED_PLACEHOLDER}
                               alt={productName || "Produit"}
-                              fill
                               className="object-contain rounded"
                             />
                           </div>

@@ -11,7 +11,8 @@ import {
   Sparkles,
   Trash2,
 } from "lucide-react";
-import Image from "next/image";
+import { SmartImage } from "@/components/ui/SmartImage";
+import { getCardImage } from "@/utils/images";
 import { useFormatter, useTranslations } from "next-intl";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -36,17 +37,12 @@ interface MyDeckCardProps {
 }
 
 function CardArtwork({ image, name }: { image: string; name: string }) {
-  const [failed, setFailed] = useState(false);
-  return failed ? (
-    <Layers className="h-10 w-10 text-muted-foreground/40" aria-hidden="true" />
-  ) : (
-    <Image
-      src={`${image}/high.webp`}
+  return (
+    <SmartImage
+      src={getCardImage({ image }, "low")}
+      fallbackSrc="/images/carte-pokemon-dos.jpg"
       alt={name}
-      fill
-      sizes="120px"
       className="object-contain drop-shadow-lg"
-      onError={() => setFailed(true)}
     />
   );
 }

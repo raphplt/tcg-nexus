@@ -9,7 +9,7 @@ import {
   X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import Image from "next/image";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -256,7 +256,7 @@ export default function CartPage() {
                         const imageUrl = isSealed
                           ? getSealedImageUrl(item.listing.sealedProduct) ||
                             SEALED_PLACEHOLDER
-                          : getCardImage(item.listing.pokemonCard);
+                          : getCardImage(item.listing.pokemonCard, "low");
                         const productName = isSealed
                           ? item.listing.sealedProduct?.name ||
                             t("sealedProduct")
@@ -273,10 +273,10 @@ export default function CartPage() {
                             <TableCell className="hidden sm:table-cell">
                               <Link href={productUrl} className="block">
                                 <div className="relative w-16 h-24">
-                                  <Image
+                                  <SmartImage
                                     src={imageUrl}
+                                    fallbackSrc={SEALED_PLACEHOLDER}
                                     alt={productName}
-                                    fill
                                     className="object-contain rounded hover:opacity-80 transition-opacity"
                                   />
                                 </div>

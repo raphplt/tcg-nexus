@@ -17,7 +17,7 @@ import {
   Store,
   Truck,
 } from "lucide-react";
-import Image from "next/image";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { Link } from "@/i18n/navigation";
 import { useParams, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
@@ -337,10 +337,10 @@ function OrderDetailsContent() {
                         className="flex flex-col sm:flex-row gap-4 p-4"
                       >
                         <div className="relative h-24 w-16 shrink-0">
-                          <Image
+                          <SmartImage
                             src={getOrderItemImage(item)}
+                            fallbackSrc="/images/carte-pokemon-dos.jpg"
                             alt={item.productName}
-                            fill
                             className="object-contain rounded"
                           />
                         </div>
@@ -440,10 +440,9 @@ function OrderDetailsContent() {
                                         rel="noreferrer"
                                         className="relative h-12 w-12 shrink-0 rounded border overflow-hidden hover:opacity-80 transition-opacity"
                                       >
-                                        <Image
+                                        <SmartImage
                                           src={url}
                                           alt={`Photo ${idx + 1}`}
-                                          fill
                                           className="object-cover"
                                         />
                                       </a>

@@ -4,7 +4,7 @@ import { DeckCard } from "@/types/deck-cards";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Image from "next/image";
+import { SmartImage } from "@/components/ui/SmartImage";
 
 import { getCardImage } from "@/utils/images";
 
@@ -38,10 +38,10 @@ const CardGrid = ({
             className="relative bg-muted/40"
             style={{ aspectRatio: "245/337" }}
           >
-            <Image
+            <SmartImage
               src={getCardImage(deckCard.card, "low")}
+              fallbackSrc="/images/carte-pokemon-dos.jpg"
               alt={deckCard.card?.name || "Carte"}
-              fill
               className="object-contain"
             />
             <Badge className="absolute top-2 left-2">x{deckCard.qty}</Badge>
@@ -84,10 +84,10 @@ function CardSection({ title, cards }: { title: string; cards: DeckCard[] }) {
               className="flex items-center gap-3 p-2 rounded-lg border bg-card/50 hover:bg-accent/50 transition-colors"
             >
               <div className="relative w-12 h-16 shrink-0 bg-muted rounded overflow-hidden">
-                <Image
+                <SmartImage
                   src={getCardImage(deckCard.card, "low")}
+                  fallbackSrc="/images/carte-pokemon-dos.jpg"
                   alt={deckCard.card?.name || "Carte"}
-                  fill
                   className="object-contain"
                 />
               </div>

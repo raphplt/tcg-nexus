@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import Image from "next/image";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { Link } from "@/i18n/navigation";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -43,12 +43,11 @@ export function CardListItem({
         )}
       >
         <div className="relative h-16 w-12 shrink-0 overflow-hidden rounded">
-          <Image
-            src={getCardImage(card)}
+          <SmartImage
+            src={getCardImage(card, "low")}
+            fallbackSrc="/images/carte-pokemon-dos.jpg"
             alt={card.name || "Pokemon Card"}
-            fill
             className="object-contain"
-            sizes="48px"
           />
         </div>
 
@@ -64,11 +63,11 @@ export function CardListItem({
           {card.set && (
             <div className="flex items-center gap-1 mt-0.5">
               {getSetSymbol(card.set) && (
-                <Image
+                <img
                   src={getSetSymbol(card.set) as string}
                   alt=""
-                  width={14}
-                  height={14}
+                  className="w-3.5 h-3.5 object-contain"
+                  loading="lazy"
                 />
               )}
               <p className="text-xs text-muted-foreground line-clamp-1">

@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { PokemonCardType } from "@/types/cardPokemon";
 import { getCardImage, getRarityImage, getSetSymbol } from "@/utils/images";
 
@@ -17,12 +17,10 @@ export function CardGallery({ card }: CardGalleryProps) {
     <div className="lg:sticky lg:top-6 space-y-3">
       <div className="rounded-xl border bg-card p-5 shadow-sm">
         <div className="relative aspect-3/4 w-full">
-          <Image
-            src={getCardImage(card)}
+          <SmartImage
+            src={getCardImage(card, "high")}
+            fallbackSrc="/images/carte-pokemon-dos.jpg"
             alt={card.name || "Carte Pokémon"}
-            fill
-            priority
-            sizes="(max-width: 1024px) 90vw, 30vw"
             className="object-contain drop-shadow-md"
           />
         </div>
@@ -32,7 +30,12 @@ export function CardGallery({ card }: CardGalleryProps) {
         {card.set && (
           <Badge variant="outline" className="gap-1.5 py-1 font-normal">
             {setSymbol && (
-              <Image src={setSymbol} alt="" width={14} height={14} />
+              <img
+                src={setSymbol}
+                alt=""
+                className="w-3.5 h-3.5 object-contain flex-shrink-0"
+                loading="lazy"
+              />
             )}
             {card.set.name}
           </Badge>
@@ -40,7 +43,12 @@ export function CardGallery({ card }: CardGalleryProps) {
         {card.rarity && (
           <Badge variant="outline" className="gap-1.5 py-1 font-normal">
             {rarityIcon && (
-              <Image src={rarityIcon} alt="" width={14} height={14} />
+              <img
+                src={rarityIcon}
+                alt=""
+                className="w-3.5 h-3.5 object-contain flex-shrink-0"
+                loading="lazy"
+              />
             )}
             {card.rarity}
           </Badge>

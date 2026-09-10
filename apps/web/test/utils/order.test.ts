@@ -77,7 +77,7 @@ describe("order utilities", () => {
       };
 
       expect(getOrderItemImage(cardItem)).toBe(
-        "https://assets.tcgdex.net/fr/swsh/swsh4/185/high.png",
+        "https://assets.tcgdex.net/fr/swsh/swsh4/185/low.png",
       );
       expect(getOrderItemUrl(cardItem)).toBe("/marketplace/cards/card-456");
     });

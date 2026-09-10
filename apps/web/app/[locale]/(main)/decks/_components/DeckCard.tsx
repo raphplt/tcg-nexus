@@ -11,7 +11,8 @@ import {
   Layers,
   User,
 } from "lucide-react";
-import Image from "next/image";
+import { SmartImage } from "@/components/ui/SmartImage";
+import { getCardImage } from "@/utils/images";
 import { Link } from "@/i18n/navigation";
 import type { MouseEvent } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -91,10 +92,10 @@ export default function DeckCard({ deck, onClick }: DeckCardProps) {
                   }}
                 >
                   {deckCard.card?.image ? (
-                    <Image
-                      src={`${deckCard.card.image}/high.webp`}
+                    <SmartImage
+                      src={getCardImage(deckCard.card, "low")}
+                      fallbackSrc="/images/carte-pokemon-dos.jpg"
                       alt={deckCard.card.name || "Carte"}
-                      fill
                       className="object-contain drop-shadow-lg"
                     />
                   ) : (

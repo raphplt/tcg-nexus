@@ -41,7 +41,7 @@ export const getOrderItemImage = (item: OrderItem): string => {
   }
 
   return item.listing?.pokemonCard
-    ? getCardImage(item.listing.pokemonCard)
+    ? getCardImage(item.listing.pokemonCard, "low")
     : SEALED_PLACEHOLDER;
 };
 

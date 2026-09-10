@@ -1,5 +1,5 @@
 import React from "react";
-import Image from "next/image";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
 import { Button } from "@components/ui/button";
 import { Input } from "@components/ui/input";
@@ -48,10 +48,10 @@ const PreviewGrid = ({
           className="flex items-center gap-2 rounded-lg border bg-card p-2 transition-colors hover:bg-accent/50"
         >
           <div className="relative h-12 w-9 shrink-0 overflow-hidden rounded bg-muted">
-            <Image
+            <SmartImage
               src={getCardImage(c.card, "low")}
+              fallbackSrc="/images/carte-pokemon-dos.jpg"
               alt={c.card?.name || t("cardFallback")}
-              fill
               className="object-contain"
             />
           </div>

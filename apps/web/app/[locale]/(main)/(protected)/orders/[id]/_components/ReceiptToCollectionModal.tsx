@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
+import { SmartImage } from "@/components/ui/SmartImage";
 import {
   Check,
   CheckCircle2,
@@ -249,10 +249,10 @@ export function ReceiptToCollectionModal({
                       >
                         <div className="relative h-12 w-10 shrink-0 bg-muted rounded overflow-hidden">
                           {item.productImage ? (
-                            <Image
+                            <SmartImage
                               src={item.productImage}
+                              fallbackSrc="/images/carte-pokemon-dos.jpg"
                               alt={item.productName}
-                              fill
                               className="object-contain"
                             />
                           ) : (

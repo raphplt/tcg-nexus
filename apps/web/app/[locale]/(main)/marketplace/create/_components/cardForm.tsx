@@ -34,7 +34,8 @@ import {
   ShoppingCart,
   Tag,
 } from "lucide-react";
-import Image from "next/image";
+import { SmartImage } from "@/components/ui/SmartImage";
+import { getCardImage } from "@/utils/images";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import React, { useEffect, useMemo, useState } from "react";
@@ -252,10 +253,10 @@ const CardForm = () => {
               <div className="flex gap-4">
                 <div className="relative w-24 h-32 rounded-lg overflow-hidden border-2 border-primary/30 shadow-md flex-shrink-0">
                   {selectedCard.image ? (
-                    <Image
-                      src={`${selectedCard.image}/low.png`}
+                    <SmartImage
+                      src={getCardImage(selectedCard, "low")}
+                      fallbackSrc="/images/carte-pokemon-dos.jpg"
                       alt={selectedCard.name || "Carte"}
-                      fill
                       className="object-cover"
                     />
                   ) : (
@@ -453,10 +454,10 @@ const CardForm = () => {
                         >
                           <div className="relative aspect-[3/4] bg-muted/40">
                             {card.image ? (
-                              <Image
-                                src={`${card.image}/low.png`}
+                              <SmartImage
+                                src={getCardImage(card, "low")}
+                                fallbackSrc="/images/carte-pokemon-dos.jpg"
                                 alt={card.name || "Carte"}
-                                fill
                                 className="object-cover group-hover:scale-105 transition-transform"
                               />
                             ) : (

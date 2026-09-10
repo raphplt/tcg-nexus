@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import Image from "next/image";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { Link } from "@/i18n/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -12,7 +12,7 @@ import {
   sealedConditionLabels,
   SealedCondition,
 } from "@/types/sealed-product";
-import { getSealedImageUrl } from "@/utils/sealedImage";
+import { getSealedImageUrl, SEALED_PLACEHOLDER } from "@/utils/sealedImage";
 import { useCurrencyStore } from "@/store/currency.store";
 
 interface SealedProductCardProps {
@@ -56,12 +56,11 @@ export function SealedProductCard({
         <CardHeader className="pb-3">
           <div className="relative aspect-square w-full overflow-hidden rounded-lg mb-3 bg-muted/40">
             {imageUrl ? (
-              <Image
+              <SmartImage
                 src={imageUrl}
+                fallbackSrc={SEALED_PLACEHOLDER}
                 alt={product.name}
-                fill
                 className="object-contain group-hover:scale-105 transition-transform duration-200"
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               />
             ) : (
               <div className="flex h-full items-center justify-center text-xs text-muted-foreground">

@@ -2,7 +2,7 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { Package, Truck } from "lucide-react";
-import Image from "next/image";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { Link } from "@/i18n/navigation";
 import {
   Accordion,
@@ -104,10 +104,10 @@ export default function OrderList({ orders }: OrderListProps) {
                           className="p-4 flex items-start gap-4"
                         >
                           <div className="relative w-16 h-24 shrink-0">
-                            <Image
+                            <SmartImage
                               src={getOrderItemImage(item)}
+                              fallbackSrc="/images/carte-pokemon-dos.jpg"
                               alt={item.productName}
-                              fill
                               className="object-contain rounded"
                             />
                           </div>

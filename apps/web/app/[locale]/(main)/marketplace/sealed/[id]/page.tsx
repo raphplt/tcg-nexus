@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import Image from "next/image";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { useRouter } from "@/i18n/navigation";
 import { use, useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -20,7 +20,7 @@ import { sealedEventTracker } from "@/services/sealed-event-tracker.service";
 import { useCartStore } from "@/store/cart.store";
 import { Listing } from "@/types/listing";
 import { sealedProductTypeLabels } from "@/types/sealed-product";
-import { getSealedImageUrl } from "@/utils/sealedImage";
+import { getSealedImageUrl, SEALED_PLACEHOLDER } from "@/utils/sealedImage";
 import { SealedListingsTable } from "./_components/SealedListingsTable";
 import { SealedMarketStats } from "./_components/SealedMarketStats";
 import SellSealedForm from "./_components/SellSealedForm";
@@ -106,12 +106,11 @@ export default function SealedProductDetailPage({ params }: PageProps) {
                 <CardContent className="pt-6">
                   <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-muted/40">
                     {imageUrl ? (
-                      <Image
+                      <SmartImage
                         src={imageUrl}
+                        fallbackSrc={SEALED_PLACEHOLDER}
                         alt={product.name}
-                        fill
                         className="object-contain"
-                        sizes="(max-width: 768px) 100vw, 50vw"
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center text-sm text-muted-foreground">

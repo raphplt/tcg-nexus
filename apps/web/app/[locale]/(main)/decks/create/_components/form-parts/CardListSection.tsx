@@ -1,6 +1,6 @@
 import { useTranslations } from "next-intl";
 import React from "react";
-import Image from "next/image";
+import { SmartImage } from "@/components/ui/SmartImage";
 import {
   Select,
   SelectContent,
@@ -86,10 +86,10 @@ export const CardListSection: React.FC<CardListSectionProps> = ({
                   className="relative flex min-w-0 flex-col overflow-hidden rounded-lg border bg-card text-sm shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
                 >
                   <div className="relative aspect-3/4 bg-muted/40">
-                    <Image
+                    <SmartImage
                       src={getCardImage(card, "low")}
+                      fallbackSrc="/images/carte-pokemon-dos.jpg"
                       alt={card.name || t("cardFallback")}
-                      fill
                       className="object-contain"
                     />
                     {card.rarity && (
