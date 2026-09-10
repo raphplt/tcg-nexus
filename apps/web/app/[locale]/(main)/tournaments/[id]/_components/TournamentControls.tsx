@@ -71,7 +71,13 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
   const [confirmAction, setConfirmAction] = useState<string | null>(null);
   const [actionData, setActionData] = useState<any>({});
   const hasSupportedEngine =
-    !tournament.isExternal && tournament.type === "single_elimination";
+    !tournament.isExternal &&
+    [
+      "single_elimination",
+      "double_elimination",
+      "round_robin",
+      "swiss_system",
+    ].includes(tournament.type as string);
 
   const getAvailableActions = (): ActionConfig[] => {
     const actions: ActionConfig[] = [];
