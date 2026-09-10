@@ -1,0 +1,2265 @@
+[
+  {
+    "key": "worlds-2025-gardevoir",
+    "name": "Gardevoir ex - Riley McKay (Worlds 2025)",
+    "format": "Standard",
+    "coverTcgDexId": "sv01-086",
+    "source": {
+      "url": "https://limitlesstcg.com/decks/list/18916",
+      "tournament": "World Championships 2025",
+      "date": "2025-08-15",
+      "placement": 1,
+      "player": "Riley McKay",
+      "format": "Standard (regulation marks G/H/I)",
+      "retrievedAt": "2026-09-10"
+    },
+    "cards": [
+      {
+        "tcgDexId": "sv06-095",
+        "name": "Munkidori",
+        "qty": 4,
+        "sourceSet": "TWM",
+        "sourceNumber": "95"
+      },
+      {
+        "tcgDexId": "sv01-084",
+        "name": "Ralts",
+        "qty": 3,
+        "sourceSet": "SVI",
+        "sourceNumber": "84"
+      },
+      {
+        "tcgDexId": "sv01-085",
+        "name": "Kirlia",
+        "qty": 2,
+        "sourceSet": "SVI",
+        "sourceNumber": "85"
+      },
+      {
+        "tcgDexId": "sv01-086",
+        "name": "Gardevoir ex",
+        "qty": 2,
+        "sourceSet": "SVI",
+        "sourceNumber": "86"
+      },
+      {
+        "tcgDexId": "sv04-086",
+        "name": "Scream Tail",
+        "qty": 1,
+        "sourceSet": "PAR",
+        "sourceNumber": "86"
+      },
+      {
+        "tcgDexId": "sv06.5-038",
+        "name": "Fezandipiti ex",
+        "qty": 1,
+        "sourceSet": "SFA",
+        "sourceNumber": "38"
+      },
+      {
+        "tcgDexId": "sv05-078",
+        "name": "Flutter Mane",
+        "qty": 1,
+        "sourceSet": "TEF",
+        "sourceNumber": "78"
+      },
+      {
+        "tcgDexId": "sv09-056",
+        "name": "Lillie's Clefairy ex",
+        "qty": 1,
+        "sourceSet": "JTG",
+        "sourceNumber": "56"
+      },
+      {
+        "tcgDexId": "sv03.5-151",
+        "name": "Mew ex",
+        "qty": 1,
+        "sourceSet": "MEW",
+        "sourceNumber": "151"
+      },
+      {
+        "tcgDexId": "sv09-155",
+        "name": "Professor's Research",
+        "qty": 4,
+        "sourceSet": "JTG",
+        "sourceNumber": "155"
+      },
+      {
+        "tcgDexId": "sv02-185",
+        "name": "Iono",
+        "qty": 4,
+        "sourceSet": "PAL",
+        "sourceNumber": "185"
+      },
+      {
+        "tcgDexId": "sv03-186",
+        "name": "Arven",
+        "qty": 2,
+        "sourceSet": "OBF",
+        "sourceNumber": "186"
+      },
+      {
+        "tcgDexId": "sv01-196",
+        "name": "Ultra Ball",
+        "qty": 4,
+        "sourceSet": "SVI",
+        "sourceNumber": "196"
+      },
+      {
+        "tcgDexId": "sv04-163",
+        "name": "Earthen Vessel",
+        "qty": 3,
+        "sourceSet": "PAR",
+        "sourceNumber": "163"
+      },
+      {
+        "tcgDexId": "sv01-191",
+        "name": "Rare Candy",
+        "qty": 2,
+        "sourceSet": "SVI",
+        "sourceNumber": "191"
+      },
+      {
+        "tcgDexId": "sv04-160",
+        "name": "Counter Catcher",
+        "qty": 2,
+        "sourceSet": "PAR",
+        "sourceNumber": "160"
+      },
+      {
+        "tcgDexId": "sv06.5-061",
+        "name": "Night Stretcher",
+        "qty": 2,
+        "sourceSet": "SFA",
+        "sourceNumber": "61"
+      },
+      {
+        "tcgDexId": "sv01-181",
+        "name": "Nest Ball",
+        "qty": 2,
+        "sourceSet": "SVI",
+        "sourceNumber": "181"
+      },
+      {
+        "tcgDexId": "sv02-188",
+        "name": "Super Rod",
+        "qty": 1,
+        "sourceSet": "PAL",
+        "sourceNumber": "188"
+      },
+      {
+        "tcgDexId": "sv06-163",
+        "name": "Secret Box",
+        "qty": 1,
+        "sourceSet": "TWM",
+        "sourceNumber": "163"
+      },
+      {
+        "tcgDexId": "sv04-178",
+        "name": "Technical Machine: Evolution",
+        "qty": 2,
+        "sourceSet": "PAR",
+        "sourceNumber": "178"
+      },
+      {
+        "tcgDexId": "sv04-177",
+        "name": "Technical Machine: Devolution",
+        "qty": 1,
+        "sourceSet": "PAR",
+        "sourceNumber": "177"
+      },
+      {
+        "tcgDexId": "sv02-173",
+        "name": "Bravery Charm",
+        "qty": 1,
+        "sourceSet": "PAL",
+        "sourceNumber": "173"
+      },
+      {
+        "tcgDexId": "sv02-171",
+        "name": "Artazon",
+        "qty": 2,
+        "sourceSet": "PAL",
+        "sourceNumber": "171"
+      },
+      {
+        "tcgDexId": "sve-005",
+        "name": "Psychic Energy",
+        "qty": 7,
+        "sourceSet": "SVE",
+        "sourceNumber": "5"
+      },
+      {
+        "tcgDexId": "sve-007",
+        "name": "Darkness Energy",
+        "qty": 4,
+        "sourceSet": "SVE",
+        "sourceNumber": "7"
+      }
+    ]
+  },
+  {
+    "key": "worlds-2025-dragapult-dusknoir",
+    "name": "Dragapult ex / Dusknoir - Justin Newdorf (Worlds 2025)",
+    "format": "Standard",
+    "coverTcgDexId": "sv06-130",
+    "source": {
+      "url": "https://limitlesstcg.com/decks/list/18917",
+      "tournament": "World Championships 2025",
+      "date": "2025-08-15",
+      "placement": 2,
+      "player": "Justin Newdorf",
+      "format": "Standard (regulation marks G/H/I)",
+      "retrievedAt": "2026-09-10"
+    },
+    "cards": [
+      {
+        "tcgDexId": "sv06-128",
+        "name": "Dreepy",
+        "qty": 4,
+        "sourceSet": "TWM",
+        "sourceNumber": "128"
+      },
+      {
+        "tcgDexId": "sv06-129",
+        "name": "Drakloak",
+        "qty": 4,
+        "sourceSet": "TWM",
+        "sourceNumber": "129"
+      },
+      {
+        "tcgDexId": "sv06-130",
+        "name": "Dragapult ex",
+        "qty": 3,
+        "sourceSet": "TWM",
+        "sourceNumber": "130"
+      },
+      {
+        "tcgDexId": "sv08.5-035",
+        "name": "Duskull",
+        "qty": 2,
+        "sourceSet": "PRE",
+        "sourceNumber": "35"
+      },
+      {
+        "tcgDexId": "sv08.5-036",
+        "name": "Dusclops",
+        "qty": 2,
+        "sourceSet": "PRE",
+        "sourceNumber": "36"
+      },
+      {
+        "tcgDexId": "sv08.5-037",
+        "name": "Dusknoir",
+        "qty": 1,
+        "sourceSet": "PRE",
+        "sourceNumber": "37"
+      },
+      {
+        "tcgDexId": "sv08.5-004",
+        "name": "Budew",
+        "qty": 2,
+        "sourceSet": "PRE",
+        "sourceNumber": "4"
+      },
+      {
+        "tcgDexId": "sv08-076",
+        "name": "Latias ex",
+        "qty": 1,
+        "sourceSet": "SSP",
+        "sourceNumber": "76"
+      },
+      {
+        "tcgDexId": "sv01-118",
+        "name": "Hawlucha",
+        "qty": 1,
+        "sourceSet": "SVI",
+        "sourceNumber": "118"
+      },
+      {
+        "tcgDexId": "sv06.5-038",
+        "name": "Fezandipiti ex",
+        "qty": 1,
+        "sourceSet": "SFA",
+        "sourceNumber": "38"
+      },
+      {
+        "tcgDexId": "sv06-141",
+        "name": "Bloodmoon Ursaluna ex",
+        "qty": 1,
+        "sourceSet": "TWM",
+        "sourceNumber": "141"
+      },
+      {
+        "tcgDexId": "sv06-095",
+        "name": "Munkidori",
+        "qty": 1,
+        "sourceSet": "TWM",
+        "sourceNumber": "95"
+      },
+      {
+        "tcgDexId": "sv09-155",
+        "name": "Professor's Research",
+        "qty": 4,
+        "sourceSet": "JTG",
+        "sourceNumber": "155"
+      },
+      {
+        "tcgDexId": "sv02-185",
+        "name": "Iono",
+        "qty": 4,
+        "sourceSet": "PAL",
+        "sourceNumber": "185"
+      },
+      {
+        "tcgDexId": "sv02-172",
+        "name": "Boss's Orders",
+        "qty": 2,
+        "sourceSet": "PAL",
+        "sourceNumber": "172"
+      },
+      {
+        "tcgDexId": "sv10.5w-084",
+        "name": "Hilda",
+        "qty": 2,
+        "sourceSet": "WHT",
+        "sourceNumber": "84"
+      },
+      {
+        "tcgDexId": "sv05-144",
+        "name": "Buddy-Buddy Poffin",
+        "qty": 4,
+        "sourceSet": "TEF",
+        "sourceNumber": "144"
+      },
+      {
+        "tcgDexId": "sv06.5-061",
+        "name": "Night Stretcher",
+        "qty": 4,
+        "sourceSet": "SFA",
+        "sourceNumber": "61"
+      },
+      {
+        "tcgDexId": "sv01-196",
+        "name": "Ultra Ball",
+        "qty": 4,
+        "sourceSet": "SVI",
+        "sourceNumber": "196"
+      },
+      {
+        "tcgDexId": "sv04-160",
+        "name": "Counter Catcher",
+        "qty": 3,
+        "sourceSet": "PAR",
+        "sourceNumber": "160"
+      },
+      {
+        "tcgDexId": "sv01-181",
+        "name": "Nest Ball",
+        "qty": 1,
+        "sourceSet": "SVI",
+        "sourceNumber": "181"
+      },
+      {
+        "tcgDexId": "sv06-153",
+        "name": "Jamming Tower",
+        "qty": 2,
+        "sourceSet": "TWM",
+        "sourceNumber": "153"
+      },
+      {
+        "tcgDexId": "sv02-191",
+        "name": "Luminous Energy",
+        "qty": 3,
+        "sourceSet": "PAL",
+        "sourceNumber": "191"
+      },
+      {
+        "tcgDexId": "sve-005",
+        "name": "Psychic Energy",
+        "qty": 2,
+        "sourceSet": "SVE",
+        "sourceNumber": "5"
+      },
+      {
+        "tcgDexId": "sve-002",
+        "name": "Fire Energy",
+        "qty": 1,
+        "sourceSet": "SVE",
+        "sourceNumber": "2"
+      },
+      {
+        "tcgDexId": "sv05-162",
+        "name": "Neo Upper Energy",
+        "qty": 1,
+        "sourceSet": "TEF",
+        "sourceNumber": "162"
+      }
+    ]
+  },
+  {
+    "key": "worlds-2025-raging-bolt-ogerpon",
+    "name": "Raging Bolt ex / Ogerpon - Shizuki Nakagawa (Worlds 2025)",
+    "format": "Standard",
+    "coverTcgDexId": "sv05-123",
+    "source": {
+      "url": "https://limitlesstcg.com/decks/list/18918",
+      "tournament": "World Championships 2025",
+      "date": "2025-08-15",
+      "placement": 3,
+      "player": "Shizuki Nakagawa",
+      "format": "Standard (regulation marks G/H/I)",
+      "retrievedAt": "2026-09-10"
+    },
+    "cards": [
+      {
+        "tcgDexId": "sv07-114",
+        "name": "Hoothoot",
+        "qty": 3,
+        "sourceSet": "SCR",
+        "sourceNumber": "114"
+      },
+      {
+        "tcgDexId": "sv07-115",
+        "name": "Noctowl",
+        "qty": 3,
+        "sourceSet": "SCR",
+        "sourceNumber": "115"
+      },
+      {
+        "tcgDexId": "sv05-123",
+        "name": "Raging Bolt ex",
+        "qty": 3,
+        "sourceSet": "TEF",
+        "sourceNumber": "123"
+      },
+      {
+        "tcgDexId": "sv06-025",
+        "name": "Teal Mask Ogerpon ex",
+        "qty": 3,
+        "sourceSet": "TWM",
+        "sourceNumber": "25"
+      },
+      {
+        "tcgDexId": "sv07-118",
+        "name": "Fan Rotom",
+        "qty": 2,
+        "sourceSet": "SCR",
+        "sourceNumber": "118"
+      },
+      {
+        "tcgDexId": "sv07-111",
+        "name": "Raging Bolt",
+        "qty": 1,
+        "sourceSet": "SCR",
+        "sourceNumber": "111"
+      },
+      {
+        "tcgDexId": "sv08-116",
+        "name": "Koraidon",
+        "qty": 1,
+        "sourceSet": "SSP",
+        "sourceNumber": "116"
+      },
+      {
+        "tcgDexId": "sv03.5-132",
+        "name": "Ditto",
+        "qty": 1,
+        "sourceSet": "MEW",
+        "sourceNumber": "132"
+      },
+      {
+        "tcgDexId": "sv08-056",
+        "name": "Chien-Pao",
+        "qty": 1,
+        "sourceSet": "SSP",
+        "sourceNumber": "56"
+      },
+      {
+        "tcgDexId": "sv08-076",
+        "name": "Latias ex",
+        "qty": 1,
+        "sourceSet": "SSP",
+        "sourceNumber": "76"
+      },
+      {
+        "tcgDexId": "sv02-169",
+        "name": "Squawkabilly ex",
+        "qty": 1,
+        "sourceSet": "PAL",
+        "sourceNumber": "169"
+      },
+      {
+        "tcgDexId": "sv06.5-038",
+        "name": "Fezandipiti ex",
+        "qty": 1,
+        "sourceSet": "SFA",
+        "sourceNumber": "38"
+      },
+      {
+        "tcgDexId": "sv04-170",
+        "name": "Professor Sada's Vitality",
+        "qty": 4,
+        "sourceSet": "PAR",
+        "sourceNumber": "170"
+      },
+      {
+        "tcgDexId": "sv02-172",
+        "name": "Boss's Orders",
+        "qty": 2,
+        "sourceSet": "PAL",
+        "sourceNumber": "172"
+      },
+      {
+        "tcgDexId": "sv07-133",
+        "name": "Crispin",
+        "qty": 1,
+        "sourceSet": "SCR",
+        "sourceNumber": "133"
+      },
+      {
+        "tcgDexId": "sv02-185",
+        "name": "Iono",
+        "qty": 1,
+        "sourceSet": "PAL",
+        "sourceNumber": "185"
+      },
+      {
+        "tcgDexId": "sv04-171",
+        "name": "Professor Turo's Scenario",
+        "qty": 1,
+        "sourceSet": "PAR",
+        "sourceNumber": "171"
+      },
+      {
+        "tcgDexId": "sv01-181",
+        "name": "Nest Ball",
+        "qty": 4,
+        "sourceSet": "SVI",
+        "sourceNumber": "181"
+      },
+      {
+        "tcgDexId": "sv01-196",
+        "name": "Ultra Ball",
+        "qty": 4,
+        "sourceSet": "SVI",
+        "sourceNumber": "196"
+      },
+      {
+        "tcgDexId": "sv04-163",
+        "name": "Earthen Vessel",
+        "qty": 3,
+        "sourceSet": "PAR",
+        "sourceNumber": "163"
+      },
+      {
+        "tcgDexId": "sv06.5-061",
+        "name": "Night Stretcher",
+        "qty": 2,
+        "sourceSet": "SFA",
+        "sourceNumber": "61"
+      },
+      {
+        "tcgDexId": "sv01-171",
+        "name": "Energy Retrieval",
+        "qty": 1,
+        "sourceSet": "SVI",
+        "sourceNumber": "171"
+      },
+      {
+        "tcgDexId": "sv01-173",
+        "name": "Energy Switch",
+        "qty": 1,
+        "sourceSet": "SVI",
+        "sourceNumber": "173"
+      },
+      {
+        "tcgDexId": "sv05-157",
+        "name": "Prime Catcher",
+        "qty": 1,
+        "sourceSet": "TEF",
+        "sourceNumber": "157"
+      },
+      {
+        "tcgDexId": "sv07-131",
+        "name": "Area Zero Underdepths",
+        "qty": 3,
+        "sourceSet": "SCR",
+        "sourceNumber": "131"
+      },
+      {
+        "tcgDexId": "sve-001",
+        "name": "Grass Energy",
+        "qty": 5,
+        "sourceSet": "SVE",
+        "sourceNumber": "1"
+      },
+      {
+        "tcgDexId": "sve-004",
+        "name": "Lightning Energy",
+        "qty": 3,
+        "sourceSet": "SVE",
+        "sourceNumber": "4"
+      },
+      {
+        "tcgDexId": "sve-006",
+        "name": "Fighting Energy",
+        "qty": 3,
+        "sourceSet": "SVE",
+        "sourceNumber": "6"
+      }
+    ]
+  },
+  {
+    "key": "worlds-2025-charizard-pidgeot",
+    "name": "Charizard ex / Pidgeot ex - Junya Tanaka (Worlds 2025)",
+    "format": "Standard",
+    "coverTcgDexId": "sv03-125",
+    "source": {
+      "url": "https://limitlesstcg.com/decks/list/18919",
+      "tournament": "World Championships 2025",
+      "date": "2025-08-15",
+      "placement": 4,
+      "player": "Junya Tanaka",
+      "format": "Standard (regulation marks G/H/I)",
+      "retrievedAt": "2026-09-10"
+    },
+    "cards": [
+      {
+        "tcgDexId": "sv04.5-007",
+        "name": "Charmander",
+        "qty": 4,
+        "sourceSet": "PAF",
+        "sourceNumber": "7"
+      },
+      {
+        "tcgDexId": "sv03.5-005",
+        "name": "Charmeleon",
+        "qty": 2,
+        "sourceSet": "MEW",
+        "sourceNumber": "5"
+      },
+      {
+        "tcgDexId": "sv03-125",
+        "name": "Charizard ex",
+        "qty": 3,
+        "sourceSet": "OBF",
+        "sourceNumber": "125"
+      },
+      {
+        "tcgDexId": "sv03-162",
+        "name": "Pidgey",
+        "qty": 2,
+        "sourceSet": "OBF",
+        "sourceNumber": "162"
+      },
+      {
+        "tcgDexId": "sv03.5-017",
+        "name": "Pidgeotto",
+        "qty": 1,
+        "sourceSet": "MEW",
+        "sourceNumber": "17"
+      },
+      {
+        "tcgDexId": "sv03-164",
+        "name": "Pidgeot ex",
+        "qty": 2,
+        "sourceSet": "OBF",
+        "sourceNumber": "164"
+      },
+      {
+        "tcgDexId": "sv08.5-035",
+        "name": "Duskull",
+        "qty": 2,
+        "sourceSet": "PRE",
+        "sourceNumber": "35"
+      },
+      {
+        "tcgDexId": "sv08.5-036",
+        "name": "Dusclops",
+        "qty": 1,
+        "sourceSet": "PRE",
+        "sourceNumber": "36"
+      },
+      {
+        "tcgDexId": "sv08.5-037",
+        "name": "Dusknoir",
+        "qty": 1,
+        "sourceSet": "PRE",
+        "sourceNumber": "37"
+      },
+      {
+        "tcgDexId": "sv03-080",
+        "name": "Cleffa",
+        "qty": 1,
+        "sourceSet": "OBF",
+        "sourceNumber": "80"
+      },
+      {
+        "tcgDexId": "sv04-029",
+        "name": "Chi-Yu",
+        "qty": 1,
+        "sourceSet": "PAR",
+        "sourceNumber": "29"
+      },
+      {
+        "tcgDexId": "sv06.5-038",
+        "name": "Fezandipiti ex",
+        "qty": 1,
+        "sourceSet": "SFA",
+        "sourceNumber": "38"
+      },
+      {
+        "tcgDexId": "sv03-186",
+        "name": "Arven",
+        "qty": 4,
+        "sourceSet": "OBF",
+        "sourceNumber": "186"
+      },
+      {
+        "tcgDexId": "sv02-185",
+        "name": "Iono",
+        "qty": 3,
+        "sourceSet": "PAL",
+        "sourceNumber": "185"
+      },
+      {
+        "tcgDexId": "sv02-172",
+        "name": "Boss's Orders",
+        "qty": 3,
+        "sourceSet": "PAL",
+        "sourceNumber": "172"
+      },
+      {
+        "tcgDexId": "sv01-175",
+        "name": "Jacq",
+        "qty": 1,
+        "sourceSet": "SVI",
+        "sourceNumber": "175"
+      },
+      {
+        "tcgDexId": "sv07-132",
+        "name": "Briar",
+        "qty": 1,
+        "sourceSet": "SCR",
+        "sourceNumber": "132"
+      },
+      {
+        "tcgDexId": "sv05-144",
+        "name": "Buddy-Buddy Poffin",
+        "qty": 4,
+        "sourceSet": "TEF",
+        "sourceNumber": "144"
+      },
+      {
+        "tcgDexId": "sv01-196",
+        "name": "Ultra Ball",
+        "qty": 3,
+        "sourceSet": "SVI",
+        "sourceNumber": "196"
+      },
+      {
+        "tcgDexId": "sv01-191",
+        "name": "Rare Candy",
+        "qty": 3,
+        "sourceSet": "SVI",
+        "sourceNumber": "191"
+      },
+      {
+        "tcgDexId": "sv04-160",
+        "name": "Counter Catcher",
+        "qty": 2,
+        "sourceSet": "PAR",
+        "sourceNumber": "160"
+      },
+      {
+        "tcgDexId": "sv02-188",
+        "name": "Super Rod",
+        "qty": 2,
+        "sourceSet": "PAL",
+        "sourceNumber": "188"
+      },
+      {
+        "tcgDexId": "sv01-181",
+        "name": "Nest Ball",
+        "qty": 1,
+        "sourceSet": "SVI",
+        "sourceNumber": "181"
+      },
+      {
+        "tcgDexId": "sv04-178",
+        "name": "Technical Machine: Evolution",
+        "qty": 1,
+        "sourceSet": "PAR",
+        "sourceNumber": "178"
+      },
+      {
+        "tcgDexId": "sv10.5b-079",
+        "name": "Air Balloon",
+        "qty": 1,
+        "sourceSet": "BLK",
+        "sourceNumber": "79"
+      },
+      {
+        "tcgDexId": "sv05-154",
+        "name": "Maximum Belt",
+        "qty": 1,
+        "sourceSet": "TEF",
+        "sourceNumber": "154"
+      },
+      {
+        "tcgDexId": "sv02-171",
+        "name": "Artazon",
+        "qty": 2,
+        "sourceSet": "PAL",
+        "sourceNumber": "171"
+      },
+      {
+        "tcgDexId": "sve-002",
+        "name": "Fire Energy",
+        "qty": 6,
+        "sourceSet": "SVE",
+        "sourceNumber": "2"
+      },
+      {
+        "tcgDexId": "sv05-161",
+        "name": "Mist Energy",
+        "qty": 1,
+        "sourceSet": "TEF",
+        "sourceNumber": "161"
+      }
+    ]
+  },
+  {
+    "key": "worlds-2025-n-zoroark",
+    "name": "N’s Zoroark ex - Mateusz Łaszkiewicz (Worlds 2025)",
+    "format": "Standard",
+    "coverTcgDexId": "sv09-098",
+    "source": {
+      "url": "https://limitlesstcg.com/decks/list/18921",
+      "tournament": "World Championships 2025",
+      "date": "2025-08-15",
+      "placement": 6,
+      "player": "Mateusz Łaszkiewicz",
+      "format": "Standard (regulation marks G/H/I)",
+      "retrievedAt": "2026-09-10"
+    },
+    "cards": [
+      {
+        "tcgDexId": "sv09-097",
+        "name": "N's Zorua",
+        "qty": 4,
+        "sourceSet": "JTG",
+        "sourceNumber": "97"
+      },
+      {
+        "tcgDexId": "sv09-098",
+        "name": "N's Zoroark ex",
+        "qty": 4,
+        "sourceSet": "JTG",
+        "sourceNumber": "98"
+      },
+      {
+        "tcgDexId": "sv06-095",
+        "name": "Munkidori",
+        "qty": 3,
+        "sourceSet": "TWM",
+        "sourceNumber": "95"
+      },
+      {
+        "tcgDexId": "sv09-116",
+        "name": "N's Reshiram",
+        "qty": 2,
+        "sourceSet": "JTG",
+        "sourceNumber": "116"
+      },
+      {
+        "tcgDexId": "sv06.5-038",
+        "name": "Fezandipiti ex",
+        "qty": 1,
+        "sourceSet": "SFA",
+        "sourceNumber": "38"
+      },
+      {
+        "tcgDexId": "sv06-141",
+        "name": "Bloodmoon Ursaluna ex",
+        "qty": 1,
+        "sourceSet": "TWM",
+        "sourceNumber": "141"
+      },
+      {
+        "tcgDexId": "sv06-064",
+        "name": "Wellspring Mask Ogerpon ex",
+        "qty": 1,
+        "sourceSet": "TWM",
+        "sourceNumber": "64"
+      },
+      {
+        "tcgDexId": "sv06-112",
+        "name": "Cornerstone Mask Ogerpon ex",
+        "qty": 1,
+        "sourceSet": "TWM",
+        "sourceNumber": "112"
+      },
+      {
+        "tcgDexId": "sv03-186",
+        "name": "Arven",
+        "qty": 4,
+        "sourceSet": "OBF",
+        "sourceNumber": "186"
+      },
+      {
+        "tcgDexId": "sv02-185",
+        "name": "Iono",
+        "qty": 3,
+        "sourceSet": "PAL",
+        "sourceNumber": "185"
+      },
+      {
+        "tcgDexId": "sv02-172",
+        "name": "Boss's Orders",
+        "qty": 3,
+        "sourceSet": "PAL",
+        "sourceNumber": "172"
+      },
+      {
+        "tcgDexId": "sv09-155",
+        "name": "Professor's Research",
+        "qty": 1,
+        "sourceSet": "JTG",
+        "sourceNumber": "155"
+      },
+      {
+        "tcgDexId": "sv04-171",
+        "name": "Professor Turo's Scenario",
+        "qty": 1,
+        "sourceSet": "PAR",
+        "sourceNumber": "171"
+      },
+      {
+        "tcgDexId": "sv01-181",
+        "name": "Nest Ball",
+        "qty": 3,
+        "sourceSet": "SVI",
+        "sourceNumber": "181"
+      },
+      {
+        "tcgDexId": "sv05-144",
+        "name": "Buddy-Buddy Poffin",
+        "qty": 3,
+        "sourceSet": "TEF",
+        "sourceNumber": "144"
+      },
+      {
+        "tcgDexId": "sv04-160",
+        "name": "Counter Catcher",
+        "qty": 2,
+        "sourceSet": "PAR",
+        "sourceNumber": "160"
+      },
+      {
+        "tcgDexId": "sv01-196",
+        "name": "Ultra Ball",
+        "qty": 1,
+        "sourceSet": "SVI",
+        "sourceNumber": "196"
+      },
+      {
+        "tcgDexId": "sv02-188",
+        "name": "Super Rod",
+        "qty": 1,
+        "sourceSet": "PAL",
+        "sourceNumber": "188"
+      },
+      {
+        "tcgDexId": "sv01-182",
+        "name": "Pal Pad",
+        "qty": 1,
+        "sourceSet": "SVI",
+        "sourceNumber": "182"
+      },
+      {
+        "tcgDexId": "sv06.5-061",
+        "name": "Night Stretcher",
+        "qty": 1,
+        "sourceSet": "SFA",
+        "sourceNumber": "61"
+      },
+      {
+        "tcgDexId": "sv01-173",
+        "name": "Energy Switch",
+        "qty": 1,
+        "sourceSet": "SVI",
+        "sourceNumber": "173"
+      },
+      {
+        "tcgDexId": "sv06-163",
+        "name": "Secret Box",
+        "qty": 1,
+        "sourceSet": "TWM",
+        "sourceNumber": "163"
+      },
+      {
+        "tcgDexId": "sv04-163",
+        "name": "Earthen Vessel",
+        "qty": 1,
+        "sourceSet": "PAR",
+        "sourceNumber": "163"
+      },
+      {
+        "tcgDexId": "sv01-194",
+        "name": "Switch",
+        "qty": 1,
+        "sourceSet": "SVI",
+        "sourceNumber": "194"
+      },
+      {
+        "tcgDexId": "sv09-153",
+        "name": "N's PP Up",
+        "qty": 1,
+        "sourceSet": "JTG",
+        "sourceNumber": "153"
+      },
+      {
+        "tcgDexId": "sv04-179",
+        "name": "Technical Machine: Turbo Energize",
+        "qty": 2,
+        "sourceSet": "PAR",
+        "sourceNumber": "179"
+      },
+      {
+        "tcgDexId": "sv04-178",
+        "name": "Technical Machine: Evolution",
+        "qty": 1,
+        "sourceSet": "PAR",
+        "sourceNumber": "178"
+      },
+      {
+        "tcgDexId": "sv10.5b-079",
+        "name": "Air Balloon",
+        "qty": 1,
+        "sourceSet": "BLK",
+        "sourceNumber": "79"
+      },
+      {
+        "tcgDexId": "sv02-171",
+        "name": "Artazon",
+        "qty": 2,
+        "sourceSet": "PAL",
+        "sourceNumber": "171"
+      },
+      {
+        "tcgDexId": "sve-007",
+        "name": "Darkness Energy",
+        "qty": 7,
+        "sourceSet": "SVE",
+        "sourceNumber": "7"
+      },
+      {
+        "tcgDexId": "sve-006",
+        "name": "Fighting Energy",
+        "qty": 1,
+        "sourceSet": "SVE",
+        "sourceNumber": "6"
+      }
+    ]
+  },
+  {
+    "key": "worlds-2025-gholdengo",
+    "name": "Gholdengo ex - Piper Lepine (Worlds 2025)",
+    "format": "Standard",
+    "coverTcgDexId": "sv04-139",
+    "source": {
+      "url": "https://limitlesstcg.com/decks/list/18922",
+      "tournament": "World Championships 2025",
+      "date": "2025-08-15",
+      "placement": 7,
+      "player": "Piper Lepine",
+      "format": "Standard (regulation marks G/H/I)",
+      "retrievedAt": "2026-09-10"
+    },
+    "cards": [
+      {
+        "tcgDexId": "sv08-097",
+        "name": "Gimmighoul",
+        "qty": 3,
+        "sourceSet": "SSP",
+        "sourceNumber": "97"
+      },
+      {
+        "tcgDexId": "sv04-087",
+        "name": "Gimmighoul",
+        "qty": 1,
+        "sourceSet": "PAR",
+        "sourceNumber": "87"
+      },
+      {
+        "tcgDexId": "sv04-139",
+        "name": "Gholdengo ex",
+        "qty": 4,
+        "sourceSet": "PAR",
+        "sourceNumber": "139"
+      },
+      {
+        "tcgDexId": "sv08-131",
+        "name": "Gholdengo",
+        "qty": 1,
+        "sourceSet": "SSP",
+        "sourceNumber": "131"
+      },
+      {
+        "tcgDexId": "sv10.5b-067",
+        "name": "Genesect ex",
+        "qty": 2,
+        "sourceSet": "BLK",
+        "sourceNumber": "67"
+      },
+      {
+        "tcgDexId": "sv03-083",
+        "name": "Togepi",
+        "qty": 1,
+        "sourceSet": "OBF",
+        "sourceNumber": "83"
+      },
+      {
+        "tcgDexId": "sv08-072",
+        "name": "Togekiss",
+        "qty": 1,
+        "sourceSet": "SSP",
+        "sourceNumber": "72"
+      },
+      {
+        "tcgDexId": "sv06.5-038",
+        "name": "Fezandipiti ex",
+        "qty": 1,
+        "sourceSet": "SFA",
+        "sourceNumber": "38"
+      },
+      {
+        "tcgDexId": "sv06-095",
+        "name": "Munkidori",
+        "qty": 1,
+        "sourceSet": "TWM",
+        "sourceNumber": "95"
+      },
+      {
+        "tcgDexId": "sv05-145",
+        "name": "Ciphermaniac's Codebreaking",
+        "qty": 4,
+        "sourceSet": "TEF",
+        "sourceNumber": "145"
+      },
+      {
+        "tcgDexId": "sv03-186",
+        "name": "Arven",
+        "qty": 3,
+        "sourceSet": "OBF",
+        "sourceNumber": "186"
+      },
+      {
+        "tcgDexId": "sv02-172",
+        "name": "Boss's Orders",
+        "qty": 3,
+        "sourceSet": "PAL",
+        "sourceNumber": "172"
+      },
+      {
+        "tcgDexId": "sv04-171",
+        "name": "Professor Turo's Scenario",
+        "qty": 1,
+        "sourceSet": "PAR",
+        "sourceNumber": "171"
+      },
+      {
+        "tcgDexId": "sv02-189",
+        "name": "Superior Energy Retrieval",
+        "qty": 4,
+        "sourceSet": "PAL",
+        "sourceNumber": "189"
+      },
+      {
+        "tcgDexId": "sv05-144",
+        "name": "Buddy-Buddy Poffin",
+        "qty": 4,
+        "sourceSet": "TEF",
+        "sourceNumber": "144"
+      },
+      {
+        "tcgDexId": "sv01-181",
+        "name": "Nest Ball",
+        "qty": 3,
+        "sourceSet": "SVI",
+        "sourceNumber": "181"
+      },
+      {
+        "tcgDexId": "sv01-196",
+        "name": "Ultra Ball",
+        "qty": 1,
+        "sourceSet": "SVI",
+        "sourceNumber": "196"
+      },
+      {
+        "tcgDexId": "sv10.5w-085",
+        "name": "Tool Scrapper",
+        "qty": 1,
+        "sourceSet": "WHT",
+        "sourceNumber": "85"
+      },
+      {
+        "tcgDexId": "sv01-186",
+        "name": "Pokégear 3.0",
+        "qty": 1,
+        "sourceSet": "SVI",
+        "sourceNumber": "186"
+      },
+      {
+        "tcgDexId": "sv06.5-061",
+        "name": "Night Stretcher",
+        "qty": 1,
+        "sourceSet": "SFA",
+        "sourceNumber": "61"
+      },
+      {
+        "tcgDexId": "sv04-163",
+        "name": "Earthen Vessel",
+        "qty": 1,
+        "sourceSet": "PAR",
+        "sourceNumber": "163"
+      },
+      {
+        "tcgDexId": "sv01-191",
+        "name": "Rare Candy",
+        "qty": 1,
+        "sourceSet": "SVI",
+        "sourceNumber": "191"
+      },
+      {
+        "tcgDexId": "sv08-176",
+        "name": "Energy Search Pro",
+        "qty": 1,
+        "sourceSet": "SSP",
+        "sourceNumber": "176"
+      },
+      {
+        "tcgDexId": "sv10.5b-079",
+        "name": "Air Balloon",
+        "qty": 3,
+        "sourceSet": "BLK",
+        "sourceNumber": "79"
+      },
+      {
+        "tcgDexId": "sv02-171",
+        "name": "Artazon",
+        "qty": 1,
+        "sourceSet": "PAL",
+        "sourceNumber": "171"
+      },
+      {
+        "tcgDexId": "sv09-150",
+        "name": "Levincia",
+        "qty": 1,
+        "sourceSet": "JTG",
+        "sourceNumber": "150"
+      },
+      {
+        "tcgDexId": "sve-008",
+        "name": "Metal Energy",
+        "qty": 3,
+        "sourceSet": "SVE",
+        "sourceNumber": "8"
+      },
+      {
+        "tcgDexId": "sve-004",
+        "name": "Lightning Energy",
+        "qty": 2,
+        "sourceSet": "SVE",
+        "sourceNumber": "4"
+      },
+      {
+        "tcgDexId": "sve-001",
+        "name": "Grass Energy",
+        "qty": 1,
+        "sourceSet": "SVE",
+        "sourceNumber": "1"
+      },
+      {
+        "tcgDexId": "sve-003",
+        "name": "Water Energy",
+        "qty": 1,
+        "sourceSet": "SVE",
+        "sourceNumber": "3"
+      },
+      {
+        "tcgDexId": "sve-002",
+        "name": "Fire Energy",
+        "qty": 1,
+        "sourceSet": "SVE",
+        "sourceNumber": "2"
+      },
+      {
+        "tcgDexId": "sve-006",
+        "name": "Fighting Energy",
+        "qty": 1,
+        "sourceSet": "SVE",
+        "sourceNumber": "6"
+      },
+      {
+        "tcgDexId": "sve-005",
+        "name": "Psychic Energy",
+        "qty": 1,
+        "sourceSet": "SVE",
+        "sourceNumber": "5"
+      },
+      {
+        "tcgDexId": "sve-007",
+        "name": "Darkness Energy",
+        "qty": 1,
+        "sourceSet": "SVE",
+        "sourceNumber": "7"
+      }
+    ]
+  },
+  {
+    "key": "worlds-2025-noctowl-ogerpon",
+    "name": "Noctowl / Ogerpon - Alex Schemanske (Worlds 2025)",
+    "format": "Standard",
+    "coverTcgDexId": "sv06-064",
+    "source": {
+      "url": "https://limitlesstcg.com/decks/list/18945",
+      "tournament": "World Championships 2025",
+      "date": "2025-08-15",
+      "placement": 31,
+      "player": "Alex Schemanske",
+      "format": "Standard (regulation marks G/H/I)",
+      "retrievedAt": "2026-09-10"
+    },
+    "cards": [
+      {
+        "tcgDexId": "sv07-114",
+        "name": "Hoothoot",
+        "qty": 3,
+        "sourceSet": "SCR",
+        "sourceNumber": "114"
+      },
+      {
+        "tcgDexId": "sv08.5-077",
+        "name": "Hoothoot",
+        "qty": 1,
+        "sourceSet": "PRE",
+        "sourceNumber": "77"
+      },
+      {
+        "tcgDexId": "sv07-115",
+        "name": "Noctowl",
+        "qty": 4,
+        "sourceSet": "SCR",
+        "sourceNumber": "115"
+      },
+      {
+        "tcgDexId": "sv07-118",
+        "name": "Fan Rotom",
+        "qty": 2,
+        "sourceSet": "SCR",
+        "sourceNumber": "118"
+      },
+      {
+        "tcgDexId": "sv06-064",
+        "name": "Wellspring Mask Ogerpon ex",
+        "qty": 2,
+        "sourceSet": "TWM",
+        "sourceNumber": "64"
+      },
+      {
+        "tcgDexId": "sv08-143",
+        "name": "Eevee",
+        "qty": 1,
+        "sourceSet": "SSP",
+        "sourceNumber": "143"
+      },
+      {
+        "tcgDexId": "sv08.5-006",
+        "name": "Leafeon ex",
+        "qty": 1,
+        "sourceSet": "PRE",
+        "sourceNumber": "6"
+      },
+      {
+        "tcgDexId": "sv03.5-132",
+        "name": "Ditto",
+        "qty": 1,
+        "sourceSet": "MEW",
+        "sourceNumber": "132"
+      },
+      {
+        "tcgDexId": "sv07-128",
+        "name": "Terapagos ex",
+        "qty": 1,
+        "sourceSet": "SCR",
+        "sourceNumber": "128"
+      },
+      {
+        "tcgDexId": "sv08-076",
+        "name": "Latias ex",
+        "qty": 1,
+        "sourceSet": "SSP",
+        "sourceNumber": "76"
+      },
+      {
+        "tcgDexId": "sv06.5-038",
+        "name": "Fezandipiti ex",
+        "qty": 1,
+        "sourceSet": "SFA",
+        "sourceNumber": "38"
+      },
+      {
+        "tcgDexId": "sv09-056",
+        "name": "Lillie's Clefairy ex",
+        "qty": 1,
+        "sourceSet": "JTG",
+        "sourceNumber": "56"
+      },
+      {
+        "tcgDexId": "sv04-056",
+        "name": "Iron Bundle",
+        "qty": 1,
+        "sourceSet": "PAR",
+        "sourceNumber": "56"
+      },
+      {
+        "tcgDexId": "sv06-025",
+        "name": "Teal Mask Ogerpon ex",
+        "qty": 1,
+        "sourceSet": "TWM",
+        "sourceNumber": "25"
+      },
+      {
+        "tcgDexId": "sv06-141",
+        "name": "Bloodmoon Ursaluna ex",
+        "qty": 1,
+        "sourceSet": "TWM",
+        "sourceNumber": "141"
+      },
+      {
+        "tcgDexId": "sv08-057",
+        "name": "Pikachu ex",
+        "qty": 1,
+        "sourceSet": "SSP",
+        "sourceNumber": "57"
+      },
+      {
+        "tcgDexId": "sv03.5-151",
+        "name": "Mew ex",
+        "qty": 1,
+        "sourceSet": "MEW",
+        "sourceNumber": "151"
+      },
+      {
+        "tcgDexId": "sv07-133",
+        "name": "Crispin",
+        "qty": 4,
+        "sourceSet": "SCR",
+        "sourceNumber": "133"
+      },
+      {
+        "tcgDexId": "sv02-172",
+        "name": "Boss's Orders",
+        "qty": 2,
+        "sourceSet": "PAL",
+        "sourceNumber": "172"
+      },
+      {
+        "tcgDexId": "sv02-185",
+        "name": "Iono",
+        "qty": 1,
+        "sourceSet": "PAL",
+        "sourceNumber": "185"
+      },
+      {
+        "tcgDexId": "sv09-155",
+        "name": "Professor's Research",
+        "qty": 1,
+        "sourceSet": "JTG",
+        "sourceNumber": "155"
+      },
+      {
+        "tcgDexId": "sv04-171",
+        "name": "Professor Turo's Scenario",
+        "qty": 1,
+        "sourceSet": "PAR",
+        "sourceNumber": "171"
+      },
+      {
+        "tcgDexId": "sv01-181",
+        "name": "Nest Ball",
+        "qty": 4,
+        "sourceSet": "SVI",
+        "sourceNumber": "181"
+      },
+      {
+        "tcgDexId": "sv01-196",
+        "name": "Ultra Ball",
+        "qty": 3,
+        "sourceSet": "SVI",
+        "sourceNumber": "196"
+      },
+      {
+        "tcgDexId": "sv01-173",
+        "name": "Energy Switch",
+        "qty": 2,
+        "sourceSet": "SVI",
+        "sourceNumber": "173"
+      },
+      {
+        "tcgDexId": "sv04-163",
+        "name": "Earthen Vessel",
+        "qty": 1,
+        "sourceSet": "PAR",
+        "sourceNumber": "163"
+      },
+      {
+        "tcgDexId": "sv06.5-061",
+        "name": "Night Stretcher",
+        "qty": 1,
+        "sourceSet": "SFA",
+        "sourceNumber": "61"
+      },
+      {
+        "tcgDexId": "sv02-188",
+        "name": "Super Rod",
+        "qty": 1,
+        "sourceSet": "PAL",
+        "sourceNumber": "188"
+      },
+      {
+        "tcgDexId": "sv08-189",
+        "name": "Tera Orb",
+        "qty": 1,
+        "sourceSet": "SSP",
+        "sourceNumber": "189"
+      },
+      {
+        "tcgDexId": "sv07-142",
+        "name": "Sparkling Crystal",
+        "qty": 1,
+        "sourceSet": "SCR",
+        "sourceNumber": "142"
+      },
+      {
+        "tcgDexId": "sv10.5b-079",
+        "name": "Air Balloon",
+        "qty": 1,
+        "sourceSet": "BLK",
+        "sourceNumber": "79"
+      },
+      {
+        "tcgDexId": "sv07-131",
+        "name": "Area Zero Underdepths",
+        "qty": 2,
+        "sourceSet": "SCR",
+        "sourceNumber": "131"
+      },
+      {
+        "tcgDexId": "sv06-153",
+        "name": "Jamming Tower",
+        "qty": 1,
+        "sourceSet": "TWM",
+        "sourceNumber": "153"
+      },
+      {
+        "tcgDexId": "sve-001",
+        "name": "Grass Energy",
+        "qty": 4,
+        "sourceSet": "SVE",
+        "sourceNumber": "1"
+      },
+      {
+        "tcgDexId": "sve-005",
+        "name": "Psychic Energy",
+        "qty": 2,
+        "sourceSet": "SVE",
+        "sourceNumber": "5"
+      },
+      {
+        "tcgDexId": "sve-003",
+        "name": "Water Energy",
+        "qty": 1,
+        "sourceSet": "SVE",
+        "sourceNumber": "3"
+      },
+      {
+        "tcgDexId": "sve-004",
+        "name": "Lightning Energy",
+        "qty": 1,
+        "sourceSet": "SVE",
+        "sourceNumber": "4"
+      },
+      {
+        "tcgDexId": "sve-008",
+        "name": "Metal Energy",
+        "qty": 1,
+        "sourceSet": "SVE",
+        "sourceNumber": "8"
+      }
+    ]
+  },
+  {
+    "key": "worlds-2025-ethan-ho-oh",
+    "name": "Ethan’s Ho-Oh ex - Nathan Spry (Worlds 2025)",
+    "format": "Standard",
+    "coverTcgDexId": "sv10-039",
+    "source": {
+      "url": "https://limitlesstcg.com/decks/list/18946",
+      "tournament": "World Championships 2025",
+      "date": "2025-08-15",
+      "placement": 32,
+      "player": "Nathan Spry",
+      "format": "Standard (regulation marks G/H/I)",
+      "retrievedAt": "2026-09-10"
+    },
+    "cards": [
+      {
+        "tcgDexId": "sv04-026",
+        "name": "Charcadet",
+        "qty": 3,
+        "sourceSet": "PAR",
+        "sourceNumber": "26"
+      },
+      {
+        "tcgDexId": "sv01-041",
+        "name": "Armarouge",
+        "qty": 2,
+        "sourceSet": "SVI",
+        "sourceNumber": "41"
+      },
+      {
+        "tcgDexId": "sv10-039",
+        "name": "Ethan's Ho-Oh ex",
+        "qty": 2,
+        "sourceSet": "DRI",
+        "sourceNumber": "39"
+      },
+      {
+        "tcgDexId": "sv04-056",
+        "name": "Iron Bundle",
+        "qty": 1,
+        "sourceSet": "PAR",
+        "sourceNumber": "56"
+      },
+      {
+        "tcgDexId": "sv06.5-038",
+        "name": "Fezandipiti ex",
+        "qty": 1,
+        "sourceSet": "SFA",
+        "sourceNumber": "38"
+      },
+      {
+        "tcgDexId": "sv03.5-151",
+        "name": "Mew ex",
+        "qty": 1,
+        "sourceSet": "MEW",
+        "sourceNumber": "151"
+      },
+      {
+        "tcgDexId": "sv08-076",
+        "name": "Latias ex",
+        "qty": 1,
+        "sourceSet": "SSP",
+        "sourceNumber": "76"
+      },
+      {
+        "tcgDexId": "sv02-169",
+        "name": "Squawkabilly ex",
+        "qty": 1,
+        "sourceSet": "PAL",
+        "sourceNumber": "169"
+      },
+      {
+        "tcgDexId": "sv06-064",
+        "name": "Wellspring Mask Ogerpon ex",
+        "qty": 1,
+        "sourceSet": "TWM",
+        "sourceNumber": "64"
+      },
+      {
+        "tcgDexId": "sv07-128",
+        "name": "Terapagos ex",
+        "qty": 1,
+        "sourceSet": "SCR",
+        "sourceNumber": "128"
+      },
+      {
+        "tcgDexId": "sv04-029",
+        "name": "Chi-Yu",
+        "qty": 1,
+        "sourceSet": "PAR",
+        "sourceNumber": "29"
+      },
+      {
+        "tcgDexId": "sv08-004",
+        "name": "Durant ex",
+        "qty": 1,
+        "sourceSet": "SSP",
+        "sourceNumber": "4"
+      },
+      {
+        "tcgDexId": "sv09-056",
+        "name": "Lillie's Clefairy ex",
+        "qty": 1,
+        "sourceSet": "JTG",
+        "sourceNumber": "56"
+      },
+      {
+        "tcgDexId": "sv06.5-037",
+        "name": "Munkidori ex",
+        "qty": 1,
+        "sourceSet": "SFA",
+        "sourceNumber": "37"
+      },
+      {
+        "tcgDexId": "sv06.5-039",
+        "name": "Pecharunt ex",
+        "qty": 1,
+        "sourceSet": "SFA",
+        "sourceNumber": "39"
+      },
+      {
+        "tcgDexId": "sv10.5w-020",
+        "name": "Reshiram ex",
+        "qty": 1,
+        "sourceSet": "WHT",
+        "sourceNumber": "20"
+      },
+      {
+        "tcgDexId": "sv04-070",
+        "name": "Iron Hands ex",
+        "qty": 1,
+        "sourceSet": "PAR",
+        "sourceNumber": "70"
+      },
+      {
+        "tcgDexId": "sv06-145",
+        "name": "Carmine",
+        "qty": 4,
+        "sourceSet": "TWM",
+        "sourceNumber": "145"
+      },
+      {
+        "tcgDexId": "sv09-155",
+        "name": "Professor's Research",
+        "qty": 4,
+        "sourceSet": "JTG",
+        "sourceNumber": "155"
+      },
+      {
+        "tcgDexId": "sv02-185",
+        "name": "Iono",
+        "qty": 2,
+        "sourceSet": "PAL",
+        "sourceNumber": "185"
+      },
+      {
+        "tcgDexId": "sv02-172",
+        "name": "Boss's Orders",
+        "qty": 1,
+        "sourceSet": "PAL",
+        "sourceNumber": "172"
+      },
+      {
+        "tcgDexId": "sv06.5-061",
+        "name": "Night Stretcher",
+        "qty": 4,
+        "sourceSet": "SFA",
+        "sourceNumber": "61"
+      },
+      {
+        "tcgDexId": "sv01-196",
+        "name": "Ultra Ball",
+        "qty": 4,
+        "sourceSet": "SVI",
+        "sourceNumber": "196"
+      },
+      {
+        "tcgDexId": "sv01-181",
+        "name": "Nest Ball",
+        "qty": 4,
+        "sourceSet": "SVI",
+        "sourceNumber": "181"
+      },
+      {
+        "tcgDexId": "sv02-188",
+        "name": "Super Rod",
+        "qty": 1,
+        "sourceSet": "PAL",
+        "sourceNumber": "188"
+      },
+      {
+        "tcgDexId": "sv01-182",
+        "name": "Pal Pad",
+        "qty": 1,
+        "sourceSet": "SVI",
+        "sourceNumber": "182"
+      },
+      {
+        "tcgDexId": "sv07-131",
+        "name": "Area Zero Underdepths",
+        "qty": 3,
+        "sourceSet": "SCR",
+        "sourceNumber": "131"
+      },
+      {
+        "tcgDexId": "sve-002",
+        "name": "Fire Energy",
+        "qty": 7,
+        "sourceSet": "SVE",
+        "sourceNumber": "2"
+      },
+      {
+        "tcgDexId": "sv10.5b-086",
+        "name": "Prism Energy",
+        "qty": 3,
+        "sourceSet": "BLK",
+        "sourceNumber": "86"
+      },
+      {
+        "tcgDexId": "sv06-167",
+        "name": "Legacy Energy",
+        "qty": 1,
+        "sourceSet": "TWM",
+        "sourceNumber": "167"
+      }
+    ]
+  },
+  {
+    "key": "worlds-2025-marnie-grimmsnarl",
+    "name": "Marnie’s Grimmsnarl ex - Aaron Curry (Worlds 2025)",
+    "format": "Standard",
+    "coverTcgDexId": "sv10-136",
+    "source": {
+      "url": "https://limitlesstcg.com/decks/list/18955",
+      "tournament": "World Championships 2025",
+      "date": "2025-08-15",
+      "placement": 41,
+      "player": "Aaron Curry",
+      "format": "Standard (regulation marks G/H/I)",
+      "retrievedAt": "2026-09-10"
+    },
+    "cards": [
+      {
+        "tcgDexId": "sv06-095",
+        "name": "Munkidori",
+        "qty": 4,
+        "sourceSet": "TWM",
+        "sourceNumber": "95"
+      },
+      {
+        "tcgDexId": "sv10-134",
+        "name": "Marnie's Impidimp",
+        "qty": 3,
+        "sourceSet": "DRI",
+        "sourceNumber": "134"
+      },
+      {
+        "tcgDexId": "sv10-135",
+        "name": "Marnie's Morgrem",
+        "qty": 2,
+        "sourceSet": "DRI",
+        "sourceNumber": "135"
+      },
+      {
+        "tcgDexId": "sv10-136",
+        "name": "Marnie's Grimmsnarl ex",
+        "qty": 2,
+        "sourceSet": "DRI",
+        "sourceNumber": "136"
+      },
+      {
+        "tcgDexId": "sv06-051",
+        "name": "Snorunt",
+        "qty": 2,
+        "sourceSet": "TWM",
+        "sourceNumber": "51"
+      },
+      {
+        "tcgDexId": "sv06-053",
+        "name": "Froslass",
+        "qty": 2,
+        "sourceSet": "TWM",
+        "sourceNumber": "53"
+      },
+      {
+        "tcgDexId": "sv08.5-004",
+        "name": "Budew",
+        "qty": 1,
+        "sourceSet": "PRE",
+        "sourceNumber": "4"
+      },
+      {
+        "tcgDexId": "sv10-010",
+        "name": "Shaymin",
+        "qty": 1,
+        "sourceSet": "DRI",
+        "sourceNumber": "10"
+      },
+      {
+        "tcgDexId": "sv09-155",
+        "name": "Professor's Research",
+        "qty": 4,
+        "sourceSet": "JTG",
+        "sourceNumber": "155"
+      },
+      {
+        "tcgDexId": "sv02-185",
+        "name": "Iono",
+        "qty": 4,
+        "sourceSet": "PAL",
+        "sourceNumber": "185"
+      },
+      {
+        "tcgDexId": "sv03-186",
+        "name": "Arven",
+        "qty": 4,
+        "sourceSet": "OBF",
+        "sourceNumber": "186"
+      },
+      {
+        "tcgDexId": "sv02-172",
+        "name": "Boss's Orders",
+        "qty": 3,
+        "sourceSet": "PAL",
+        "sourceNumber": "172"
+      },
+      {
+        "tcgDexId": "sv05-144",
+        "name": "Buddy-Buddy Poffin",
+        "qty": 2,
+        "sourceSet": "TEF",
+        "sourceNumber": "144"
+      },
+      {
+        "tcgDexId": "sv04-160",
+        "name": "Counter Catcher",
+        "qty": 2,
+        "sourceSet": "PAR",
+        "sourceNumber": "160"
+      },
+      {
+        "tcgDexId": "sv06.5-061",
+        "name": "Night Stretcher",
+        "qty": 2,
+        "sourceSet": "SFA",
+        "sourceNumber": "61"
+      },
+      {
+        "tcgDexId": "sv01-191",
+        "name": "Rare Candy",
+        "qty": 2,
+        "sourceSet": "SVI",
+        "sourceNumber": "191"
+      },
+      {
+        "tcgDexId": "sv01-181",
+        "name": "Nest Ball",
+        "qty": 1,
+        "sourceSet": "SVI",
+        "sourceNumber": "181"
+      },
+      {
+        "tcgDexId": "sv01-196",
+        "name": "Ultra Ball",
+        "qty": 1,
+        "sourceSet": "SVI",
+        "sourceNumber": "196"
+      },
+      {
+        "tcgDexId": "sv06-163",
+        "name": "Secret Box",
+        "qty": 1,
+        "sourceSet": "TWM",
+        "sourceNumber": "163"
+      },
+      {
+        "tcgDexId": "sv02-188",
+        "name": "Super Rod",
+        "qty": 1,
+        "sourceSet": "PAL",
+        "sourceNumber": "188"
+      },
+      {
+        "tcgDexId": "sv01-186",
+        "name": "Pokégear 3.0",
+        "qty": 1,
+        "sourceSet": "SVI",
+        "sourceNumber": "186"
+      },
+      {
+        "tcgDexId": "sv04-178",
+        "name": "Technical Machine: Evolution",
+        "qty": 2,
+        "sourceSet": "PAR",
+        "sourceNumber": "178"
+      },
+      {
+        "tcgDexId": "sv04-177",
+        "name": "Technical Machine: Devolution",
+        "qty": 1,
+        "sourceSet": "PAR",
+        "sourceNumber": "177"
+      },
+      {
+        "tcgDexId": "sv10.5b-079",
+        "name": "Air Balloon",
+        "qty": 1,
+        "sourceSet": "BLK",
+        "sourceNumber": "79"
+      },
+      {
+        "tcgDexId": "sv10-169",
+        "name": "Spikemuth Gym",
+        "qty": 2,
+        "sourceSet": "DRI",
+        "sourceNumber": "169"
+      },
+      {
+        "tcgDexId": "sv02-171",
+        "name": "Artazon",
+        "qty": 1,
+        "sourceSet": "PAL",
+        "sourceNumber": "171"
+      },
+      {
+        "tcgDexId": "sve-007",
+        "name": "Darkness Energy",
+        "qty": 8,
+        "sourceSet": "SVE",
+        "sourceNumber": "7"
+      }
+    ]
+  },
+  {
+    "key": "worlds-2025-joltik-box",
+    "name": "Joltik Box - Chunhchih Chen (Worlds 2025)",
+    "format": "Standard",
+    "coverTcgDexId": "sv08-057",
+    "source": {
+      "url": "https://limitlesstcg.com/decks/list/18963",
+      "tournament": "World Championships 2025",
+      "date": "2025-08-15",
+      "placement": 50,
+      "player": "Chunhchih Chen",
+      "format": "Standard (regulation marks G/H/I)",
+      "retrievedAt": "2026-09-10"
+    },
+    "cards": [
+      {
+        "tcgDexId": "sv07-050",
+        "name": "Joltik",
+        "qty": 2,
+        "sourceSet": "SCR",
+        "sourceNumber": "50"
+      },
+      {
+        "tcgDexId": "sv06.5-002",
+        "name": "Galvantula",
+        "qty": 1,
+        "sourceSet": "SFA",
+        "sourceNumber": "2"
+      },
+      {
+        "tcgDexId": "sv04-070",
+        "name": "Iron Hands ex",
+        "qty": 2,
+        "sourceSet": "PAR",
+        "sourceNumber": "70"
+      },
+      {
+        "tcgDexId": "sv08-057",
+        "name": "Pikachu ex",
+        "qty": 2,
+        "sourceSet": "SSP",
+        "sourceNumber": "57"
+      },
+      {
+        "tcgDexId": "sv05-025",
+        "name": "Iron Leaves ex",
+        "qty": 1,
+        "sourceSet": "TEF",
+        "sourceNumber": "25"
+      },
+      {
+        "tcgDexId": "sv06-141",
+        "name": "Bloodmoon Ursaluna ex",
+        "qty": 1,
+        "sourceSet": "TWM",
+        "sourceNumber": "141"
+      },
+      {
+        "tcgDexId": "sv08-076",
+        "name": "Latias ex",
+        "qty": 1,
+        "sourceSet": "SSP",
+        "sourceNumber": "76"
+      },
+      {
+        "tcgDexId": "sv03.5-151",
+        "name": "Mew ex",
+        "qty": 1,
+        "sourceSet": "MEW",
+        "sourceNumber": "151"
+      },
+      {
+        "tcgDexId": "sv04-056",
+        "name": "Iron Bundle",
+        "qty": 1,
+        "sourceSet": "PAR",
+        "sourceNumber": "56"
+      },
+      {
+        "tcgDexId": "sv01-081",
+        "name": "Miraidon ex",
+        "qty": 1,
+        "sourceSet": "SVI",
+        "sourceNumber": "81"
+      },
+      {
+        "tcgDexId": "sv06.5-038",
+        "name": "Fezandipiti ex",
+        "qty": 1,
+        "sourceSet": "SFA",
+        "sourceNumber": "38"
+      },
+      {
+        "tcgDexId": "sv09-056",
+        "name": "Lillie's Clefairy ex",
+        "qty": 1,
+        "sourceSet": "JTG",
+        "sourceNumber": "56"
+      },
+      {
+        "tcgDexId": "sv03-186",
+        "name": "Arven",
+        "qty": 4,
+        "sourceSet": "OBF",
+        "sourceNumber": "186"
+      },
+      {
+        "tcgDexId": "sv07-133",
+        "name": "Crispin",
+        "qty": 4,
+        "sourceSet": "SCR",
+        "sourceNumber": "133"
+      },
+      {
+        "tcgDexId": "sv02-172",
+        "name": "Boss's Orders",
+        "qty": 4,
+        "sourceSet": "PAL",
+        "sourceNumber": "172"
+      },
+      {
+        "tcgDexId": "sv01-196",
+        "name": "Ultra Ball",
+        "qty": 4,
+        "sourceSet": "SVI",
+        "sourceNumber": "196"
+      },
+      {
+        "tcgDexId": "sv01-181",
+        "name": "Nest Ball",
+        "qty": 4,
+        "sourceSet": "SVI",
+        "sourceNumber": "181"
+      },
+      {
+        "tcgDexId": "sv01-186",
+        "name": "Pokégear 3.0",
+        "qty": 3,
+        "sourceSet": "SVI",
+        "sourceNumber": "186"
+      },
+      {
+        "tcgDexId": "sv04-163",
+        "name": "Earthen Vessel",
+        "qty": 1,
+        "sourceSet": "PAR",
+        "sourceNumber": "163"
+      },
+      {
+        "tcgDexId": "sv06.5-061",
+        "name": "Night Stretcher",
+        "qty": 1,
+        "sourceSet": "SFA",
+        "sourceNumber": "61"
+      },
+      {
+        "tcgDexId": "sv05-157",
+        "name": "Prime Catcher",
+        "qty": 1,
+        "sourceSet": "TEF",
+        "sourceNumber": "157"
+      },
+      {
+        "tcgDexId": "sv02-173",
+        "name": "Bravery Charm",
+        "qty": 2,
+        "sourceSet": "PAL",
+        "sourceNumber": "173"
+      },
+      {
+        "tcgDexId": "sv10.5b-079",
+        "name": "Air Balloon",
+        "qty": 1,
+        "sourceSet": "BLK",
+        "sourceNumber": "79"
+      },
+      {
+        "tcgDexId": "sv10.5w-080",
+        "name": "Brave Bangle",
+        "qty": 1,
+        "sourceSet": "WHT",
+        "sourceNumber": "80"
+      },
+      {
+        "tcgDexId": "sv06.5-063",
+        "name": "Powerglass",
+        "qty": 1,
+        "sourceSet": "SFA",
+        "sourceNumber": "63"
+      },
+      {
+        "tcgDexId": "sv08-180",
+        "name": "Lively Stadium",
+        "qty": 1,
+        "sourceSet": "SSP",
+        "sourceNumber": "180"
+      },
+      {
+        "tcgDexId": "sve-004",
+        "name": "Lightning Energy",
+        "qty": 5,
+        "sourceSet": "SVE",
+        "sourceNumber": "4"
+      },
+      {
+        "tcgDexId": "sve-001",
+        "name": "Grass Energy",
+        "qty": 5,
+        "sourceSet": "SVE",
+        "sourceNumber": "1"
+      },
+      {
+        "tcgDexId": "sve-008",
+        "name": "Metal Energy",
+        "qty": 2,
+        "sourceSet": "SVE",
+        "sourceNumber": "8"
+      },
+      {
+        "tcgDexId": "sve-005",
+        "name": "Psychic Energy",
+        "qty": 1,
+        "sourceSet": "SVE",
+        "sourceNumber": "5"
+      }
+    ]
+  }
+]

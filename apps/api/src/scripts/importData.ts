@@ -207,13 +207,9 @@ async function bootstrap() {
       logWarn(`Listings scellés ignorés : ${(err as Error).message}`);
     }
 
-    logStep("Création des decks de test...");
+    logStep("Seeding verified Worlds 2025 tournament decks...");
     await seedService.seedDecks();
-    logSuccess("Decks créés !");
-
-    logStep("Création des decks compétitifs (IA / templates)...");
-    await seedService.seedCompetitiveDecks();
-    logSuccess("Decks compétitifs créés !");
+    logSuccess("Tournament decks verified and seeded.");
 
     logStep("Création d'un tournoi complet avec seeding...");
     const completeTournament = await seedService.seedCompleteTournament(

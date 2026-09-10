@@ -2,8 +2,6 @@ import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
 import * as bcrypt from "bcryptjs";
-import * as fs from "fs";
-import * as path from "path";
 import { Article, ArticleStatus } from "src/article/entities/article.entity";
 import { Card } from "src/card/entities/card.entity";
 import { PokemonCardDetails } from "src/card/entities/pokemon-card-details.entity";
@@ -92,6 +90,12 @@ import {
   calculateRecentEventShare,
   sampleRecentCards,
 } from "./trending-seed.utils";
+
+import { seedCompetitiveDeckPresets } from "./competitive-deck-seed";
+import {
+  COMPETITIVE_DECK_PRESETS,
+  parseCompetitiveDeckOwnerId,
+} from "./competitive-decks";
 
 const SEED_AVATARS = [
   "/images/avatars/pikachu.png",
@@ -1245,141 +1249,24 @@ export class SeedService {
     return await this.formatRepository.find();
   }
 
-  async seedDecks() {
-    const users = await this.userRepository.find();
-    if (users.length === 0) return;
-
-    const formats = await this.seedDeckFormats();
-    if (formats.length === 0) return;
-
-    const cards = await this.pokemonCardRepository.find({ take: 5 });
-    if (cards.length < 2) return;
-    const decks: Deck[] = [];
-    for (let i = 0; i < 20; i++) {
-      const randomUser = users[Math.floor(Math.random() * users.length)];
-      const randomFormat = formats[Math.floor(Math.random() * formats.length)];
-      const isPublic = i === 0 ? false : Math.random() > 0.5;
-
-      const deck = this.deckRepository.create({
-        name: `Deck Demo ${i + 1}`,
-        user: randomUser,
-        format: randomFormat,
-        isPublic: isPublic,
-      });
-
-      decks.push(deck);
-    }
-    const savedDecks = await this.deckRepository.save(decks);
-
-    const deckCards: DeckCard[] = [];
-    for (const deck of savedDecks) {
-      const cardCount = 10;
-
-      for (let j = 0; j < cardCount; j++) {
-        const randomCard = cards[Math.floor(Math.random() * cards.length)];
-        deckCards.push(
-          this.deckCardRepository.create({
-            deck,
-            card: randomCard,
-            qty: Math.floor(Math.random() * 3) + 1,
-            role: DeckCardRole.main,
-          }),
-        );
-      }
-    }
-    await this.deckCardRepository.save(deckCards);
+  /** Seeds real tournament lists through the legacy full-seed entry point. */
+  async seedDecks(): Promise<void> {
+    await this.seedCompetitiveDecks();
   }
 
-  /**
-   * Seed competitive decks from JSON preset files.
-   * Creates public decks owned by the first admin user, linked to real cards in the DB.
-   */
-  async seedCompetitiveDecks() {
-    const users = await this.userRepository.find();
-    if (users.length === 0) return;
-
-    const owner = users.find((u) => u.role === UserRole.ADMIN) ?? users[0];
-    const formats = await this.seedDeckFormats();
-    const standardFormat = formats.find((f) => f.type === "Standard");
-    if (!standardFormat) return;
-
-    const deckFiles = [
-      "deck-lanssorien.json",
-      "deck-gardevoir.json",
-      "deck-gromago.json",
-      "deck-zoroark-n.json",
-      "deck-angoliath-rosemary.json",
-      "deck-momartik-munkidori.json",
-    ];
-
-    let created = 0;
-
-    for (const filename of deckFiles) {
-      const filePath = path.join(__dirname, "data", filename);
-      if (!fs.existsSync(filePath)) {
-        console.log(`⚠️  Fichier ${filename} introuvable, ignoré.`);
-        continue;
-      }
-
-      const raw = JSON.parse(fs.readFileSync(filePath, "utf-8"));
-
-      const existing = await this.deckRepository.findOne({
-        where: { name: raw.name, user: { id: owner.id } },
-      });
-      if (existing) {
-        console.log(`⏭️  Deck "${raw.name}" existe déjà, ignoré.`);
-        continue;
-      }
-
-      const resolvedCards: { card: Card; qty: number }[] = [];
-      const notFound: string[] = [];
-
-      for (const entry of raw.cards) {
-        const card = await this.pokemonCardRepository.findOne({
-          where: { tcgDexId: entry.tcgDexId },
-        });
-        if (card) {
-          resolvedCards.push({ card, qty: entry.qty });
-        } else {
-          notFound.push(entry.tcgDexId || entry.name);
-        }
-      }
-
-      if (resolvedCards.length === 0) {
-        console.log(
-          `⚠️  Deck "${raw.name}" : aucune carte trouvée en BDD, ignoré.`,
-        );
-        continue;
-      }
-
-      const deck = this.deckRepository.create({
-        name: raw.name,
-        isPublic: true,
-        user: owner,
-        format: standardFormat,
-        coverCard: resolvedCards[0]?.card,
-      });
-      await this.deckRepository.save(deck);
-
-      const deckCards = resolvedCards.map((rc) =>
-        this.deckCardRepository.create({
-          card: rc.card,
-          qty: rc.qty,
-          role: DeckCardRole.main,
-          deck,
-        }),
-      );
-      await this.deckCardRepository.save(deckCards);
-      created++;
-
-      if (notFound.length > 0) {
-        console.log(
-          `⚠️  Deck "${raw.name}" : ${notFound.length} cartes introuvables (${notFound.slice(0, 5).join(", ")}${notFound.length > 5 ? "..." : ""})`,
-        );
-      }
-    }
-
-    console.log(`✅ ${created} deck(s) compétitif(s) créé(s).`);
+  /** Seeds complete, attributed public decks in development and production. */
+  async seedCompetitiveDecks(): Promise<void> {
+    const report = await seedCompetitiveDeckPresets(
+      this.deckRepository.manager,
+      {
+        ownerId: parseCompetitiveDeckOwnerId(
+          this.configService.get("SEED_DECK_OWNER_ID"),
+        ),
+      },
+    );
+    console.log(
+      `Competitive decks: ${report.created} created, ${report.existing} already present; ${report.uniqueCards} catalog prints verified.`,
+    );
   }
 
   /**
@@ -2145,64 +2032,12 @@ export class SeedService {
       }
     }
 
-    // 5. Maxime's 5 Standard Decks
-    let standardFormat = await this.formatRepository.findOne({
-      where: { type: "Standard" },
-    });
-    if (!standardFormat) {
-      standardFormat = await this.formatRepository.save(
-        this.formatRepository.create({
-          type: "Standard",
-        }),
-      );
-    }
-
-    const deckNames = [
-      "Dracaufeu ex / Pidgeot ex Compétitif",
-      "Gardevoir ex Control",
-      "Miraidon ex Speed",
-      "Lugia VSTAR Archeops",
-      "Lost Zone Box Giratina",
-    ];
-
-    for (let d = 0; d < deckNames.length; d++) {
-      const name = deckNames[d];
-      let deck = await this.deckRepository.findOne({
-        where: { user: { id: maxime.id }, name },
-        relations: ["cards"],
-      });
-
-      if (!deck) {
-        deck = this.deckRepository.create({
-          name,
-          user: maxime,
-          format: standardFormat,
-          isPublic: true,
-          coverCard: allCards[d % allCards.length],
-        });
-        deck = await this.deckRepository.save(deck);
-
-        // Build 60 cards
-        const deckCards: DeckCard[] = [];
-        let totalCount = 0;
-        let cardIdx = 0;
-        while (totalCount < 60 && cardIdx < allCards.length) {
-          const remaining = 60 - totalCount;
-          const qty = Math.min(remaining, d === 0 ? 4 : (cardIdx % 4) + 1);
-          deckCards.push(
-            this.deckCardRepository.create({
-              deck,
-              card: allCards[cardIdx % allCards.length],
-              qty,
-              role: DeckCardRole.main,
-            }),
-          );
-          totalCount += qty;
-          cardIdx++;
-        }
-        await this.deckCardRepository.save(deckCards);
-      }
-    }
+    // Use the same verified lists in the personal demo library.
+    await seedCompetitiveDeckPresets(
+      this.deckRepository.manager,
+      { ownerId: maxime.id },
+      COMPETITIVE_DECK_PRESETS.slice(0, 5),
+    );
 
     // 6. Maxime's 4 Finished Tournaments (Historical ELO curve)
     const pastTournamentsData = [
