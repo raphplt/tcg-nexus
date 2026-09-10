@@ -232,6 +232,12 @@ describe("Migration chain (PostgreSQL, synchronize disabled)", () => {
 
       const stamped = await connect(adopted);
       try {
+        // deck_embedding has no entity, so synchronization never creates it:
+        // its migration is the only one the runner still has to execute.
+        const executed = await stamped.runMigrations({ transaction: "each" });
+        expect(executed.map((migration) => migration.name)).toEqual([
+          "DeckEmbeddings1789600000000",
+        ]);
         expect(await stamped.showMigrations()).toBe(false);
         const pending = await stamped.driver.createSchemaBuilder().log();
         expect(pending.upQueries.map((query) => query.query)).toEqual([]);

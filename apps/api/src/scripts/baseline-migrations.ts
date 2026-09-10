@@ -161,6 +161,15 @@ const PROBES: MigrationProbe[] = [
             WHERE table_name = 'seller_settlement_account'`,
   },
   {
+    name: "EarlyLegacyColumnRenames1786300000000",
+    // A database built by synchronization already carries the column names the
+    // entities read, so the early renames have nothing to do on it.
+    timestamp: 1786300000000,
+    probe: `SELECT 1 FROM information_schema.columns
+            WHERE table_name = 'collection_item'
+              AND column_name = 'quantityAvailable'`,
+  },
+  {
     name: "RefundReservations1788768000000",
     timestamp: 1788768000000,
     probe: `SELECT 1 FROM information_schema.columns
