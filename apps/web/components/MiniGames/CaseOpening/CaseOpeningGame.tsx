@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useMiniGameSocket } from "@/hooks/useMiniGameSocket";
 import { miniGameService } from "@/services/miniGame.service";
 import type { BoosterCard, MiniGameQueueParams } from "@/types/mini-game";
+import { preloadCardImages } from "@/utils/miniGames/cardPreloader";
 import { formatEuro } from "@/utils/miniGames/pricing";
 import { DEFAULT_DUEL_OPTIONS, DuelSetup, type DuelOptions } from "./DuelSetup";
 import type { Side } from "./duelReducer";
@@ -24,10 +25,18 @@ const PACK_SIZES = { standard: 6, premium: 6, chase: 3 } as const;
 
 /** Builds the matchmaking parameters from the setup screen. */
 export function queueParamsFrom(options: DuelOptions): MiniGameQueueParams {
-  const setId = options.scope === "set" && options.setId ? options.setId : undefined;
+  const setId =
+    options.scope === "set" && options.setId ? options.setId : undefined;
   const serieId =
-    !setId && options.scope !== "all" && options.serieId ? options.serieId : undefined;
-  return { roundCount: options.roundCount, packStyle: options.style, setId, serieId };
+    !setId && options.scope !== "all" && options.serieId
+      ? options.serieId
+      : undefined;
+  return {
+    roundCount: options.roundCount,
+    packStyle: options.style,
+    setId,
+    serieId,
+  };
 }
 
 /** The Case Opening mini-game: setup, then a solo, local or online duel. */
@@ -61,6 +70,7 @@ export function CaseOpeningGame() {
           style: options.style,
         });
         setPacks(response.packs);
+        void preloadCardImages(response.packs.flat(2), "low");
         setGameKey((key) => key + 1);
         setLoading("idle");
       } catch {
@@ -144,7 +154,9 @@ export function CaseOpeningGame() {
       {(mode === "solo" || mode === "local") && loading === "loading" ? (
         <div className="flex flex-col items-center justify-center gap-3 py-20">
           <Loader2 className="h-10 w-10 animate-spin text-primary" />
-          <p className="text-sm font-bold text-muted-foreground">{tm("common.preparing")}</p>
+          <p className="text-sm font-bold text-muted-foreground">
+            {tm("common.preparing")}
+          </p>
         </div>
       ) : null}
 
@@ -152,7 +164,9 @@ export function CaseOpeningGame() {
         <LoadError onRetry={() => startOffline(mode)} onBack={backToSelect} />
       ) : null}
 
-      {(mode === "solo" || mode === "local") && loading === "idle" && packs.length > 0 ? (
+      {(mode === "solo" || mode === "local") &&
+      loading === "idle" &&
+      packs.length > 0 ? (
         <OfflineDuel
           key={gameKey}
           mode={mode}

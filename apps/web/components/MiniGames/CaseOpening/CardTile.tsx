@@ -11,6 +11,7 @@ import {
   TIER_BADGE_CLASSES,
   TIER_LABEL_KEYS,
 } from "@/utils/miniGames/booster";
+import { isCardImagePreloaded } from "@/utils/miniGames/cardPreloader";
 import { formatEuro } from "@/utils/miniGames/pricing";
 
 const CARD_BACK = "/images/carte-pokemon-dos.jpg";
@@ -35,11 +36,14 @@ export function CardTile({ card, size = "md" }: CardTileProps) {
           : "border-border"
       }`}
     >
-      <div className={`relative ${size === "sm" ? "aspect-5/7 w-17" : "aspect-5/7 w-full"}`}>
+      <div
+        className={`relative ${size === "sm" ? "aspect-5/7 w-17" : "aspect-5/7 w-full"}`}
+      >
         <SmartImage
           src={getCardImage(card, "low")}
           alt={card.name ?? ""}
           fallbackSrc={CARD_BACK}
+          noSkeleton={isCardImagePreloaded(getCardImage(card, "low"))}
           className="object-contain"
         />
       </div>
@@ -49,7 +53,9 @@ export function CardTile({ card, size = "md" }: CardTileProps) {
             {card.name ?? ""}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-1">
-            <Badge className={`border px-1.5 py-0 text-[9px] ${TIER_BADGE_CLASSES[tier]}`}>
+            <Badge
+              className={`border px-1.5 py-0 text-[9px] ${TIER_BADGE_CLASSES[tier]}`}
+            >
               {t(TIER_LABEL_KEYS[tier])}
             </Badge>
             <Badge className="border bg-zinc-800 px-1.5 py-0 font-mono text-[9px] text-white">
