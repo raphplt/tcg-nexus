@@ -81,7 +81,7 @@ describe("CheckoutPage", () => {
     );
 
   it("resumes an active pending session with item snapshot and timer", async () => {
-    (paymentService.getPendingCheckout as jest.Mock).mockResolvedValueOnce({
+    vi.mocked(paymentService.getPendingCheckout).mockResolvedValueOnce({
       orderId: 777,
       clientSecret: "pi_test_secret",
       amount: 30,
@@ -113,7 +113,7 @@ describe("CheckoutPage", () => {
   });
 
   it("cancels pending reservation and resets session", async () => {
-    (paymentService.getPendingCheckout as jest.Mock).mockResolvedValueOnce({
+    vi.mocked(paymentService.getPendingCheckout).mockResolvedValueOnce({
       orderId: 777,
       clientSecret: "pi_test_secret",
       amount: 30,
@@ -134,7 +134,7 @@ describe("CheckoutPage", () => {
         },
       ],
     });
-    (paymentService.cancelPendingOrder as jest.Mock).mockResolvedValueOnce({
+    vi.mocked(paymentService.cancelPendingOrder).mockResolvedValueOnce({
       success: true,
       orderId: 777,
     });
@@ -154,14 +154,13 @@ describe("CheckoutPage", () => {
   });
 
   it("renders expired reservation notice when timer expires", async () => {
-    (paymentService.getPendingCheckout as jest.Mock).mockResolvedValueOnce({
+    vi.mocked(paymentService.getPendingCheckout).mockResolvedValueOnce({
       orderId: 777,
       clientSecret: "pi_test_secret",
       amount: 30,
       shippingAmount: 5,
       currency: "EUR",
       shippingAddress: "42 Wallaby Way",
-      // Expired in the past
       reservationExpiresAt: new Date(Date.now() - 5000).toISOString(),
       items: [],
     });
