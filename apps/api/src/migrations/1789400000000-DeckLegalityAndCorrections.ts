@@ -1,5 +1,9 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
-import { schemaAlreadyHas } from "../common/migration-guard";
+import {
+  renameLegacyColumns,
+  schemaAlreadyHas,
+} from "../common/migration-guard";
+import { RepairLegacyColumnNames1789500000000 } from "./1789500000000-RepairLegacyColumnNames";
 
 /**
  * Adds explicit deck legality, submission history and rating reversal (TRN-02, TRN-05).
@@ -24,6 +28,17 @@ export class DeckLegalityAndCorrections1789400000000
     ) {
       return;
     }
+
+    // A legacy database got this table from TournamentOperations under
+    // snake_case names, and RepairLegacyColumnNames only runs after this
+    // migration: rename them first so the backfill below reads real columns.
+    await renameLegacyColumns(
+      queryRunner,
+      "tournament_deck_snapshot",
+      RepairLegacyColumnNames1789500000000.RENAMES.find(
+        ([table]) => table === "tournament_deck_snapshot",
+      )?.[1] ?? [],
+    );
 
     await queryRunner.query(`ALTER TABLE "tournament_deck_snapshot"
       ADD COLUMN IF NOT EXISTS "legalityStatus" character varying(16) NOT NULL DEFAULT 'unverified',

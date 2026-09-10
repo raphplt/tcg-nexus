@@ -1,4 +1,5 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
+import { renameLegacyColumns } from "../common/migration-guard";
 
 /**
  * Renames the columns earlier migrations created under names the entities never
@@ -178,22 +179,7 @@ export class RepairLegacyColumnNames1789500000000
       table,
       columns,
     ] of RepairLegacyColumnNames1789500000000.RENAMES) {
-      for (const [written, expected] of columns) {
-        await queryRunner.query(
-          `DO $$
-            BEGIN
-              IF EXISTS (
-                SELECT 1 FROM information_schema.columns
-                 WHERE table_schema = current_schema() AND table_name = '${table}' AND column_name = '${written}'
-              ) AND NOT EXISTS (
-                SELECT 1 FROM information_schema.columns
-                 WHERE table_schema = current_schema() AND table_name = '${table}' AND column_name = '${expected}'
-              ) THEN
-                ALTER TABLE "${table}" RENAME COLUMN "${written}" TO "${expected}";
-              END IF;
-            END $$`,
-        );
-      }
+      await renameLegacyColumns(queryRunner, table, columns);
     }
 
     // The settlement migration wrote this default as a scaled literal, which
