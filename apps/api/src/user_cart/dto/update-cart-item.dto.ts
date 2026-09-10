@@ -1,13 +1,15 @@
-import { ApiProperty, PartialType } from "@nestjs/swagger";
+import { ApiPropertyOptional, PartialType } from "@nestjs/swagger";
 import { IsInt, IsOptional, Min } from "class-validator";
 import { CreateCartItemDto } from "./create-cart-item.dto";
 
+/**
+ * Payload for updating the quantity of an existing item in the shopping cart.
+ */
 export class UpdateCartItemDto extends PartialType(CreateCartItemDto) {
-  @ApiProperty({
-    description: "Nouvelle quantité pour cet item",
+  @ApiPropertyOptional({
+    description: "New quantity for this cart item",
     example: 2,
     minimum: 1,
-    required: false,
   })
   @IsOptional()
   @IsInt()

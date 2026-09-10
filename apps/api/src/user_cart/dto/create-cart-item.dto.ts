@@ -1,9 +1,12 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsInt, IsNotEmpty, IsPositive, Min } from "class-validator";
 
+/**
+ * Payload for adding an item listing to the user's active shopping cart.
+ */
 export class CreateCartItemDto {
   @ApiProperty({
-    description: "ID du listing à ajouter au panier",
+    description: "Marketplace listing identifier to add to cart",
     example: 1,
   })
   @IsInt()
@@ -12,7 +15,7 @@ export class CreateCartItemDto {
   listingId: number;
 
   @ApiProperty({
-    description: "Quantité à ajouter au panier",
+    description: "Quantity to add to cart",
     example: 1,
     default: 1,
     minimum: 1,
