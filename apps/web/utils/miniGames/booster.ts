@@ -15,7 +15,8 @@ export const TIER_LABEL_KEYS: Record<RarityTier, string> = {
 export const TIER_BADGE_CLASSES: Record<RarityTier, string> = {
   [RarityTier.Common]: "border-border bg-muted text-muted-foreground",
   [RarityTier.Uncommon]: "border-border bg-muted text-foreground",
-  [RarityTier.Rare]: "border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400",
+  [RarityTier.Rare]:
+    "border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400",
   [RarityTier.Holo]:
     "border-purple-500/30 bg-purple-500/10 text-purple-600 dark:text-purple-400",
   [RarityTier.Ultra]:

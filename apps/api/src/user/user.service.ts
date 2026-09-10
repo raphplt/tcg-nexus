@@ -10,7 +10,9 @@ import { Repository } from "typeorm";
 import type { QueryDeepPartialEntity } from "typeorm/query-builder/QueryPartialEntity";
 import { UserFollowService } from "../user-follow/user-follow.service";
 import { CreateUserDto } from "./dto/create-user.dto";
+import { OnboardingStateDto } from "./dto/onboarding-state.dto";
 import { PublicUserDto } from "./dto/public-user.dto";
+import { UpdateOnboardingDto } from "./dto/update-onboarding.dto";
 import { UpdateMyProfileDto } from "./dto/update-my-profile.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { User } from "./entities/user.entity";
@@ -232,6 +234,57 @@ export class UserService {
       await this.userRepository.update(id, sanitizedData);
     }
     return this.findOne(id);
+  }
+
+  /**
+   * Retrieves the authenticated user's persisted product-onboarding state.
+   *
+   * @param id Authenticated user ID.
+   * @returns Current onboarding state.
+   */
+  async getOnboardingState(id: number): Promise<OnboardingStateDto> {
+    const user = await this.userRepository.findOne({
+      where: { id },
+      select: [
+        "id",
+        "onboardingVersion",
+        "onboardingStatus",
+        "onboardingUpdatedAt",
+      ],
+    });
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+    return {
+      version: user.onboardingVersion,
+      status: user.onboardingStatus,
+      updatedAt: user.onboardingUpdatedAt,
+    };
+  }
+
+  /**
+   * Records completion or dismissal of the current product-onboarding version.
+   *
+   * @param id Authenticated user ID.
+   * @param updateDto Terminal onboarding outcome.
+   * @returns Updated onboarding state.
+   */
+  async updateOnboardingState(
+    id: number,
+    updateDto: UpdateOnboardingDto,
+  ): Promise<OnboardingStateDto> {
+    const state = await this.getOnboardingState(id);
+    const updatedAt = new Date();
+    await this.userRepository.update(id, {
+      onboardingVersion: Math.max(state.version, updateDto.version),
+      onboardingStatus: updateDto.status,
+      onboardingUpdatedAt: updatedAt,
+    });
+    return {
+      version: Math.max(state.version, updateDto.version),
+      status: updateDto.status,
+      updatedAt,
+    };
   }
 
   /**

@@ -8,6 +8,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Card } from "../card/entities/card.entity";
 import { PokemonCardDetails } from "../card/entities/pokemon-card-details.entity";
 import { CardGame } from "../common/enums/cardGame";
+import { PokemonCardsType } from "../common/enums/pokemonCardsType";
 import { PokemonSet } from "../pokemon-set/entities/pokemon-set.entity";
 import { Repository } from "typeorm";
 import { PaginatedResult, PaginationHelper } from "../helpers/pagination";
@@ -169,7 +170,17 @@ export class PokemonCardService {
     return this.toPokemonCardResponse(card);
   }
 
-  async findBySearch(search: string): Promise<Record<string, any>[]> {
+  /**
+   * Searches Pokémon cards by matching names or keywords.
+   *
+   * @param search - Search query term.
+   * @param limit - Optional upper bound on results returned.
+   * @returns Array of serialized card responses.
+   */
+  async findBySearch(
+    search: string,
+    limit?: number,
+  ): Promise<Record<string, any>[]> {
     const qb = this.pokemonCardRepository
       .createQueryBuilder("card")
       .leftJoinAndSelect("card.set", "set")
@@ -181,6 +192,10 @@ export class PokemonCardService {
     }
 
     applyCardSearch(qb, search);
+
+    if (limit !== undefined && limit > 0) {
+      qb.limit(Math.min(limit, 100));
+    }
 
     const cards = await qb.getMany();
     return cards.map((card) => this.toPokemonCardResponse(card));
@@ -323,10 +338,23 @@ export class PokemonCardService {
     );
   }
 
+  /**
+   * Retrieves a random Pokémon card matching optional criteria.
+   *
+   * @param serieId Optional series identifier.
+   * @param rarity Optional rarity name.
+   * @param setId Optional set identifier.
+   * @param category Optional card category (e.g. Pokemon).
+   * @param excludeIds Optional card IDs to exclude.
+   * @returns Localized card entity or null.
+   */
   async findRandom(
     serieId?: string,
     rarity?: string,
     setId?: string,
+    category?: PokemonCardsType,
+    excludeIds?: string[],
+    hasImage = false,
   ): Promise<Record<string, any> | null> {
     const qb = this.pokemonCardRepository
       .createQueryBuilder("pokemonCard")
@@ -347,7 +375,124 @@ export class PokemonCardService {
       qb.andWhere("pokemonSet.id = :setId", { setId });
     }
 
+    if (category) {
+      qb.andWhere("pokemonDetails.category = :category", { category });
+    }
+
+    if (excludeIds && excludeIds.length > 0) {
+      qb.andWhere("pokemonCard.id NOT IN (:...excludeIds)", { excludeIds });
+    }
+
+    if (hasImage) {
+      qb.andWhere(`EXISTS (
+        SELECT 1 FROM card_translation ct
+        WHERE ct.card_id = "pokemonCard"."id"
+          AND ct.image IS NOT NULL
+          AND ct.image != ''
+      )`);
+    }
+
     const card = await qb.orderBy("RANDOM()").limit(1).getOne();
+    return card ? this.toPokemonCardResponse(card) : null;
+  }
+
+  /**
+   * Retrieves a random sample of distinct Pokémon species for mini-game distractors.
+   *
+   * Each entry represents a unique Pokémon by primary National Pokédex number,
+   * filtered to Pokémon category. Names are resolved by CatalogLocalizationInterceptor
+   * using the card identifier and tcgDexId.
+   *
+   * @param count Number of distinct species to draw (capped between 1 and 100).
+   * @returns Array of species items with id, tcgDexId, dexId and types.
+   */
+  async findRandomSpecies(count = 40): Promise<Record<string, any>[]> {
+    const validCount = Math.max(1, Math.min(100, count));
+    const qb = this.pokemonCardRepository
+      .createQueryBuilder("card")
+      .innerJoinAndSelect("card.pokemonDetails", "pokemonDetails")
+      .where("card.game = :game", { game: CardGame.Pokemon })
+      .andWhere("pokemonDetails.category = :category", {
+        category: PokemonCardsType.Pokemon,
+      })
+      .andWhere("pokemonDetails.dexId IS NOT NULL")
+      .andWhere(`EXISTS (
+        SELECT 1 FROM card_translation ct
+        WHERE ct.card_id = "card"."id"
+          AND ct.image IS NOT NULL
+          AND ct.image != ''
+      )`)
+      .orderBy("RANDOM()")
+      .limit(validCount * 4);
+
+    const cards = await qb.getMany();
+    const seenDex = new Set<number>();
+    const species: Record<string, any>[] = [];
+
+    for (const card of cards) {
+      const primaryDexId = card.pokemonDetails?.dexId?.[0];
+      if (primaryDexId === undefined || seenDex.has(primaryDexId)) {
+        continue;
+      }
+      seenDex.add(primaryDexId);
+      species.push({
+        id: card.id,
+        tcgDexId: card.tcgDexId,
+        dexId: primaryDexId,
+        types: card.pokemonDetails?.types ?? [],
+      });
+      if (species.length >= validCount) {
+        break;
+      }
+    }
+
+    return species;
+  }
+
+  /**
+   * Retrieves the deterministic daily Pokémon species card for Pokedle.
+   *
+   * @param dateStr - Target date string (YYYY-MM-DD). Defaults to current UTC date.
+   * @returns Serialized card response or null if unavailable.
+   */
+  async getDailySpecies(dateStr?: string): Promise<Record<string, any> | null> {
+    const targetDate = dateStr || new Date().toISOString().split("T")[0];
+
+    let hash = 0;
+    for (let i = 0; i < targetDate.length; i++) {
+      hash = (hash << 5) - hash + targetDate.charCodeAt(i);
+      hash |= 0;
+    }
+    const seed = Math.abs(hash);
+
+    const qb = this.pokemonCardRepository
+      .createQueryBuilder("card")
+      .innerJoinAndSelect("card.pokemonDetails", "pokemonDetails")
+      .leftJoinAndSelect("card.set", "set")
+      .where("card.game = :game", { game: CardGame.Pokemon })
+      .andWhere("pokemonDetails.category = :category", {
+        category: PokemonCardsType.Pokemon,
+      })
+      .andWhere("pokemonDetails.dexId IS NOT NULL")
+      .andWhere(`EXISTS (
+        SELECT 1 FROM card_translation ct
+        WHERE ct.card_id = "card"."id"
+          AND ct.image IS NOT NULL
+          AND ct.image != ''
+      )`);
+
+    const total = await qb.getCount();
+    if (total === 0) {
+      return null;
+    }
+
+    const offset = seed % total;
+    const card = await qb
+      .orderBy("card.id", "ASC")
+      .skip(offset)
+      .take(1)
+      .getOne();
+
     return card ? this.toPokemonCardResponse(card) : null;
   }
 

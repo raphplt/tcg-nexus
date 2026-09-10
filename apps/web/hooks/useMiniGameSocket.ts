@@ -114,7 +114,11 @@ export function useMiniGameSocket(
     socket.on("disconnect", (reason) => {
       // The gateway drops unauthenticated sockets right after the handshake.
       if (reason === "io server disconnect" && !matchedRef.current) {
-        patch({ connection: "unauthorized", error: "unauthorized", queue: "idle" });
+        patch({
+          connection: "unauthorized",
+          error: "unauthorized",
+          queue: "idle",
+        });
         return;
       }
       patch({ connection: "disconnected", queue: "idle" });

@@ -104,7 +104,9 @@ describe("MiniGameItemsService", () => {
         makeCard("rare", 12),
       ]);
 
-      const cards = await service.drawPricedCards(2, undefined, { minPrice: 1 });
+      const cards = await service.drawPricedCards(2, undefined, {
+        minPrice: 1,
+      });
 
       expect(cards.map((c) => c.id)).toEqual(["ok", "rare"]);
       expect(cardQb.limit).toHaveBeenCalledWith(8);
@@ -245,7 +247,10 @@ describe("MiniGameItemsService", () => {
       expect(copy!.set).toBeInstanceOf(PokemonSet);
       expect(card.name).toBeUndefined();
       expect(card.pricing).toBeDefined();
-      expect(localization.localize).toHaveBeenCalledWith(expect.any(Array), "en");
+      expect(localization.localize).toHaveBeenCalledWith(
+        expect.any(Array),
+        "en",
+      );
     });
 
     it("keeps the pricing of revealed cards on request", async () => {

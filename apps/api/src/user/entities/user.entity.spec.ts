@@ -26,6 +26,9 @@ describe("User serialization", () => {
     expect(plain).not.toHaveProperty("role");
     expect(plain).not.toHaveProperty("isActive");
     expect(plain).not.toHaveProperty("emailVerified");
+    expect(plain).not.toHaveProperty("onboardingVersion");
+    expect(plain).not.toHaveProperty("onboardingStatus");
+    expect(plain).not.toHaveProperty("onboardingUpdatedAt");
     expect(plain.firstName).toBe("Ada");
   });
 

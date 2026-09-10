@@ -9,11 +9,17 @@ import {
  * Payload for creating a new Pokémon card series.
  */
 export class CreatePokemonSeryDto {
-  @ApiProperty({ description: "Series unique identifier", example: "scarlet-violet" })
+  @ApiProperty({
+    description: "Series unique identifier",
+    example: "scarlet-violet",
+  })
   @IsString()
   id: string;
 
-  @ApiProperty({ description: "Series display name", example: "Scarlet & Violet" })
+  @ApiProperty({
+    description: "Series display name",
+    example: "Scarlet & Violet",
+  })
   @IsString()
   name: string;
 

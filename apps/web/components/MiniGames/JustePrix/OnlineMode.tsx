@@ -10,7 +10,10 @@ import { useCountdown } from "@/hooks/useCountdown";
 import { OnlineLobby } from "@/components/MiniGames/OnlineLobby";
 import { OnlineResult } from "@/components/MiniGames/OnlineResult";
 import { OpponentConnectionNotice } from "@/components/MiniGames/OpponentConnectionNotice";
-import { formatEuro, JUSTE_PRIX_ROUND_SECONDS } from "@/utils/miniGames/pricing";
+import {
+  formatEuro,
+  JUSTE_PRIX_ROUND_SECONDS,
+} from "@/utils/miniGames/pricing";
 import { ItemShowcase } from "./ItemShowcase";
 import { GuessInput } from "./GuessInput";
 
@@ -25,7 +28,12 @@ interface OnlineModeProps {
  * Online Juste Prix duel. The server drives the rounds: this component only
  * renders the session it receives and sends the player's actions.
  */
-export function OnlineMode({ socket, isAuthenticated, roundCount, onBack }: OnlineModeProps) {
+export function OnlineMode({
+  socket,
+  isAuthenticated,
+  roundCount,
+  onBack,
+}: OnlineModeProps) {
   const t = useTranslations("JustePrix");
   const to = useTranslations("MiniGames.online");
   const tc = useTranslations("MiniGames.common");
@@ -88,7 +96,8 @@ export function OnlineMode({ socket, isAuthenticated, roundCount, onBack }: Onli
                   <p className="text-xs text-muted-foreground">
                     {t("enterGuessHelp", {
                       seconds: Math.round(
-                        (session.roundDurationMs ?? JUSTE_PRIX_ROUND_SECONDS * 1000) / 1000,
+                        (session.roundDurationMs ??
+                          JUSTE_PRIX_ROUND_SECONDS * 1000) / 1000,
                       ),
                     })}
                   </p>
@@ -133,7 +142,9 @@ export function OnlineMode({ socket, isAuthenticated, roundCount, onBack }: Onli
                           {isMe ? tc("me") : g.userName}
                         </p>
                         <p className="text-lg font-bold text-foreground">
-                          {g.guess === null ? t("noGuess") : formatEuro(g.guess, locale)}
+                          {g.guess === null
+                            ? t("noGuess")
+                            : formatEuro(g.guess, locale)}
                         </p>
                         <Badge className="mt-1 border border-border bg-muted text-foreground">
                           {t("pointsEarned", { points: g.points })}
@@ -152,7 +163,10 @@ export function OnlineMode({ socket, isAuthenticated, roundCount, onBack }: Onli
                     {to("waitingOpponent")}
                   </Button>
                 ) : (
-                  <Button onClick={socket.ready} className="h-11 w-full font-semibold">
+                  <Button
+                    onClick={socket.ready}
+                    className="h-11 w-full font-semibold"
+                  >
                     {session.round < session.maxRounds
                       ? to("readyNextRound")
                       : to("viewResults")}

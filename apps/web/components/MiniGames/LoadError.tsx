@@ -22,7 +22,9 @@ export function LoadError({ onRetry, onBack }: LoadErrorProps) {
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
           <AlertTriangle className="h-8 w-8" />
         </div>
-        <h3 className="font-heading text-lg font-bold">{t("loadErrorTitle")}</h3>
+        <h3 className="font-heading text-lg font-bold">
+          {t("loadErrorTitle")}
+        </h3>
         <p className="text-sm text-muted-foreground">{t("loadErrorHelp")}</p>
         <div className="flex justify-center gap-3 pt-2">
           <Button variant="outline" onClick={onBack}>

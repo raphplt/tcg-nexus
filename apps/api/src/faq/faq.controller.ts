@@ -33,4 +33,3 @@ export class FaqController {
     return this.faqService.findAll(query);
   }
 }
-

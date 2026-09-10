@@ -5,7 +5,11 @@ import { IsInt, IsOptional, Min } from "class-validator";
  * Payload for creating a new player profile.
  */
 export class CreatePlayerDto {
-  @ApiPropertyOptional({ description: "Experience points", example: 0, default: 0 })
+  @ApiPropertyOptional({
+    description: "Experience points",
+    example: 0,
+    default: 0,
+  })
   @IsOptional()
   @IsInt()
   @Min(0)
@@ -17,7 +21,11 @@ export class CreatePlayerDto {
   @Min(1)
   level?: number;
 
-  @ApiPropertyOptional({ description: "Competitive ELO rating", example: 1000, default: 1000 })
+  @ApiPropertyOptional({
+    description: "Competitive ELO rating",
+    example: 1000,
+    default: 1000,
+  })
   @IsOptional()
   @IsInt()
   @Min(0)
@@ -29,4 +37,3 @@ export class CreatePlayerDto {
   @Min(1)
   userId?: number;
 }
-

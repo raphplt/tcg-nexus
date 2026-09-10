@@ -29,7 +29,10 @@ export class StatisticsController {
    */
   @Post()
   @ApiOperation({ summary: "Record player match performance statistics" })
-  @ApiResponse({ status: 201, description: "Statistics successfully recorded." })
+  @ApiResponse({
+    status: 201,
+    description: "Statistics successfully recorded.",
+  })
   create(@Body() createStatisticDto: CreateStatisticDto) {
     return this.statisticsService.create(createStatisticDto);
   }
@@ -92,4 +95,3 @@ export class StatisticsController {
     return this.statisticsService.remove(+id);
   }
 }
-

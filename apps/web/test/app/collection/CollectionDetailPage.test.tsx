@@ -203,9 +203,7 @@ describe("CollectionDetailPage", () => {
       await screen.findByText(messages.CollectionDetail.valuationTitle),
     ).toBeInTheDocument();
     expect(screen.getByText("€125.50")).toBeInTheDocument();
-    expect(
-      screen.getByText(/Acquisition Cost:\s*€95\.00/),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Acquisition Cost:\s*€95\.00/)).toBeInTheDocument();
     expect(screen.getByText(/\+€30\.50/)).toBeInTheDocument();
   });
 

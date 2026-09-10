@@ -75,11 +75,70 @@
     "myOrders": "Mes commandes",
     "mySales": "Mes ventes",
     "settings": "Paramètres",
+    "guidedTour": "Visite guidée",
     "faq": "FAQ",
     "blog": "Blog",
     "manageBlog": "Gérer le blog",
     "admin": "Admin",
     "login": "Se connecter"
+  },
+  "Onboarding": {
+    "saveError": "Impossible d'enregistrer votre choix. La visite ne sera pas relancée pendant cette session.",
+    "welcome": {
+      "title": "Bienvenue sur TCG Nexus, {firstName} !",
+      "description": "Votre collection, vos decks, vos parties et le marché des cartes sont réunis au même endroit.",
+      "features": {
+        "collection": "Collectionner",
+        "decks": "Construire",
+        "play": "Jouer",
+        "marketplace": "Échanger"
+      },
+      "start": "Commencer la visite (1 min)",
+      "skip": "Explorer par moi-même"
+    },
+    "controls": {
+      "previous": "Précédent",
+      "next": "Suivant",
+      "done": "Terminer",
+      "close": "Fermer la visite",
+      "skip": "Passer",
+      "progress": "{current} sur {total}"
+    },
+    "steps": {
+      "1": {
+        "title": "Votre tableau de bord",
+        "description": "Retrouvez ici un aperçu de votre activité, de votre collection et de vos prochaines actions."
+      },
+      "2": {
+        "title": "Tout retrouver rapidement",
+        "description": "Recherchez une carte, un joueur, un deck, un tournoi ou un produit depuis n'importe quelle page."
+      },
+      "3": {
+        "title": "Gérez votre collection",
+        "description": "Suivez vos cartes, vos favoris, votre wishlist et la progression de vos Master Sets."
+      },
+      "4": {
+        "title": "Construisez de meilleurs decks",
+        "description": "Créez ou importez vos decks, vérifiez leur légalité et profitez de l'analyse stratégique."
+      },
+      "5": {
+        "title": "Jouez et participez",
+        "description": "Entraînez-vous, affrontez d'autres joueurs, rejoignez des tournois et découvrez les mini-jeux."
+      },
+      "6": {
+        "title": "Explorez la marketplace",
+        "description": "Comparez les prix, achetez les cartes qui vous manquent ou mettez les vôtres en vente."
+      },
+      "7": {
+        "title": "Besoin d'un rappel ?",
+        "description": "Retrouvez la FAQ, personnalisez vos préférences et relancez cette visite quand vous le souhaitez."
+      }
+    },
+    "settings": {
+      "title": "Visite guidée",
+      "description": "Redécouvrez les principales fonctionnalités de TCG Nexus en une minute.",
+      "action": "Revoir la visite guidée"
+    }
   },
   "Footer": {
     "tagline": "Votre plateforme complète pour le trading de cartes Pokémon, les tournois et l'analyse stratégique.",
@@ -1837,23 +1896,70 @@
     "tierSecret": "Secrète",
     "waitingOpponentBooster": "En attente que l'adversaire ouvre son booster…",
     "bothOpened": "Les deux boosters sont ouverts !",
-    "onlineTurn": "Manche {round} : ouvre ton booster !"
+    "onlineTurn": "Manche {round} : ouvre ton booster !",
+    "card": "carte",
+    "cards": "cartes",
+    "roundLabel": "Manche {round}",
+    "collapseAll": "Tout replier",
+    "expandAll": "Tout déplier",
+    "latestRound": "Dernière"
   },
   "Pokedle": {
+    "title": "Pokédle",
     "subtitle": "Devine le Pokémon mystère à partir des attributs",
     "choosingPokemon": "Choix du Pokémon mystère...",
     "congratulations": "Félicitations !",
     "retry": "Réessayer",
+    "newGame": "Nouvelle partie",
     "previousGuesses": "Essais précédents",
     "searchPlaceholder": "Entrez le nom d'un Pokémon...",
     "mysteryCard": "Carte mystère",
-    "title": "Pokédle",
     "tooBad": "Dommage !",
     "generation": "Génération",
     "rarity": "Rareté",
     "stage": "Stage",
     "types": "Types",
-    "pokemon": "Pokémon"
+    "pokemon": "Pokémon",
+    "dailyMode": "Mode du jour",
+    "trainingMode": "Entraînement",
+    "guessCount": "Essai {current}/{max}",
+    "whoIsThis": "??? QUI EST-CE ? ???",
+    "cardRevealed": "Carte révélée",
+    "pokedexNumber": "N° Dex",
+    "type1": "Type 1",
+    "type2": "Type 2",
+    "hp": "PV",
+    "retreat": "Retraite",
+    "none": "Aucun",
+    "higher": "Plus grand (la cible est supérieure)",
+    "lower": "Plus petit (la cible est inférieure)",
+    "exact": "Match exact",
+    "partial": "Présent dans l'autre type",
+    "incorrect": "Incorrect",
+    "alreadyGuessed": "Déjà proposé",
+    "noResultsFound": "Aucun Pokémon trouvé",
+    "searchAriaLabel": "Rechercher une espèce de Pokémon",
+    "clearSearch": "Effacer la recherche",
+    "statistics": "Statistiques",
+    "played": "Parties",
+    "winRate": "% Victoires",
+    "currentStreak": "Série actuelle",
+    "maxStreak": "Meilleure série",
+    "guessDistribution": "Distribution des essais",
+    "share": "Partager la grille",
+    "shareSuccess": "Résultat copié dans le presse-papier !",
+    "nextDailyIn": "Prochain Pokédle dans",
+    "dailyAlreadyPlayed": "Tu as déjà terminé le Pokédle du jour !",
+    "wonMessage": "Tu as trouvé {name} en {count} essai{plural} !",
+    "lostMessage": "Le Pokémon mystère était {name}.",
+    "legendTitle": "Légende des indices",
+    "legendExact": "Vert : Correspondance exacte",
+    "legendPartial": "Jaune : Présent dans l'autre type",
+    "legendWrong": "Gris : Ne correspond pas",
+    "legendHigher": "Flèche ⬆️ : La valeur cible est plus grande",
+    "legendLower": "Flèche ⬇️ : La valeur cible est plus petite",
+    "howToPlay": "Comment jouer ?",
+    "howToPlayDesc": "Devine le Pokémon en 6 essais. Après chaque essai, les tuiles changent de couleur et indiquent si tes attributs sont trop hauts ou trop bas !"
   },
   "WhosThatPokemon": {
     "title": "Qui est ce Pokémon ?",
@@ -1867,9 +1973,30 @@
     "hard": "Difficile",
     "easyHelp": "Flou léger, 20s, indices type + génération. Mauvaises réponses très différentes.",
     "mediumHelp": "Flou moyen, 15s, indice de type. Propositions variées.",
-    "hardHelp": "Flou fort, 10s, aucun indice. Mauvaises réponses proches (même type / génération).",
+    "hardHelp": "Silhouette sombre, 10s, aucun indice. Mauvaises réponses proches (même type / génération).",
     "viewResults": "Voir les résultats",
-    "pointsIn": "pts · en {difficulty}"
+    "pointsIn": "pts · en {difficulty}",
+    "play": "Jouer",
+    "playAgain": "Rejouer",
+    "nextRound": "Manche suivante",
+    "finalScore": "Score final :",
+    "bestStreak": "Meilleure série : {count} d'affilée",
+    "timeOut": "Temps écoulé ! C'était {name}.",
+    "correct": "Bien joué ! C'est bien {name} !",
+    "wrong": "Faux ! La bonne réponse était {name}.",
+    "pointsGained": "+{points} pts",
+    "streakFire": "série x{count} 🔥",
+    "expansion": "Extension :",
+    "hint": "Indice :",
+    "generation": "Génération {gen}",
+    "clueType": "Type : {type}",
+    "unknownExpansion": "Inconnue",
+    "loadError": "Impossible de charger les données du jeu.",
+    "retry": "Réessayer",
+    "mysteryCardAlt": "Carte mystère",
+    "secondsSuffix": "{seconds}s",
+    "roundOf": "{current}/{total}",
+    "pointsSuffix": "{points} pts"
   },
   "SmashOrPass": {
     "loginToSave": "Connecte-toi pour enregistrer cette carte dans ta wishlist.",

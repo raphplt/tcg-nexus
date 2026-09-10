@@ -2,11 +2,12 @@
 
 import { Loader2, Package, Play, RotateCcw, Trophy } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useReducer } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { BoosterCard } from "@/types/mini-game";
 import { bestPull, cardValue } from "@/utils/miniGames/booster";
+import { useCardImagePreloader } from "@/utils/miniGames/cardPreloader";
 import { formatEuro } from "@/utils/miniGames/pricing";
 import { CardRoulette } from "./CardRoulette";
 import { duelReducer, initialDuelState, type Side } from "./duelReducer";
@@ -30,14 +31,25 @@ const COMPUTER_DELAY_MS = 900;
  * a second person in local), round after round. Boosters come pre-drawn from
  * the API so both modes share the same draw as the online duel.
  */
-export function OfflineDuel({ mode, packs, onReplay, onBack, onScoresChange }: OfflineDuelProps) {
+export function OfflineDuel({
+  mode,
+  packs,
+  onReplay,
+  onBack,
+  onScoresChange,
+}: OfflineDuelProps) {
   const t = useTranslations("CaseOpening");
   const tc = useTranslations("MiniGames.common");
   const locale = useLocale();
-  const [state, dispatch] = useReducer(duelReducer, packs.length, initialDuelState);
+  const [state, dispatch] = useReducer(
+    duelReducer,
+    packs.length,
+    initialDuelState,
+  );
   const reveal = usePackReveal();
 
   const pool = useMemo(() => packs.flat(2), [packs]);
+  useCardImagePreloader(pool, "low");
   const packSize = packs[0]?.[0]?.length ?? 6;
 
   const name = (side: Side) =>
@@ -53,6 +65,15 @@ export function OfflineDuel({ mode, packs, onReplay, onBack, onScoresChange }: O
     onScoresChange?.(state.scores);
   }, [state.scores, onScoresChange]);
 
+  // Reset the revealed card tray when transitioning between rounds or when the duel ends
+  const roundRef = useRef(state.round);
+  useEffect(() => {
+    if (roundRef.current !== state.round || state.stage === "finished") {
+      roundRef.current = state.round;
+      reveal.clear();
+    }
+  }, [state.round, state.stage, reveal]);
+
   const open = useCallback(() => {
     if (state.stage !== "idle") return;
     const cards = packs[state.round - 1]?.[state.active === "p1" ? 0 : 1] ?? [];
@@ -62,7 +83,8 @@ export function OfflineDuel({ mode, packs, onReplay, onBack, onScoresChange }: O
 
   // The computer opens on its own once the player's booster is on the board.
   useEffect(() => {
-    if (mode !== "solo" || state.stage !== "idle" || state.active !== "p2") return;
+    if (mode !== "solo" || state.stage !== "idle" || state.active !== "p2")
+      return;
     const timer = setTimeout(open, COMPUTER_DELAY_MS);
     return () => clearTimeout(timer);
   }, [mode, open, state.active, state.stage]);
@@ -91,9 +113,17 @@ export function OfflineDuel({ mode, packs, onReplay, onBack, onScoresChange }: O
               {state.scores.p1 === state.scores.p2 ? (
                 <span className="text-amber-500">{t("perfectTie")}</span>
               ) : (
-                <span className={state.scores.p1 > state.scores.p2 ? "text-green-500" : "text-red-500"}>
+                <span
+                  className={
+                    state.scores.p1 > state.scores.p2
+                      ? "text-green-500"
+                      : "text-red-500"
+                  }
+                >
                   {t("playerVictory", {
-                    player: name(state.scores.p1 > state.scores.p2 ? "p1" : "p2"),
+                    player: name(
+                      state.scores.p1 > state.scores.p2 ? "p1" : "p2",
+                    ),
                   })}
                 </span>
               )}
@@ -107,7 +137,11 @@ export function OfflineDuel({ mode, packs, onReplay, onBack, onScoresChange }: O
               </p>
             ) : null}
             <div className="flex justify-center gap-4 pt-1">
-              <Button onClick={onBack} variant="outline" className="text-foreground">
+              <Button
+                onClick={onBack}
+                variant="outline"
+                className="text-foreground"
+              >
                 {tc("back")}
               </Button>
               <Button onClick={onReplay} className="font-semibold">
@@ -124,13 +158,18 @@ export function OfflineDuel({ mode, packs, onReplay, onBack, onScoresChange }: O
         ) : mode === "solo" && state.active === "p2" ? (
           <div className="flex w-full flex-col items-center justify-center gap-2 py-8 text-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-sm font-semibold text-white">{t("computerOpening")}</p>
+            <p className="text-sm font-semibold text-white">
+              {t("computerOpening")}
+            </p>
           </div>
         ) : (
           <div className="flex w-full flex-col items-center justify-center gap-2 py-8 text-center">
             <Package className="h-10 w-10 animate-bounce text-primary" />
             <p className="text-sm font-semibold tracking-wide text-white">
-              {t("readyToOpen", { player: name(state.active), round: state.round })}
+              {t("readyToOpen", {
+                player: name(state.active),
+                round: state.round,
+              })}
             </p>
           </div>
         )}
@@ -144,18 +183,34 @@ export function OfflineDuel({ mode, packs, onReplay, onBack, onScoresChange }: O
 
       {state.stage === "idle" && !(mode === "solo" && state.active === "p2") ? (
         <div className="flex justify-center">
-          <Button onClick={open} className="h-14 px-10 text-lg font-semibold shadow-md">
+          <Button
+            onClick={open}
+            className="h-14 px-10 text-lg font-semibold shadow-md"
+          >
             <Play className="mr-2 h-5 w-5 fill-current" />
             {mode === "local"
-              ? t("openBoosterFor", { player: name(state.active), round: state.round })
+              ? t("openBoosterFor", {
+                  player: name(state.active),
+                  round: state.round,
+                })
               : t("openBooster", { round: state.round })}
           </Button>
         </div>
       ) : null}
 
       <div className="grid grid-cols-1 gap-8 pt-2 md:grid-cols-2">
-        <PlayerBoard name={name("p1")} score={state.scores.p1} packs={state.packs.p1} accent="blue" />
-        <PlayerBoard name={name("p2")} score={state.scores.p2} packs={state.packs.p2} accent="red" />
+        <PlayerBoard
+          name={name("p1")}
+          score={state.scores.p1}
+          packs={state.packs.p1}
+          accent="blue"
+        />
+        <PlayerBoard
+          name={name("p2")}
+          score={state.scores.p2}
+          packs={state.packs.p2}
+          accent="red"
+        />
       </div>
     </div>
   );

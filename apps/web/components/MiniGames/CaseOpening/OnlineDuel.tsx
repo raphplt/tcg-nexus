@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { UseMiniGameSocket } from "@/hooks/useMiniGameSocket";
 import type { MiniGameQueueParams } from "@/types/mini-game";
+import { useCardImagePreloader } from "@/utils/miniGames/cardPreloader";
 import { formatEuro } from "@/utils/miniGames/pricing";
 import { CardRoulette } from "./CardRoulette";
 import { PlayerBoard } from "./PlayerBoard";
@@ -29,7 +30,13 @@ interface OnlineDuelProps {
  * pack opened by this player, it is replayed through the roulette; the
  * opponent's packs land directly on their board.
  */
-export function OnlineDuel({ socket, isAuthenticated, queueParams, packSize, onBack }: OnlineDuelProps) {
+export function OnlineDuel({
+  socket,
+  isAuthenticated,
+  queueParams,
+  packSize,
+  onBack,
+}: OnlineDuelProps) {
   const t = useTranslations("CaseOpening");
   const to = useTranslations("MiniGames.online");
   const tc = useTranslations("MiniGames.common");
@@ -54,13 +61,30 @@ export function OnlineDuel({ socket, isAuthenticated, queueParams, packSize, onB
     if (!session) revealedCountRef.current = 0;
   }, [session]);
 
+  // Reset the revealed card tray when transitioning between rounds or when game ends
+  const roundRef = useRef(session?.round);
+  useEffect(() => {
+    if (
+      session &&
+      (roundRef.current !== session.round || session.state === "finished")
+    ) {
+      roundRef.current = session.round;
+      reveal.clear();
+    }
+  }, [session, session?.round, session?.state, reveal]);
+
   const pool = useMemo(
     () => session?.players.flatMap((p) => p.openedPacks.flat()) ?? [],
     [session],
   );
+  useCardImagePreloader(pool, "low");
 
   /** Packs already replayed locally; the board lags the server by one reveal. */
-  const myShownPacks = me?.openedPacks.slice(0, revealedCountRef.current - (reveal.spinning ? 1 : 0)) ?? [];
+  const myShownPacks =
+    me?.openedPacks.slice(
+      0,
+      revealedCountRef.current - (reveal.spinning ? 1 : 0),
+    ) ?? [];
 
   if (!session || session.state === "waiting") {
     return (
@@ -117,11 +141,18 @@ export function OnlineDuel({ socket, isAuthenticated, queueParams, packSize, onB
         )}
       </Card>
 
-      <RevealTray revealed={reveal.revealed} packSize={packSize} active={spinning} />
+      <RevealTray
+        revealed={reveal.revealed}
+        packSize={packSize}
+        active={spinning}
+      />
 
       {!iOpened && !spinning ? (
         <div className="flex justify-center">
-          <Button onClick={socket.openPack} className="h-14 px-10 text-lg font-semibold shadow-md">
+          <Button
+            onClick={socket.openPack}
+            className="h-14 px-10 text-lg font-semibold shadow-md"
+          >
             <Play className="mr-2 h-5 w-5 fill-current" />
             {t("openBooster", { round: session.round })}
           </Button>
@@ -129,7 +160,12 @@ export function OnlineDuel({ socket, isAuthenticated, queueParams, packSize, onB
       ) : null}
 
       <div className="grid grid-cols-1 gap-8 pt-2 md:grid-cols-2">
-        <PlayerBoard name={tc("me")} score={me?.score ?? 0} packs={myShownPacks} accent="blue" />
+        <PlayerBoard
+          name={tc("me")}
+          score={me?.score ?? 0}
+          packs={myShownPacks}
+          accent="blue"
+        />
         <PlayerBoard
           name={opp?.userName ?? t("opponent")}
           score={opp?.score ?? 0}
@@ -146,7 +182,9 @@ export function OnlineDuel({ socket, isAuthenticated, queueParams, packSize, onB
             </Button>
           ) : (
             <Button onClick={socket.ready} className="h-12 px-8 font-semibold">
-              {session.round < session.maxRounds ? to("readyNextRound") : to("viewResults")}
+              {session.round < session.maxRounds
+                ? to("readyNextRound")
+                : to("viewResults")}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           )}

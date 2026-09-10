@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { BoosterCard } from "@/types/mini-game";
+import { preloadCardImages } from "@/utils/miniGames/cardPreloader";
 
 export interface PackRevealState {
   /** Card currently spinning on the roulette, `null` between boosters. */
@@ -67,6 +68,7 @@ export function usePackReveal(): PackRevealState {
       revealedRef.current = [];
       onDoneRef.current = onDone;
       setRevealed([]);
+      void preloadCardImages(cards, "low");
       spinNext();
     },
     [spinNext],

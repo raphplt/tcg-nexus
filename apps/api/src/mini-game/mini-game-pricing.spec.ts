@@ -39,8 +39,12 @@ describe("mini-game pricing", () => {
     it("returns null instead of a made-up price", () => {
       expect(cardMarketValue(undefined)).toBeNull();
       expect(cardMarketValue({ pricing: null })).toBeNull();
-      expect(cardMarketValue({ pricing: { cardmarket: { trend: 0 } } })).toBeNull();
-      expect(cardMarketValue({ pricing: { cardmarket: { trend: "abc" } } })).toBeNull();
+      expect(
+        cardMarketValue({ pricing: { cardmarket: { trend: 0 } } }),
+      ).toBeNull();
+      expect(
+        cardMarketValue({ pricing: { cardmarket: { trend: "abc" } } }),
+      ).toBeNull();
     });
   });
 
