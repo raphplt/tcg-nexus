@@ -33,4 +33,7 @@ RUN node -e "require('./dist/main.js')" \
 
 EXPOSE 3001
 
+HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=5 \
+    CMD node -e "require('http').get('http://127.0.0.1:3001/api/health/live',(response)=>process.exit(response.statusCode<500?0:1)).on('error',()=>process.exit(1))"
+
 CMD ["npm", "run", "start:prod"]

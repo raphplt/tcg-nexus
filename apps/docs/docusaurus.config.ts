@@ -4,6 +4,9 @@ import type * as Preset from "@docusaurus/preset-classic";
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
+const docsUrl = process.env.DOCS_URL ?? "https://docs.tcg-nexus.org";
+const swaggerUrl = process.env.SWAGGER_URL ?? "http://localhost:3001/api/docs";
+
 const config: Config = {
   title: "TCG Nexus Docs",
   tagline:
@@ -16,7 +19,7 @@ const config: Config = {
   },
 
   // Set the production url of your site here
-  url: "https://docs.tcg-nexus.org",
+  url: docsUrl,
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: "/",
@@ -72,7 +75,7 @@ const config: Config = {
           label: "Documentation",
         },
         {
-          href: "http://localhost:3001/api",
+          href: swaggerUrl,
           label: "Swagger API",
           position: "right",
         },

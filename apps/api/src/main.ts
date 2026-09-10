@@ -17,6 +17,10 @@ export async function bootstrap() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule, {
       rawBody: true,
     });
+    const swaggerEnabled =
+      process.env.NODE_ENV !== "production" ||
+      process.env.SWAGGER_ENABLED === "true";
+    const swaggerPath = "/api/docs";
 
     // Behind a reverse proxy (Docker, Railway, nginx), the throttler and the
     // secure-cookie logic need the forwarded client IP and protocol.
@@ -24,32 +28,58 @@ export async function bootstrap() {
       app.set("trust proxy", 1);
     }
 
-    app.use(
-      helmet({
-        // The API serves JSON only: a restrictive CSP avoids any inline
-        // execution should a response ever be rendered as a document.
-        contentSecurityPolicy: {
-          directives: {
-            defaultSrc: ["'none'"],
-            frameAncestors: ["'none'"],
-            baseUri: ["'none'"],
-            formAction: ["'none'"],
-          },
+    const commonHelmetOptions = {
+      crossOriginEmbedderPolicy: false,
+      hsts:
+        process.env.NODE_ENV === "production"
+          ? { maxAge: 31_536_000, includeSubDomains: true, preload: true }
+          : false,
+      referrerPolicy: { policy: "no-referrer" as const },
+    };
+    const apiSecurityHeaders = helmet({
+      ...commonHelmetOptions,
+      // The API serves JSON only: a restrictive CSP avoids any inline
+      // execution should a response ever be rendered as a document.
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'none'"],
+          frameAncestors: ["'none'"],
+          baseUri: ["'none'"],
+          formAction: ["'none'"],
         },
-        // Swagger UI loads its own assets: relax only the embedder policy.
-        crossOriginEmbedderPolicy: false,
-        hsts:
-          process.env.NODE_ENV === "production"
-            ? { maxAge: 31_536_000, includeSubDomains: true, preload: true }
-            : false,
-        referrerPolicy: { policy: "no-referrer" },
-      }),
-    );
+      },
+    });
+    const swaggerSecurityHeaders = helmet({
+      ...commonHelmetOptions,
+      // Swagger UI needs its bundled scripts and inline styles. Keep the
+      // exception scoped to the documentation routes.
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          baseUri: ["'self'"],
+          connectSrc: ["'self'"],
+          fontSrc: ["'self'", "data:"],
+          formAction: ["'self'"],
+          frameAncestors: ["'none'"],
+          imgSrc: ["'self'", "data:"],
+          scriptSrc: ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+        },
+      },
+    });
+
+    app.use((request, response, next) => {
+      const securityHeaders =
+        swaggerEnabled && request.path.startsWith(swaggerPath)
+          ? swaggerSecurityHeaders
+          : apiSecurityHeaders;
+      securityHeaders(request, response, next);
+    });
 
     app.use(cookieParser());
     app.setGlobalPrefix("api");
 
-    if (process.env.NODE_ENV !== "production") {
+    if (swaggerEnabled) {
       const config = new DocumentBuilder()
         .setTitle("TCG Nexus API")
         .setDescription("API documentation for TCG Nexus")
@@ -93,7 +123,9 @@ export async function bootstrap() {
 
     await app.listen(port, "0.0.0.0").then(() => {
       console.log(`🚀 Server running on http://0.0.0.0:${port}`);
-      console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
+      if (swaggerEnabled) {
+        console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
+      }
     });
   } catch (error) {
     // A failed bootstrap must not leave a half-started process alive: rethrow

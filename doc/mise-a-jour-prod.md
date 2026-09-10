@@ -25,6 +25,7 @@ reproduites ici : elles vivent uniquement dans le dashboard.
 | `DATABASE_SSL` | `false` | Postgres est en réseau interne, pas de TLS |
 | `DATABASE_MIGRATIONS_RUN` | `true` | applique les migrations au démarrage |
 | `NODE_ENV` | `production` | désactive `synchronize` et l'endpoint de seed |
+| `SWAGGER_ENABLED` | `true` | publie Swagger sur `/api/docs` en production |
 | `FRONTEND_URL` | `https://tcg-nexus.org` | origine de référence CORS **et** CSRF |
 | `COOKIE_DOMAIN` | `tcg-nexus.org` | cookies partagés avec `api.` |
 | `COOKIE_SAMESITE` | `lax` | web et API sont same-site |
@@ -191,7 +192,7 @@ Puis dans le navigateur :
 - https://tcg-nexus.org — liste de cartes, images chargées
 - connexion avec un compte de seed
 - une fiche tournoi et une page marketplace
-- https://api.tcg-nexus.org/api — Swagger
+- https://api.tcg-nexus.org/api/docs — Swagger
 - https://docs.tcg-nexus.org — documentation
 
 ---

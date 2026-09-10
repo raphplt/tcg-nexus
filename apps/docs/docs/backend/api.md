@@ -7,7 +7,7 @@ title: API NestJS
 - **NestJS 11** + **TypeORM** (PostgreSQL)
 - Authentification JWT (`JwtAuthGuard` global) + throttling (`@nestjs/throttler`)
 - Validation DTO via `ValidationPipe` (whitelist + transformation) et sérialisation (`ClassSerializerInterceptor`)
-- Swagger auto-généré sur `/api` en mode non-prod
+- Swagger auto-généré sur `/api/docs` ; en production, il nécessite `SWAGGER_ENABLED=true`
 
 ## Configuration
 
@@ -35,7 +35,7 @@ npm run docker:db      # Postgres via docker-compose.yml
 npm run start:dev      # http://localhost:3001
 ```
 
-Swagger : `http://localhost:3001/api`
+Swagger : `http://localhost:3001/api/docs`
 
 ## Modules principaux
 

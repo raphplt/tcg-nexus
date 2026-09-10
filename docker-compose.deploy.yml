@@ -55,6 +55,7 @@ services:
       DATABASE_SSL: "false"
       DATABASE_MIGRATIONS_RUN: "true"
       NODE_ENV: production
+      SWAGGER_ENABLED: "${SWAGGER_ENABLED:-false}"
       FRONTEND_URL: https://tcg-nexus.org
       COOKIE_DOMAIN: tcg-nexus.org
       VISION_SERVICE_URL: http://vision:8000
@@ -127,6 +128,9 @@ services:
     build:
       context: .
       dockerfile: apps/docs/Dockerfile
+      args:
+        DOCS_URL: ${DOCS_URL:-https://docs.tcg-nexus.org}
+        SWAGGER_URL: ${SWAGGER_URL:-https://api.tcg-nexus.org/api/docs}
     container_name: tcg-nexus-docs
     restart: unless-stopped
     ports:

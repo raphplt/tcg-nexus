@@ -1,4 +1,5 @@
 import { NestFactory } from "@nestjs/core";
+import { SwaggerModule } from "@nestjs/swagger";
 import { bootstrap } from "./main";
 
 // NOTE: Bootstrap uses a mocked NestFactory; importing the real module would
@@ -92,6 +93,29 @@ describe("main bootstrap", () => {
       ?.value;
     expect(createdApp.useGlobalPipes).toHaveBeenCalled();
     expect(createdApp.listen).toHaveBeenCalled();
+  });
+
+  it("does not expose Swagger in production by default", async () => {
+    process.env.NODE_ENV = "production";
+    delete process.env.SWAGGER_ENABLED;
+
+    await bootstrap();
+
+    expect(SwaggerModule.setup).not.toHaveBeenCalled();
+  });
+
+  it("exposes Swagger in production when explicitly enabled", async () => {
+    process.env.NODE_ENV = "production";
+    process.env.SWAGGER_ENABLED = "true";
+
+    await bootstrap();
+
+    expect(SwaggerModule.setup).toHaveBeenCalledWith(
+      "api/docs",
+      expect.anything(),
+      expect.any(Function),
+      expect.any(Object),
+    );
   });
 });
 

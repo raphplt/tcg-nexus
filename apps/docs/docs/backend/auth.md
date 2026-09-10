@@ -2,7 +2,7 @@
 title: Authentification & sessions
 ---
 
-Auth API basée sur JWT avec stockage des tokens en cookies httpOnly. Swagger disponible sur `/api` en dev.
+Auth API basée sur JWT avec stockage des tokens en cookies httpOnly. Swagger est disponible sur `/api/docs` en développement et lorsqu'il est explicitement activé en production.
 
 - **Base path** : `/auth`
 - **Auth requise** : non pour `login`/`register`/`refresh` (refresh via cookie), oui pour `logout` et `profile`

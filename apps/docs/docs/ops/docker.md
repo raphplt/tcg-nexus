@@ -15,7 +15,7 @@ npm run start:dev         # API NestJS locale
 
 Services :
 - API : http://localhost:3001
-- Swagger : http://localhost:3001/api
+- Swagger : http://localhost:3001/api/docs
 - Postgres : localhost:5432 (postgres/postgres par défaut)
 
 ## Cycle de vie Postgres
