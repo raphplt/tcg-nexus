@@ -1,7 +1,7 @@
-import { Ranking } from "src/ranking/entities/ranking.entity";
-import { Statistics } from "src/statistics/entities/statistic.entity";
-import { Tournament } from "src/tournament/entities/tournament.entity";
-import { User } from "src/user/entities/user.entity";
+import { Ranking } from "../../ranking/entities/ranking.entity";
+import { Statistics } from "../../statistics/entities/statistic.entity";
+import { Tournament } from "../../tournament/entities/tournament.entity";
+import { User } from "../../user/entities/user.entity";
 import {
   Column,
   Entity,

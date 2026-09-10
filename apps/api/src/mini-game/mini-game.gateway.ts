@@ -1,81 +1,137 @@
 import {
-  WebSocketGateway,
-  WebSocketServer,
-  SubscribeMessage,
-  OnGatewayConnection,
-  OnGatewayDisconnect,
-  ConnectedSocket,
-  MessageBody,
-} from "@nestjs/websockets";
-import { Server, Socket } from "socket.io";
-import { JwtService } from "@nestjs/jwt";
-import { ConfigService } from "@nestjs/config";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { Card } from "../card/entities/card.entity";
-import { buildWebSocketCorsOptions } from "../common/websocket-cors";
-import { SealedProduct } from "../sealed-product/entities/sealed-product.entity";
-import { User } from "../user/entities/user.entity";
-import {
-  UnauthorizedException,
   Injectable,
+  Logger,
+  UnauthorizedException,
   UsePipes,
   ValidationPipe,
 } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { JwtService } from "@nestjs/jwt";
+import { InjectRepository } from "@nestjs/typeorm";
+import {
+  ConnectedSocket,
+  MessageBody,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+  SubscribeMessage,
+  WebSocketGateway,
+  WebSocketServer,
+} from "@nestjs/websockets";
+import { Server, Socket } from "socket.io";
+import { Repository } from "typeorm";
+import type { Card } from "../card/entities/card.entity";
+import { buildWebSocketCorsOptions } from "../common/websocket-cors";
+import { resolveRequestLocale } from "../translation/request-locale";
+import type { SupportedLocale } from "../translation/supported-locales";
+import { User } from "../user/entities/user.entity";
 import {
   JoinQueueDto,
   MAX_ROUND_COUNT,
   MIN_ROUND_COUNT,
+  MiniGameType,
   SessionDto,
   SubmitGuessDto,
 } from "./dto/mini-game-events.dto";
+import {
+  type JustePrixItem,
+  MiniGameItemsService,
+} from "./mini-game-items.service";
+import {
+  cardMarketValue,
+  JUSTE_PRIX_ROUND_SECONDS,
+  roundPrice,
+  scoreJustePrixGuess,
+} from "./mini-game-pricing";
 
 type AuthenticatedSocket = Socket & {
   data: Socket["data"] & {
     user?: Pick<User, "id" | "email" | "role">;
+    locale?: SupportedLocale;
   };
 };
+
+/** Default number of rounds when the client does not ask for a count. */
+const DEFAULT_ROUND_COUNT = 5;
+
+/** Time a disconnected player has to come back before forfeiting the duel. */
+export const RECONNECT_GRACE_MS = 20_000;
+
+/** Extra time granted past the round deadline before the server closes it. */
+const ROUND_DEADLINE_SLACK_MS = 1_000;
+
+/** How long a finished session stays readable before being dropped. */
+const FINISHED_SESSION_TTL_MS = 5 * 60_000;
+
+interface QueueParams {
+  setId?: string;
+  roundCount: number;
+}
 
 interface QueuePlayer {
   userId: number;
   userName: string;
   socketId: string;
-  gameType: "case_opening" | "juste_prix";
-  params?: {
-    setId?: string;
-    roundCount?: number;
-  };
+  locale: SupportedLocale;
+  gameType: MiniGameType;
+  params: QueueParams;
+}
+
+interface RoundGuess {
+  round: number;
+  /** `null` when the round timed out before the player answered. */
+  guess: number | null;
+  elapsedSeconds: number;
+  points: number;
 }
 
 interface GamePlayerState {
   userId: number;
   userName: string;
   socketId: string;
+  locale: SupportedLocale;
   score: number;
   ready: boolean;
-  openedPacks: any[][]; // Cards opened per booster
-  guesses: {
-    round: number;
-    guess: number;
-    timeTaken: number;
-    diff: number;
-    points: number;
-  }[];
+  connected: boolean;
+  /** Case Opening: number of boosters opened so far. */
+  openedCount: number;
+  /** Juste Prix: one entry per closed round. */
+  guesses: RoundGuess[];
 }
 
 interface GameSession {
   id: string;
-  gameType: "case_opening" | "juste_prix";
-  params?: any;
+  gameType: MiniGameType;
+  params: QueueParams;
   players: GamePlayerState[];
   state: "waiting" | "playing" | "finished";
   round: number;
   maxRounds: number;
-  items: any[]; // The card or sealed product items generated for this session
-  /** Server-side start of the current round, used to time the guesses. */
+  /** Server-side start of the current round. */
   roundStartedAt: number;
+  /** Round length, `null` for games without a timer. */
+  roundDurationMs: number | null;
+  roundTimer?: NodeJS.Timeout;
+  /** Set when the duel ended because a player left. */
+  forfeitedBy?: number;
+  /** Juste Prix rounds, prices included: never sent as-is to clients. */
+  justePrixItems?: JustePrixItem[];
+  /** Case Opening boosters, `packs[round][playerIndex]`. */
+  caseOpeningPacks?: Card[][][];
 }
 
+/**
+ * Real-time gateway of the two-player mini-games (Case Opening and Juste
+ * Prix): matchmaking, session state and per-round actions.
+ *
+ * The server is the authority on everything that can be cheated: items and
+ * their prices are drawn here, guesses are timed here, and clients only ever
+ * receive what they are allowed to see at that point of the round. Labels are
+ * resolved per recipient locale, since the HTTP localization interceptor does
+ * not apply to WebSocket payloads.
+ *
+ * Queue and sessions are held in memory: a single API instance serves every
+ * duel and a restart ends the duels in progress.
+ */
 @WebSocketGateway({
   cors: buildWebSocketCorsOptions(),
   namespace: "/mini-game",
@@ -95,25 +151,27 @@ export class MiniGameGateway
   @WebSocketServer()
   server: Server;
 
-  // Queue in memory
+  private readonly logger = new Logger(MiniGameGateway.name);
+
   private matchmakingQueue: QueuePlayer[] = [];
-  // Active game sessions in memory
-  private activeSessions = new Map<string, GameSession>();
+  private readonly activeSessions = new Map<string, GameSession>();
+  /** Pending forfeits, keyed by `${sessionId}:${userId}`. */
+  private readonly disconnectTimers = new Map<string, NodeJS.Timeout>();
 
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-    @InjectRepository(Card)
-    private readonly cardRepository: Repository<Card>,
-    @InjectRepository(SealedProduct)
-    private readonly sealedProductRepository: Repository<SealedProduct>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly items: MiniGameItemsService,
   ) {}
 
   async handleConnection(client: AuthenticatedSocket) {
     try {
       client.data.user = await this.authenticateClient(client);
+      client.data.locale = resolveRequestLocale(
+        readHeader(client.handshake.headers["accept-language"]),
+      );
     } catch {
       client.disconnect(true);
     }
@@ -121,39 +179,41 @@ export class MiniGameGateway
 
   handleDisconnect(client: AuthenticatedSocket) {
     const user = client.data.user;
-    if (user) {
-      // Remove from queue if disconnects
-      this.matchmakingQueue = this.matchmakingQueue.filter(
-        (p) => p.userId !== user.id,
-      );
-      this.notifyQueueUpdate();
+    if (!user) return;
 
-      // Handle active games: if a player disconnects, forfeit or alert the opponent
-      for (const [sessionId, session] of this.activeSessions.entries()) {
-        const playerIndex = session.players.findIndex(
-          (p) => p.userId === user.id,
-        );
-        if (playerIndex !== -1) {
-          // Notify opponent
-          this.server
-            .to(`minigame:room:${sessionId}`)
-            .emit("player_disconnected", {
-              userId: user.id,
-              userName: session.players[playerIndex].userName,
-            });
-          // End session if in finished state or clean up later
-          this.activeSessions.delete(sessionId);
-        }
-      }
+    this.removeFromQueue(user.id);
+
+    for (const session of this.activeSessions.values()) {
+      const player = session.players.find((p) => p.userId === user.id);
+      // A stale socket of a player who already reconnected must not forfeit.
+      if (!player || player.socketId !== client.id) continue;
+      if (session.state === "finished") continue;
+
+      player.connected = false;
+      this.server.to(roomOf(session.id)).emit("minigame_player_connection", {
+        userId: player.userId,
+        userName: player.userName,
+        connected: false,
+        graceMs: RECONNECT_GRACE_MS,
+      });
+
+      const key = `${session.id}:${user.id}`;
+      this.clearDisconnectTimer(key);
+      this.disconnectTimers.set(
+        key,
+        setTimeout(() => {
+          this.disconnectTimers.delete(key);
+          this.forfeit(session, player);
+        }, RECONNECT_GRACE_MS),
+      );
     }
   }
 
-  // --- Matchmaking events ---
+  // --- Matchmaking -----------------------------------------------------------
 
   @SubscribeMessage("minigame_join_queue")
   async handleJoinQueue(
-    @MessageBody()
-    data: JoinQueueDto,
+    @MessageBody() data: JoinQueueDto,
     @ConnectedSocket() client: AuthenticatedSocket,
   ) {
     const user = this.requireSocketUser(client);
@@ -161,200 +221,164 @@ export class MiniGameGateway
       where: { id: user.id },
     });
     const userName = dbUser?.email?.split("@")[0] || `User_${user.id}`;
+    const params: QueueParams = {
+      setId: data.params?.setId || undefined,
+      roundCount: clampRoundCount(data.params?.roundCount),
+    };
 
-    // Remove if already in queue
-    this.matchmakingQueue = this.matchmakingQueue.filter(
-      (p) => p.userId !== user.id,
-    );
+    this.removeFromQueue(user.id);
 
     const newPlayer: QueuePlayer = {
       userId: user.id,
       userName,
       socketId: client.id,
+      locale: client.data.locale ?? "fr",
       gameType: data.gameType,
-      params: data.params,
+      params,
     };
 
-    // Try matching
+    // Only pair players who asked for the same duel: same game, same number of
+    // rounds, same set (or no set on either side).
     const opponent = this.matchmakingQueue.find(
       (p) =>
         p.gameType === data.gameType &&
         p.userId !== user.id &&
-        (!data.params?.setId ||
-          !p.params?.setId ||
-          p.params.setId === data.params.setId),
+        p.params.roundCount === params.roundCount &&
+        (p.params.setId ?? null) === (params.setId ?? null),
     );
 
-    if (opponent) {
-      // Remove opponent from queue
-      this.matchmakingQueue = this.matchmakingQueue.filter(
-        (p) => p.userId !== opponent.userId,
-      );
-
-      // Create session
-      const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-      // Generate items depending on game type
-      const roundCount = Math.min(
-        MAX_ROUND_COUNT,
-        Math.max(MIN_ROUND_COUNT, data.params?.roundCount ?? 5),
-      );
-      const items = await this.generateGameItems(
-        data.gameType,
-        roundCount,
-        data.params?.setId,
-      );
-
-      const session: GameSession = {
-        id: sessionId,
-        gameType: data.gameType,
-        params: data.params,
-        players: [
-          {
-            userId: opponent.userId,
-            userName: opponent.userName,
-            socketId: opponent.socketId,
-            score: 0,
-            ready: false,
-            openedPacks: [],
-            guesses: [],
-          },
-          {
-            userId: user.id,
-            userName,
-            socketId: client.id,
-            score: 0,
-            ready: false,
-            openedPacks: [],
-            guesses: [],
-          },
-        ],
-        state: "waiting",
-        round: 0,
-        maxRounds: roundCount,
-        items,
-        roundStartedAt: Date.now(),
-      };
-
-      this.activeSessions.set(sessionId, session);
-
-      // Emit to both sockets. `selfId` = recipient's own ID so client does not need to deduce identity by elimination
-      this.server.to(opponent.socketId).emit("minigame_matched", {
-        sessionId,
-        gameType: data.gameType,
-        selfId: opponent.userId,
-        opponentName: userName,
-        opponentId: user.id,
-        roundCount,
-        items: this.sanitizeItemsForClient(items, data.gameType),
-      });
-
-      client.emit("minigame_matched", {
-        sessionId,
-        gameType: data.gameType,
-        selfId: user.id,
-        opponentName: opponent.userName,
-        opponentId: opponent.userId,
-        roundCount,
-        items: this.sanitizeItemsForClient(items, data.gameType),
-      });
-
+    if (!opponent) {
+      this.matchmakingQueue.push(newPlayer);
       this.notifyQueueUpdate();
-      return { status: "matched", sessionId };
+      return { status: "queued" as const };
     }
 
-    // Add to queue
-    this.matchmakingQueue.push(newPlayer);
-    this.notifyQueueUpdate();
+    this.removeFromQueue(opponent.userId);
 
-    return { status: "queued" };
+    let session: GameSession;
+    try {
+      session = await this.createSession(data.gameType, params, [
+        opponent,
+        newPlayer,
+      ]);
+    } catch (error) {
+      this.logger.warn(
+        `Could not start a ${data.gameType} duel: ${(error as Error).message}`,
+      );
+      const payload = { code: "not_enough_items" };
+      this.server.to(opponent.socketId).emit("minigame_error", payload);
+      client.emit("minigame_error", payload);
+      this.notifyQueueUpdate();
+      return { status: "error" as const, error: payload.code };
+    }
+
+    this.activeSessions.set(session.id, session);
+
+    // `selfId` lets each client know who it is without guessing by elimination.
+    this.server.to(opponent.socketId).emit("minigame_matched", {
+      sessionId: session.id,
+      gameType: data.gameType,
+      selfId: opponent.userId,
+      opponentName: userName,
+      opponentId: user.id,
+      roundCount: params.roundCount,
+    });
+    client.emit("minigame_matched", {
+      sessionId: session.id,
+      gameType: data.gameType,
+      selfId: user.id,
+      opponentName: opponent.userName,
+      opponentId: opponent.userId,
+      roundCount: params.roundCount,
+    });
+
+    this.notifyQueueUpdate();
+    return { status: "matched" as const, sessionId: session.id };
   }
 
   @SubscribeMessage("minigame_leave_queue")
   handleLeaveQueue(@ConnectedSocket() client: AuthenticatedSocket) {
     const user = this.requireSocketUser(client);
-    this.matchmakingQueue = this.matchmakingQueue.filter(
-      (p) => p.userId !== user.id,
-    );
+    this.removeFromQueue(user.id);
     this.notifyQueueUpdate();
-    return { status: "left" };
+    return { status: "left" as const };
   }
 
-  // --- Game Session events ---
+  // --- Session -------------------------------------------------------------
 
   @SubscribeMessage("minigame_join_room")
-  handleJoinRoom(
+  async handleJoinRoom(
     @MessageBody() data: SessionDto,
     @ConnectedSocket() client: AuthenticatedSocket,
   ) {
     const user = this.requireSocketUser(client);
     const session = this.activeSessions.get(data.sessionId);
-
-    if (!session) {
-      return { error: "Session not found" };
-    }
+    if (!session) return { error: "Session not found" };
 
     const player = session.players.find((p) => p.userId === user.id);
-    if (!player) {
-      return { error: "You are not a player in this session" };
+    if (!player) return { error: "You are not a player in this session" };
+
+    // A reconnecting player comes back on a new socket: adopt it and cancel
+    // the pending forfeit.
+    player.socketId = client.id;
+    player.locale = client.data.locale ?? player.locale;
+    const wasDisconnected = !player.connected;
+    player.connected = true;
+    this.clearDisconnectTimer(`${session.id}:${user.id}`);
+
+    client.join(roomOf(session.id));
+
+    if (wasDisconnected) {
+      this.server.to(roomOf(session.id)).emit("minigame_player_connection", {
+        userId: player.userId,
+        userName: player.userName,
+        connected: true,
+      });
     }
 
-    // Update socketId in case it changed
-    player.socketId = client.id;
-
-    const roomName = `minigame:room:${data.sessionId}`;
-    client.join(roomName);
-
-    client.emit("minigame_state_update", this.formatSessionState(session));
-    return { status: "joined" };
+    client.emit(
+      "minigame_state_update",
+      await this.formatSessionState(session, player),
+    );
+    return { status: "joined" as const };
   }
 
   @SubscribeMessage("minigame_ready")
-  handleReady(
+  async handleReady(
     @MessageBody() data: SessionDto,
     @ConnectedSocket() client: AuthenticatedSocket,
   ) {
     const user = this.requireSocketUser(client);
     const session = this.activeSessions.get(data.sessionId);
-
     if (!session) return { error: "Session not found" };
 
     const player = session.players.find((p) => p.userId === user.id);
     if (!player) return { error: "Not a player" };
+    if (session.state === "finished") return { error: "Session is over" };
+
+    // Readiness only advances between rounds: a round in progress is closed by
+    // the guesses (or the timer), not by a ready click.
+    if (session.state === "playing" && !this.isRoundClosed(session)) {
+      return { error: "Round still in progress" };
+    }
 
     player.ready = true;
 
-    // If both ready, advance round or start game
     if (session.players.every((p) => p.ready)) {
-      // Reset ready flags
-      for (const p of session.players) {
-        p.ready = false;
-      }
+      for (const p of session.players) p.ready = false;
 
       if (session.state === "waiting") {
         session.state = "playing";
-        session.round = 1;
-        session.roundStartedAt = Date.now();
-      } else if (session.state === "playing") {
-        if (session.round < session.maxRounds) {
-          session.round += 1;
-          session.roundStartedAt = Date.now();
-        } else {
-          session.state = "finished";
-        }
+        this.startRound(session, 1);
+      } else if (session.round < session.maxRounds) {
+        this.startRound(session, session.round + 1);
+      } else {
+        this.finish(session);
       }
-
-      this.server
-        .to(`minigame:room:${session.id}`)
-        .emit("minigame_state_update", this.formatSessionState(session));
-    } else {
-      // Notify other player that this player is ready
-      this.server
-        .to(`minigame:room:${session.id}`)
-        .emit("minigame_state_update", this.formatSessionState(session));
     }
 
-    return { status: "ok" };
+    await this.broadcastState(session);
+    return { status: "ok" as const };
   }
 
   @SubscribeMessage("minigame_open_pack")
@@ -364,124 +388,320 @@ export class MiniGameGateway
   ) {
     const user = this.requireSocketUser(client);
     const session = this.activeSessions.get(data.sessionId);
-
-    if (!session || session.gameType !== "case_opening") {
+    if (!session || session.gameType !== MiniGameType.CASE_OPENING) {
       return { error: "Invalid session" };
     }
+    if (session.state !== "playing") return { error: "Game not in progress" };
 
-    const player = session.players.find((p) => p.userId === user.id);
+    const playerIndex = session.players.findIndex((p) => p.userId === user.id);
+    const player = session.players[playerIndex];
     if (!player) return { error: "Not a player" };
-
-    const currentRound = session.round;
-    if (player.openedPacks.length >= currentRound) {
+    if (player.openedCount >= session.round) {
       return { error: "Pack already opened for this round" };
     }
 
-    // The cards are already pre-generated for this round in session.items[round-1][playerIndex]
-    const roundIndex = currentRound - 1;
-    const playerIndex = session.players.findIndex((p) => p.userId === user.id);
-    const packCards = session.items[roundIndex]?.[playerIndex] || [];
+    const pack = session.caseOpeningPacks?.[session.round - 1]?.[playerIndex];
+    if (!pack) return { error: "No booster for this round" };
 
-    // Calculate score (total value)
-    let packValue = 0;
-    for (const card of packCards) {
-      const price = this.getCardMarketValue(card);
-      packValue += price;
-    }
+    const packValue = pack.reduce(
+      (sum, card) => sum + (cardMarketValue(card) ?? 0),
+      0,
+    );
+    player.openedCount += 1;
+    player.score = roundPrice(player.score + packValue);
 
-    player.openedPacks.push(packCards);
-    player.score = parseFloat((player.score + packValue).toFixed(2));
+    await this.broadcastState(session);
 
-    // Broadcast that player opened their pack (with the cards details)
-    this.server
-      .to(`minigame:room:${session.id}`)
-      .emit("minigame_state_update", this.formatSessionState(session));
-
-    return { status: "ok", cards: packCards };
+    const cards = await this.items.localizeCards(pack, player.locale, {
+      keepPricing: true,
+    });
+    return { status: "ok" as const, cards };
   }
 
   @SubscribeMessage("minigame_submit_guess")
-  handleSubmitGuess(
-    @MessageBody()
-    data: SubmitGuessDto,
+  async handleSubmitGuess(
+    @MessageBody() data: SubmitGuessDto,
     @ConnectedSocket() client: AuthenticatedSocket,
   ) {
     const user = this.requireSocketUser(client);
     const session = this.activeSessions.get(data.sessionId);
-
-    if (!session || session.gameType !== "juste_prix") {
+    if (!session || session.gameType !== MiniGameType.JUSTE_PRIX) {
       return { error: "Invalid session" };
     }
+    if (session.state !== "playing") return { error: "Game not in progress" };
 
     const player = session.players.find((p) => p.userId === user.id);
     if (!player) return { error: "Not a player" };
 
-    const currentRound = session.round;
-    if (player.guesses.some((g) => g.round === currentRound)) {
+    const round = session.round;
+    if (player.guesses.some((g) => g.round === round)) {
       return { error: "Guess already submitted for this round" };
     }
 
-    const roundIndex = currentRound - 1;
-    const item = session.items[roundIndex];
+    const item = session.justePrixItems?.[round - 1];
     if (!item) return { error: "Item not found" };
 
-    const correctPrice = this.getItemPrice(item);
-    const diff = Math.abs(correctPrice - data.guess);
-    const diffPercent = correctPrice > 0 ? diff / correctPrice : 0;
-
-    // Elapsed time is measured server-side from the round start: a
-    // client-provided duration could be negative and inflate the bonus.
-    const timeTaken = Math.max(0, (Date.now() - session.roundStartedAt) / 1000);
-
-    // Points system:
-    // Max points per round = 1000
-    // Penalize based on deviation percent (e.g., -100 points for each 10% deviation)
-    let points = Math.max(0, 1000 - Math.round(diffPercent * 10000));
-    // If they got it very close (within 5%), add speed bonus
-    if (diffPercent <= 0.05) {
-      const speedBonus = Math.max(0, Math.round((15 - timeTaken) * 20)); // up to 300 points speed bonus
-      points += speedBonus;
-    }
-
-    player.guesses.push({
-      round: currentRound,
-      guess: data.guess,
-      timeTaken,
-      diff,
-      points,
-    });
-
-    player.score += points;
-
-    // Check if all players submitted guesses for this round
-    const allGuessed = session.players.every((p) =>
-      p.guesses.some((g) => g.round === currentRound),
+    // Elapsed time is measured server-side: a client-provided duration could
+    // be negative and inflate the speed bonus.
+    const elapsedSeconds = Math.max(
+      0,
+      (Date.now() - session.roundStartedAt) / 1000,
+    );
+    const points = scoreJustePrixGuess(
+      item.price,
+      data.guess,
+      elapsedSeconds,
+      JUSTE_PRIX_ROUND_SECONDS,
     );
 
-    if (allGuessed) {
-      // Reveal prices to everyone
-      this.server
-        .to(`minigame:room:${session.id}`)
-        .emit("minigame_round_reveal", {
-          round: currentRound,
-          correctPrice,
-          guesses: session.players.map((p) => ({
-            userId: p.userId,
-            userName: p.userName,
-            guess: p.guesses.find((g) => g.round === currentRound)?.guess,
-            points: p.guesses.find((g) => g.round === currentRound)?.points,
-          })),
-        });
+    player.guesses.push({ round, guess: data.guess, elapsedSeconds, points });
+    player.score += points;
+
+    // State first, reveal last: a client that resets its reveal panel on every
+    // state update must still end up showing the reveal.
+    await this.broadcastState(session);
+    if (this.isRoundClosed(session)) {
+      this.revealRound(session);
     }
-
-    this.server
-      .to(`minigame:room:${session.id}`)
-      .emit("minigame_state_update", this.formatSessionState(session));
-
-    return { status: "ok" };
+    return { status: "ok" as const };
   }
 
-  // --- Helper Methods ---
+  // --- Round lifecycle -------------------------------------------------------
+
+  private async createSession(
+    gameType: MiniGameType,
+    params: QueueParams,
+    queued: QueuePlayer[],
+  ): Promise<GameSession> {
+    const session: GameSession = {
+      id: `session_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`,
+      gameType,
+      params,
+      players: queued.map((p) => ({
+        userId: p.userId,
+        userName: p.userName,
+        socketId: p.socketId,
+        locale: p.locale,
+        score: 0,
+        ready: false,
+        connected: true,
+        openedCount: 0,
+        guesses: [],
+      })),
+      state: "waiting",
+      round: 0,
+      maxRounds: params.roundCount,
+      roundStartedAt: Date.now(),
+      roundDurationMs:
+        gameType === MiniGameType.JUSTE_PRIX
+          ? JUSTE_PRIX_ROUND_SECONDS * 1000
+          : null,
+    };
+
+    if (gameType === MiniGameType.CASE_OPENING) {
+      session.caseOpeningPacks = await this.items.buildCaseOpeningPacks(
+        params.roundCount,
+        queued.length,
+        params.setId,
+      );
+    } else {
+      session.justePrixItems = await this.items.buildJustePrixItems(
+        params.roundCount,
+        params.setId,
+      );
+    }
+
+    return session;
+  }
+
+  private startRound(session: GameSession, round: number) {
+    session.round = round;
+    session.roundStartedAt = Date.now();
+    this.clearRoundTimer(session);
+
+    if (session.roundDurationMs !== null) {
+      session.roundTimer = setTimeout(() => {
+        session.roundTimer = undefined;
+        void this.closeRoundOnTimeout(session);
+      }, session.roundDurationMs + ROUND_DEADLINE_SLACK_MS);
+    }
+  }
+
+  /** Juste Prix: every player has answered the current round. */
+  private isRoundClosed(session: GameSession): boolean {
+    if (session.gameType === MiniGameType.CASE_OPENING) {
+      return session.players.every((p) => p.openedCount >= session.round);
+    }
+    return session.players.every((p) =>
+      p.guesses.some((g) => g.round === session.round),
+    );
+  }
+
+  /** Files an empty guess for every player who let the timer run out. */
+  private async closeRoundOnTimeout(session: GameSession) {
+    if (session.state !== "playing" || this.isRoundClosed(session)) return;
+
+    const elapsedSeconds = (session.roundDurationMs ?? 0) / 1000;
+    for (const player of session.players) {
+      if (!player.guesses.some((g) => g.round === session.round)) {
+        player.guesses.push({
+          round: session.round,
+          guess: null,
+          elapsedSeconds,
+          points: 0,
+        });
+      }
+    }
+
+    await this.broadcastState(session);
+    this.revealRound(session);
+  }
+
+  private revealRound(session: GameSession) {
+    this.clearRoundTimer(session);
+    const item = session.justePrixItems?.[session.round - 1];
+    if (!item) return;
+
+    this.server.to(roomOf(session.id)).emit("minigame_round_reveal", {
+      round: session.round,
+      correctPrice: item.price,
+      guesses: session.players.map((p) => {
+        const guess = p.guesses.find((g) => g.round === session.round);
+        return {
+          userId: p.userId,
+          userName: p.userName,
+          guess: guess?.guess ?? null,
+          points: guess?.points ?? 0,
+        };
+      }),
+    });
+  }
+
+  private finish(session: GameSession) {
+    session.state = "finished";
+    this.clearRoundTimer(session);
+    for (const player of session.players) {
+      this.clearDisconnectTimer(`${session.id}:${player.userId}`);
+    }
+    setTimeout(() => {
+      this.activeSessions.delete(session.id);
+    }, FINISHED_SESSION_TTL_MS).unref?.();
+  }
+
+  private forfeit(session: GameSession, leaver: GamePlayerState) {
+    if (session.state === "finished") return;
+
+    session.forfeitedBy = leaver.userId;
+    this.finish(session);
+
+    // Kept for clients that treat a departure as an interrupted match.
+    this.server.to(roomOf(session.id)).emit("player_disconnected", {
+      userId: leaver.userId,
+      userName: leaver.userName,
+    });
+    void this.broadcastState(session);
+  }
+
+  // --- Payloads --------------------------------------------------------------
+
+  /** Sends each player the state in their own language. */
+  private async broadcastState(session: GameSession) {
+    await Promise.all(
+      session.players
+        .filter((player) => player.connected)
+        .map(async (player) =>
+          this.server
+            .to(player.socketId)
+            .emit(
+              "minigame_state_update",
+              await this.formatSessionState(session, player),
+            ),
+        ),
+    );
+  }
+
+  /**
+   * Client view of a session for one recipient.
+   *
+   * Guesses of the round in progress are withheld from everyone: only
+   * `hasGuessed` is exposed until the reveal, so a player cannot read the
+   * opponent's estimate before submitting their own.
+   */
+  private async formatSessionState(
+    session: GameSession,
+    recipient: GamePlayerState,
+  ) {
+    const locale = recipient.locale;
+    const revealedRound = this.isRoundClosed(session)
+      ? session.round
+      : session.round - 1;
+
+    const players = await Promise.all(
+      session.players.map(async (p, index) => ({
+        userId: p.userId,
+        userName: p.userName,
+        score: p.score,
+        ready: p.ready,
+        connected: p.connected,
+        hasGuessed: p.guesses.some((g) => g.round === session.round),
+        guesses: p.guesses.filter((g) => g.round <= revealedRound),
+        openedPacks: await this.openedPacksFor(session, index, locale),
+      })),
+    );
+
+    const currentItem =
+      session.gameType === MiniGameType.JUSTE_PRIX && session.round > 0
+        ? await this.currentItemFor(session, locale)
+        : null;
+
+    return {
+      id: session.id,
+      gameType: session.gameType,
+      round: session.round,
+      maxRounds: session.maxRounds,
+      state: session.state,
+      roundStartedAt: session.roundStartedAt,
+      roundDurationMs: session.roundDurationMs,
+      serverTime: Date.now(),
+      forfeitedBy: session.forfeitedBy ?? null,
+      players,
+      currentItem,
+    };
+  }
+
+  private async openedPacksFor(
+    session: GameSession,
+    playerIndex: number,
+    locale: SupportedLocale,
+  ): Promise<Card[][]> {
+    const packs = session.caseOpeningPacks;
+    const opened = session.players[playerIndex]?.openedCount ?? 0;
+    if (!packs || opened === 0) return [];
+
+    return Promise.all(
+      packs
+        .slice(0, opened)
+        .map((roundPacks) =>
+          this.items.localizeCards(roundPacks[playerIndex] ?? [], locale, {
+            keepPricing: true,
+          }),
+        ),
+    );
+  }
+
+  private async currentItemFor(session: GameSession, locale: SupportedLocale) {
+    const item = session.justePrixItems?.[session.round - 1];
+    if (!item) return null;
+    return this.items.localizeJustePrixItem(item, locale);
+  }
+
+  // --- Helpers ---------------------------------------------------------------
+
+  private removeFromQueue(userId: number) {
+    this.matchmakingQueue = this.matchmakingQueue.filter(
+      (p) => p.userId !== userId,
+    );
+  }
 
   private notifyQueueUpdate() {
     this.server.emit("minigame_queue_status", {
@@ -489,248 +709,26 @@ export class MiniGameGateway
     });
   }
 
-  private async generateGameItems(
-    gameType: "case_opening" | "juste_prix",
-    roundCount: number,
-    setId?: string,
-  ): Promise<any[]> {
-    if (gameType === "case_opening") {
-      const cardsPerPack = 6;
-      const cards = await this.drawRandomCards(
-        roundCount * cardsPerPack * 2,
-        setId,
-      );
-      const packs: any[] = [];
-      for (let r = 0; r < roundCount; r++) {
-        const roundOffset = r * cardsPerPack * 2;
-        const packA = cards.slice(roundOffset, roundOffset + cardsPerPack);
-        const packB = cards.slice(
-          roundOffset + cardsPerPack,
-          roundOffset + cardsPerPack * 2,
-        );
-        packs.push([packA, packB]);
-      }
-      return packs;
-    } else {
-      // Juste Prix: we need 5 random items (could be cards or sealed products).
-      // Let's get a mix: 3 cards, 2 sealed products.
-      const items: any[] = [];
-
-      // Query cards with pricing
-      const cardQb = this.cardRepository
-        .createQueryBuilder("card")
-        .leftJoinAndSelect("card.set", "set")
-        .where("card.pricing IS NOT NULL");
-      if (setId) {
-        cardQb.andWhere("set.id = :setId", { setId });
-      }
-      const [dbCards, dbSealed] = await Promise.all([
-        cardQb.orderBy("RANDOM()").limit(roundCount).getMany(),
-        this.sealedProductRepository
-          .createQueryBuilder("sealed")
-          .leftJoinAndSelect("sealed.pokemonSet", "set")
-          .orderBy("RANDOM()")
-          .limit(roundCount)
-          .getMany(),
-      ]);
-
-      // Mix items
-      let cardIdx = 0;
-      let sealedIdx = 0;
-      for (let i = 0; i < roundCount; i++) {
-        if (i % 2 === 0 && cardIdx < dbCards.length) {
-          items.push({
-            type: "card",
-            data: dbCards[cardIdx++],
-          });
-        } else if (sealedIdx < dbSealed.length) {
-          items.push({
-            type: "sealed",
-            data: dbSealed[sealedIdx++],
-          });
-        } else if (cardIdx < dbCards.length) {
-          items.push({
-            type: "card",
-            data: dbCards[cardIdx++],
-          });
-        } else {
-          // Fail-safe mock if database is empty
-          items.push(this.generateMockItem(i));
-        }
-      }
-
-      return items;
+  private clearRoundTimer(session: GameSession) {
+    if (session.roundTimer) {
+      clearTimeout(session.roundTimer);
+      session.roundTimer = undefined;
     }
   }
 
-  private async drawRandomCards(
-    count: number,
-    setId?: string,
-  ): Promise<Card[]> {
-    const qb = this.cardRepository
-      .createQueryBuilder("card")
-      .leftJoinAndSelect("card.set", "set");
-
-    if (setId) {
-      qb.where("set.id = :setId", { setId });
-    }
-
-    const cards = await qb.orderBy("RANDOM()").limit(count).getMany();
-
-    // Fill with mocks if not enough cards in database
-    while (cards.length < count) {
-      cards.push(this.generateMockCard() as any);
-    }
-
-    return cards;
-  }
-
-  private generateMockCard() {
-    const id = `mock_${Math.random().toString(36).substr(2, 9)}`;
-    const names = [
-      "Dracaufeu",
-      "Pikachu",
-      "Mewtwo",
-      "Tortank",
-      "Florizarre",
-      "Lugia",
-      "Evoli",
-    ];
-    const rarities = ["Rare Holo", "Ultra Rare", "Secret Rare", "Common"];
-    const randomName = names[Math.floor(Math.random() * names.length)];
-    const randomRarity = rarities[Math.floor(Math.random() * rarities.length)];
-    const randomPrice = parseFloat((Math.random() * 50 + 0.5).toFixed(2));
-
-    return {
-      id,
-      name: randomName,
-      rarity: randomRarity,
-      image: "https://images.pokemontcg.io/cel25/4_hires.png",
-      pricing: {
-        cardmarket: {
-          trend: randomPrice,
-        },
-      },
-    };
-  }
-
-  private generateMockItem(index: number) {
-    const isCard = index % 2 === 0;
-    if (isCard) {
-      return {
-        type: "card",
-        data: this.generateMockCard(),
-      };
-    } else {
-      const names = [
-        "Booster Base Set",
-        "Display Épée et Bouclier",
-        "Coffret Evoli",
-        "ETB Destinées Occultes",
-      ];
-      const randomName = names[Math.floor(Math.random() * names.length)];
-      const randomPrice = parseFloat((Math.random() * 300 + 10).toFixed(2));
-      return {
-        type: "sealed",
-        data: {
-          id: `mock_sealed_${index}`,
-          name: randomName,
-          productType: "booster",
-          image: "pokecardex/AQ/Booster_Aquapolis_Arcanin.png",
-          mockPrice: randomPrice,
-        },
-      };
-    }
-  }
-
-  private sanitizeItemsForClient(items: any[], gameType: string): any[] {
-    if (gameType === "case_opening") {
-      // In case opening, we don't send the pre-generated card packs to the client
-      // because they would see what cards are inside before clicking open!
-      // We just send placeholders or general info
-      return items.map(() => ({ placeholder: true }));
-    } else {
-      // In juste prix, we send the item details *but strip the pricing* so they can't cheat!
-      return items.map((item) => {
-        const sanitized = JSON.parse(JSON.stringify(item));
-        if (sanitized.type === "card" && sanitized.data) {
-          delete sanitized.data.pricing;
-        } else if (sanitized.type === "sealed" && sanitized.data) {
-          delete sanitized.data.mockPrice;
-        }
-        return sanitized;
-      });
-    }
-  }
-
-  private formatSessionState(session: GameSession) {
-    return {
-      id: session.id,
-      gameType: session.gameType,
-      round: session.round,
-      maxRounds: session.maxRounds,
-      state: session.state,
-      players: session.players.map((p) => ({
-        userId: p.userId,
-        userName: p.userName,
-        score: p.score,
-        ready: p.ready,
-        openedPack: p.openedPacks[session.round - 1] || null,
-        openedPacks: p.openedPacks,
-        hasGuessed: p.guesses.some((g) => g.round === session.round),
-        guesses: p.guesses,
-      })),
-      currentItem:
-        session.gameType === "juste_prix" && session.round > 0
-          ? this.sanitizeItemsForClient(
-              [session.items[session.round - 1]],
-              "juste_prix",
-            )[0]
-          : null,
-    };
-  }
-
-  private getCardMarketValue(card: any): number {
-    if (!card) return 0;
-    // Extract pricing
-    const cm = card.pricing?.cardmarket;
-    if (cm) {
-      if (cm.trend != null) return parseFloat(cm.trend);
-      if (cm.avg != null) return parseFloat(cm.avg);
-      if (cm.low != null) return parseFloat(cm.low);
-    }
-    const tcg = card.pricing?.tcgplayer;
-    if (tcg) {
-      const variants = [tcg.normal, tcg.holofoil, tcg.reverseHolofoil];
-      for (const v of variants) {
-        if (v?.marketPrice != null) return parseFloat(v.marketPrice);
-        if (v?.midPrice != null) return parseFloat(v.midPrice);
-      }
-    }
-    return 1.0; // default minimum
-  }
-
-  private getItemPrice(item: any): number {
-    if (!item) return 0;
-    if (item.type === "card") {
-      return this.getCardMarketValue(item.data);
-    } else {
-      if (item.data.mockPrice != null) return item.data.mockPrice;
-      // For sealed products, try to get some mock price based on productType
-      const type = item.data.productType;
-      if (type === "display") return 150.0;
-      if (type === "etb") return 55.0;
-      if (type === "booster") return 6.0;
-      return 25.0;
+  private clearDisconnectTimer(key: string) {
+    const timer = this.disconnectTimers.get(key);
+    if (timer) {
+      clearTimeout(timer);
+      this.disconnectTimers.delete(key);
     }
   }
 
   private async authenticateClient(client: AuthenticatedSocket) {
-    const accessToken = this.readCookie(
+    const accessToken = readCookie(
       client.handshake.headers.cookie,
       "accessToken",
     );
-
     if (!accessToken) {
       throw new UnauthorizedException("Missing access token");
     }
@@ -740,9 +738,10 @@ export class MiniGameGateway
       throw new UnauthorizedException("JWT secret not configured");
     }
 
-    const payload = await this.jwtService.verifyAsync<any>(accessToken, {
-      secret: jwtSecret,
-    });
+    const payload = await this.jwtService.verifyAsync<{ sub: number }>(
+      accessToken,
+      { secret: jwtSecret },
+    );
 
     // A valid token is not enough: the account may have been deactivated or
     // deleted since it was issued, and the token stays valid until it expires.
@@ -750,16 +749,11 @@ export class MiniGameGateway
       where: { id: payload.sub },
       select: { id: true, email: true, role: true, isActive: true },
     });
-
     if (!user?.isActive) {
       throw new UnauthorizedException("Account is not active");
     }
 
-    return {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-    };
+    return { id: user.id, email: user.email, role: user.role };
   }
 
   private requireSocketUser(client: AuthenticatedSocket) {
@@ -768,15 +762,30 @@ export class MiniGameGateway
     }
     return client.data.user;
   }
+}
 
-  private readCookie(cookieHeader: string | undefined, cookieName: string) {
-    if (!cookieHeader) return null;
-    for (const rawCookie of cookieHeader.split(";")) {
-      const [name, ...valueParts] = rawCookie.trim().split("=");
-      if (name === cookieName) {
-        return decodeURIComponent(valueParts.join("="));
-      }
+function roomOf(sessionId: string): string {
+  return `minigame:room:${sessionId}`;
+}
+
+function clampRoundCount(value: number | undefined): number {
+  return Math.min(
+    MAX_ROUND_COUNT,
+    Math.max(MIN_ROUND_COUNT, value ?? DEFAULT_ROUND_COUNT),
+  );
+}
+
+function readHeader(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function readCookie(cookieHeader: string | undefined, cookieName: string) {
+  if (!cookieHeader) return null;
+  for (const rawCookie of cookieHeader.split(";")) {
+    const [name, ...valueParts] = rawCookie.trim().split("=");
+    if (name === cookieName) {
+      return decodeURIComponent(valueParts.join("="));
     }
-    return null;
   }
+  return null;
 }

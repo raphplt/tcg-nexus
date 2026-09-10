@@ -1,16 +1,16 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
-import { BadgeService } from "src/badge/badge.service";
-import { CollectionItem } from "src/collection-item/entities/collection-item.entity";
-import { Collection } from "src/collection/entities/collection.entity";
-import { Deck } from "src/deck/entities/deck.entity";
-import { CardEvent } from "src/marketplace/entities/card-event.entity";
-import { Listing } from "src/marketplace/entities/listing.entity";
-import { Order } from "src/marketplace/entities/order.entity";
-import { OrderItem } from "src/marketplace/entities/order-item.entity";
-import { Player } from "src/player/entities/player.entity";
-import { Ranking } from "src/ranking/entities/ranking.entity";
-import { User } from "src/user/entities/user.entity";
+import { BadgeService } from "../badge/badge.service";
+import { CollectionItem } from "../collection-item/entities/collection-item.entity";
+import { Collection } from "../collection/entities/collection.entity";
+import { Deck } from "../deck/entities/deck.entity";
+import { CardEvent } from "../marketplace/entities/card-event.entity";
+import { Listing } from "../marketplace/entities/listing.entity";
+import { Order } from "../marketplace/entities/order.entity";
+import { OrderItem } from "../marketplace/entities/order-item.entity";
+import { Player } from "../player/entities/player.entity";
+import { Ranking } from "../ranking/entities/ranking.entity";
+import { User } from "../user/entities/user.entity";
 import { DashboardService } from "./dashboard.service";
 
 describe("DashboardService", () => {

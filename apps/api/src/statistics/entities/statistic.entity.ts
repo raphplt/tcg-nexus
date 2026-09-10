@@ -1,5 +1,5 @@
-import { Match } from "src/match/entities/match.entity";
-import { Player } from "src/player/entities/player.entity";
+import { Match } from "../../match/entities/match.entity";
+import { Player } from "../../player/entities/player.entity";
 import {
   Column,
   CreateDateColumn,
@@ -10,6 +10,9 @@ import {
   UpdateDateColumn,
 } from "typeorm";
 
+/**
+ * Match performance metrics recorded for an individual player.
+ */
 @Entity()
 @Index(["player", "match"], { unique: true })
 export class Statistics {

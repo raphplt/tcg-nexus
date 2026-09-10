@@ -7,6 +7,7 @@ import { UserRole } from "../common/enums/user";
 import { SealedProduct } from "../sealed-product/entities/sealed-product.entity";
 import { User } from "../user/entities/user.entity";
 import { MiniGameType } from "./dto/mini-game-events.dto";
+import { MiniGameItemsService } from "./mini-game-items.service";
 import { MiniGameGateway } from "./mini-game.gateway";
 
 describe("MiniGameGateway", () => {
@@ -49,6 +50,17 @@ describe("MiniGameGateway", () => {
     get: jest.fn((k) => (k === "JWT_SECRET" ? "secret" : null)),
   };
 
+  const mockItemsService = {
+    localizeCards: jest
+      .fn()
+      .mockImplementation((cards) => Promise.resolve(cards)),
+    buildCaseOpeningPacks: jest.fn().mockResolvedValue([]),
+    buildJustePrixItems: jest.fn().mockResolvedValue([]),
+    localizeJustePrixItem: jest
+      .fn()
+      .mockImplementation((item) => Promise.resolve(item)),
+  };
+
   beforeEach(async () => {
     jest.clearAllMocks();
 
@@ -63,6 +75,7 @@ describe("MiniGameGateway", () => {
         { provide: getRepositoryToken(User), useValue: mockUserRepo },
         { provide: JwtService, useValue: mockJwtService },
         { provide: ConfigService, useValue: mockConfigService },
+        { provide: MiniGameItemsService, useValue: mockItemsService },
       ],
     }).compile();
 
@@ -204,7 +217,7 @@ describe("MiniGameGateway", () => {
             socketId: "sock-1",
             score: 0,
             ready: false,
-            openedPacks: [],
+            openedCount: 0,
             guesses: [],
           },
           {
@@ -213,14 +226,14 @@ describe("MiniGameGateway", () => {
             socketId: "sock-2",
             score: 0,
             ready: false,
-            openedPacks: [],
+            openedCount: 0,
             guesses: [],
           },
         ],
         state: "waiting",
         round: 0,
         maxRounds: 2,
-        items: [
+        caseOpeningPacks: [
           [
             [{ id: "c1", pricing: { cardmarket: { trend: "10.0" } } }],
             [{ id: "c2", pricing: { cardmarket: { trend: "15.0" } } }],
@@ -230,6 +243,14 @@ describe("MiniGameGateway", () => {
             [{ id: "c4", pricing: { cardmarket: { trend: "25.0" } } }],
           ],
         ],
+        justePrixItems: [
+          {
+            type: "card",
+            id: "c1",
+            price: 50,
+            data: { id: "c1", pricing: { cardmarket: { trend: "50.0" } } },
+          },
+        ],
         roundStartedAt: Date.now(),
       };
 
@@ -237,7 +258,7 @@ describe("MiniGameGateway", () => {
       return { sessionId, session };
     };
 
-    it("should join minigame room", () => {
+    it("should join minigame room", async () => {
       const { sessionId } = setupActiveSession();
       const client: any = {
         id: "sock-1-new",
@@ -246,21 +267,21 @@ describe("MiniGameGateway", () => {
         emit: jest.fn(),
       };
 
-      const result = gateway.handleJoinRoom({ sessionId }, client);
+      const result = await gateway.handleJoinRoom({ sessionId }, client);
       expect(result).toEqual({ status: "joined" });
       expect(client.join).toHaveBeenCalledWith(`minigame:room:${sessionId}`);
     });
 
-    it("should handle ready flag and advance state when all players ready", () => {
+    it("should handle ready flag and advance state when all players ready", async () => {
       const { sessionId, session } = setupActiveSession();
       const client1: any = { data: { user: { id: 1 } } };
       const client2: any = { data: { user: { id: 2 } } };
 
-      const r1 = gateway.handleReady({ sessionId }, client1);
+      const r1 = await gateway.handleReady({ sessionId }, client1);
       expect(r1).toEqual({ status: "ok" });
       expect(session.state).toBe("waiting");
 
-      const r2 = gateway.handleReady({ sessionId }, client2);
+      const r2 = await gateway.handleReady({ sessionId }, client2);
       expect(r2).toEqual({ status: "ok" });
       expect(session.state).toBe("playing");
       expect(session.round).toBe(1);
@@ -279,20 +300,22 @@ describe("MiniGameGateway", () => {
       expect(session.players[0].score).toBe(10);
     });
 
-    it("should submit guess in juste_prix mode and compute score", () => {
+    it("should submit guess in juste_prix mode and compute score", async () => {
       const { sessionId, session } = setupActiveSession("juste_prix");
       session.state = "playing";
       session.round = 1;
-      session.items = [
+      session.justePrixItems = [
         {
           type: "card",
+          id: "c1",
+          price: 50,
           data: { id: "c1", pricing: { cardmarket: { trend: "50.0" } } },
         },
       ];
 
       const client: any = { data: { user: { id: 1 } } };
 
-      const result = gateway.handleSubmitGuess(
+      const result = await gateway.handleSubmitGuess(
         { sessionId, guess: 48 },
         client,
       );

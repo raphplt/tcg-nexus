@@ -1,5 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { User } from "src/user/entities/user.entity";
+import { User } from "../user/entities/user.entity";
 import { DashboardController } from "./dashboard.controller";
 import { DashboardService } from "./dashboard.service";
 

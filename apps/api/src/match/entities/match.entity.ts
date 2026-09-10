@@ -1,6 +1,6 @@
-import { Player } from "src/player/entities/player.entity";
-import { Statistics } from "src/statistics/entities/statistic.entity";
-import { Tournament } from "src/tournament/entities/tournament.entity";
+import { Player } from "../../player/entities/player.entity";
+import { Statistics } from "../../statistics/entities/statistic.entity";
+import { Tournament } from "../../tournament/entities/tournament.entity";
 import {
   Column,
   CreateDateColumn,

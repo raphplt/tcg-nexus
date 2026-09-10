@@ -1,17 +1,17 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { BadgeService } from "src/badge/badge.service";
-import { Collection } from "src/collection/entities/collection.entity";
-import { CollectionItem } from "src/collection-item/entities/collection-item.entity";
-import { Deck } from "src/deck/entities/deck.entity";
-import { CardEvent } from "src/marketplace/entities/card-event.entity";
-import { Listing } from "src/marketplace/entities/listing.entity";
-import { Order, OrderStatus } from "src/marketplace/entities/order.entity";
-import { OrderItem } from "src/marketplace/entities/order-item.entity";
-import { Player } from "src/player/entities/player.entity";
-import { Ranking } from "src/ranking/entities/ranking.entity";
-import { User } from "src/user/entities/user.entity";
-import { In, MoreThan, Repository } from "typeorm";
+import { Repository } from "typeorm";
+import { BadgeService } from "../badge/badge.service";
+import { Collection } from "../collection/entities/collection.entity";
+import { CollectionItem } from "../collection-item/entities/collection-item.entity";
+import { Deck } from "../deck/entities/deck.entity";
+import { CardEvent } from "../marketplace/entities/card-event.entity";
+import { Listing } from "../marketplace/entities/listing.entity";
+import { Order, OrderStatus } from "../marketplace/entities/order.entity";
+import { OrderItem } from "../marketplace/entities/order-item.entity";
+import { Player } from "../player/entities/player.entity";
+import { Ranking } from "../ranking/entities/ranking.entity";
+import { User } from "../user/entities/user.entity";
 import {
   DashboardActivityDay,
   DashboardBadgesData,
@@ -22,6 +22,9 @@ import {
   DashboardTournamentsData,
 } from "./dto/dashboard-response.dto";
 
+/**
+ * Service calculating and aggregating user telemetry and stats across all domains.
+ */
 @Injectable()
 export class DashboardService {
   constructor(
