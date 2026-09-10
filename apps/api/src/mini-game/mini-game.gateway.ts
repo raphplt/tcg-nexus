@@ -22,6 +22,7 @@ import { Repository } from "typeorm";
 import type { Card } from "../card/entities/card.entity";
 import { buildWebSocketCorsOptions } from "../common/websocket-cors";
 import { resolveRequestLocale } from "../translation/request-locale";
+import type { PackStyle } from "./booster";
 import type { SupportedLocale } from "../translation/supported-locales";
 import { User } from "../user/entities/user.entity";
 import {
@@ -64,6 +65,8 @@ const FINISHED_SESSION_TTL_MS = 5 * 60_000;
 
 interface QueueParams {
   setId?: string;
+  serieId?: string;
+  packStyle: PackStyle;
   roundCount: number;
 }
 
@@ -223,6 +226,8 @@ export class MiniGameGateway
     const userName = dbUser?.email?.split("@")[0] || `User_${user.id}`;
     const params: QueueParams = {
       setId: data.params?.setId || undefined,
+      serieId: data.params?.setId ? undefined : data.params?.serieId || undefined,
+      packStyle: data.params?.packStyle ?? "standard",
       roundCount: clampRoundCount(data.params?.roundCount),
     };
 
@@ -238,13 +243,15 @@ export class MiniGameGateway
     };
 
     // Only pair players who asked for the same duel: same game, same number of
-    // rounds, same set (or no set on either side).
+    // rounds, same booster style, same set or series (or none on either side).
     const opponent = this.matchmakingQueue.find(
       (p) =>
         p.gameType === data.gameType &&
         p.userId !== user.id &&
         p.params.roundCount === params.roundCount &&
-        (p.params.setId ?? null) === (params.setId ?? null),
+        p.params.packStyle === params.packStyle &&
+        (p.params.setId ?? null) === (params.setId ?? null) &&
+        (p.params.serieId ?? null) === (params.serieId ?? null),
     );
 
     if (!opponent) {
@@ -502,7 +509,11 @@ export class MiniGameGateway
       session.caseOpeningPacks = await this.items.buildCaseOpeningPacks(
         params.roundCount,
         queued.length,
-        params.setId,
+        {
+          setId: params.setId,
+          serieId: params.serieId,
+          style: params.packStyle,
+        },
       );
     } else {
       session.justePrixItems = await this.items.buildJustePrixItems(
@@ -664,6 +675,11 @@ export class MiniGameGateway
       roundDurationMs: session.roundDurationMs,
       serverTime: Date.now(),
       forfeitedBy: session.forfeitedBy ?? null,
+      params: {
+        setId: session.params.setId ?? null,
+        serieId: session.params.serieId ?? null,
+        packStyle: session.params.packStyle,
+      },
       players,
       currentItem,
     };

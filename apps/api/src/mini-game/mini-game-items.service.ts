@@ -8,6 +8,15 @@ import { PokemonCardsType } from "../common/enums/pokemonCardsType";
 import { Listing } from "../marketplace/entities/listing.entity";
 import { SealedProduct } from "../sealed-product/entities/sealed-product.entity";
 import type { SupportedLocale } from "../translation/supported-locales";
+import {
+  drawPack,
+  emptyPools,
+  type PackStyle,
+  RARITY_LABELS,
+  RARITY_TIERS,
+  type RarityTier,
+  type TierPools,
+} from "./booster";
 import { cardMarketValue, roundPrice } from "./mini-game-pricing";
 
 /** One Juste Prix round: the thing to price and its reference price. */
@@ -15,8 +24,20 @@ export type JustePrixItem =
   | { type: "card"; id: string; price: number; data: Card }
   | { type: "sealed"; id: string; price: number; data: SealedProduct };
 
-/** Number of cards in a Case Opening booster. */
-export const CASE_OPENING_PACK_SIZE = 6;
+/**
+ * A card drawn into a booster, tagged with the tier it was drawn from so
+ * clients can highlight hits without knowing every localized rarity label.
+ */
+export type BoosterCard = Card & { rarityTier: RarityTier };
+
+/** Restriction of a booster draw: one set, or every set of a series. */
+export interface BoosterScope {
+  setId?: string;
+  serieId?: string;
+}
+
+/** Cards sampled per rarity tier when building booster pools. */
+const BOOSTER_POOL_PER_TIER = 60;
 
 /** Share of Juste Prix rounds that feature a card rather than a sealed product. */
 const JUSTE_PRIX_CARD_SHARE = 0.6;
@@ -63,32 +84,7 @@ export class MiniGameItemsService {
     if (count <= 0) return [];
     const minPrice = options.minPrice ?? 0;
 
-    const qb = this.cardRepository
-      .createQueryBuilder("card")
-      .leftJoinAndSelect("card.set", "set")
-      .leftJoinAndSelect("card.pokemonDetails", "pokemonDetails")
-      .where("card.game = :game", { game: CardGame.Pokemon })
-      .andWhere(
-        new Brackets((where) => {
-          where
-            .where("(card.pricing->'cardmarket'->>'trend') IS NOT NULL")
-            .orWhere("(card.pricing->'cardmarket'->>'avg') IS NOT NULL")
-            .orWhere("(card.pricing->'cardmarket'->>'low') IS NOT NULL")
-            .orWhere(
-              "(card.pricing->'tcgplayer'->'normal'->>'marketPrice') IS NOT NULL",
-            )
-            .orWhere(
-              "(card.pricing->'tcgplayer'->'holofoil'->>'marketPrice') IS NOT NULL",
-            )
-            .orWhere(
-              "(card.pricing->'tcgplayer'->'reverseHolofoil'->>'marketPrice') IS NOT NULL",
-            );
-        }),
-      );
-
-    if (setId) {
-      qb.andWhere("set.id = :setId", { setId });
-    }
+    const qb = this.pricedPokemonCardsQuery({ setId });
 
     // Over-fetch: a JSON price can be present yet unusable (zero, negative,
     // or under the floor), and the floor is checked in code because the value
@@ -198,42 +194,117 @@ export class MiniGameItemsService {
   }
 
   /**
+   * Priced Pokémon cards of a scope, bucketed by rarity tier.
+   *
+   * One random sample per tier rather than one big sample: secret rares are a
+   * few percent of a set, a flat sample would rarely hold enough of them to
+   * make hits feel varied.
+   *
+   * @param scope Set or series restriction; the whole catalog when empty.
+   * @param perTier Maximum cards sampled per tier.
+   */
+  async loadBoosterPools(
+    scope: BoosterScope = {},
+    perTier = BOOSTER_POOL_PER_TIER,
+  ): Promise<TierPools<BoosterCard>> {
+    const pools = emptyPools<BoosterCard>();
+
+    await Promise.all(
+      RARITY_TIERS.map(async (tier) => {
+        const qb = this.pricedPokemonCardsQuery(scope).andWhere(
+          `EXISTS (
+            SELECT 1 FROM card_translation ct
+            WHERE ct.card_id = card.id AND ct.rarity IN (:...labels)
+          )`,
+          { labels: RARITY_LABELS[tier] },
+        );
+        const candidates = await qb
+          .orderBy("RANDOM()")
+          .limit(perTier * 2)
+          .getMany();
+        pools[tier] = candidates
+          .filter((card) => cardMarketValue(card) !== null)
+          .slice(0, perTier)
+          .map((card) => Object.assign(card, { rarityTier: tier }));
+      }),
+    );
+
+    return pools;
+  }
+
+  /**
    * Builds the boosters of a Case Opening duel: for each round, one pack per
-   * player, every card carrying a real market value.
+   * player, drawn by rarity slot from the scope's pools, every card carrying a
+   * real market value.
    *
    * @param roundCount Number of rounds (boosters per player).
    * @param playerCount Number of players.
-   * @param setId Optional set restriction.
+   * @param options Scope (set or series) and pack style.
    * @returns `packs[round][player]` arrays of cards.
-   * @throws ServiceUnavailableException when the catalog cannot fill the packs.
+   * @throws ServiceUnavailableException when the scope holds no priced card.
    */
   async buildCaseOpeningPacks(
     roundCount: number,
     playerCount: number,
-    setId?: string,
-  ): Promise<Card[][][]> {
-    const needed = roundCount * playerCount * CASE_OPENING_PACK_SIZE;
-    const pool = await this.drawPricedCards(needed, setId);
+    options: BoosterScope & { style?: PackStyle } = {},
+  ): Promise<BoosterCard[][][]> {
+    const style = options.style ?? "standard";
+    const pools = await this.loadBoosterPools({
+      setId: options.setId,
+      serieId: options.serieId,
+    });
 
-    if (pool.length === 0) {
+    if (RARITY_TIERS.every((tier) => pools[tier].length === 0)) {
       throw new ServiceUnavailableException(
         "Not enough priced cards in the catalog to open boosters",
       );
     }
 
-    // A small set legitimately holds fewer priced cards than a full duel needs:
-    // reuse the pool rather than refuse the game, the way a real set repeats.
-    const cards = Array.from({ length: needed }, (_, index) => pool[index % pool.length]);
-    const packs: Card[][][] = [];
+    const packs: BoosterCard[][][] = [];
     for (let round = 0; round < roundCount; round += 1) {
-      const roundPacks: Card[][] = [];
+      const roundPacks: BoosterCard[][] = [];
       for (let player = 0; player < playerCount; player += 1) {
-        const start = (round * playerCount + player) * CASE_OPENING_PACK_SIZE;
-        roundPacks.push(cards.slice(start, start + CASE_OPENING_PACK_SIZE));
+        roundPacks.push(drawPack(pools, style, (card) => card.id));
       }
       packs.push(roundPacks);
     }
     return packs;
+  }
+
+  /** Base query of priced Pokémon cards within an optional set or series. */
+  private pricedPokemonCardsQuery(scope: BoosterScope) {
+    const qb = this.cardRepository
+      .createQueryBuilder("card")
+      .leftJoinAndSelect("card.set", "set")
+      .leftJoinAndSelect("card.pokemonDetails", "pokemonDetails")
+      .where("card.game = :game", { game: CardGame.Pokemon })
+      .andWhere(
+        new Brackets((where) => {
+          where
+            .where("(card.pricing->'cardmarket'->>'trend') IS NOT NULL")
+            .orWhere("(card.pricing->'cardmarket'->>'avg') IS NOT NULL")
+            .orWhere("(card.pricing->'cardmarket'->>'low') IS NOT NULL")
+            .orWhere(
+              "(card.pricing->'tcgplayer'->'normal'->>'marketPrice') IS NOT NULL",
+            )
+            .orWhere(
+              "(card.pricing->'tcgplayer'->'holofoil'->>'marketPrice') IS NOT NULL",
+            )
+            .orWhere(
+              "(card.pricing->'tcgplayer'->'reverseHolofoil'->>'marketPrice') IS NOT NULL",
+            );
+        }),
+      );
+
+    if (scope.setId) {
+      qb.andWhere("set.id = :setId", { setId: scope.setId });
+    } else if (scope.serieId) {
+      qb.leftJoin("set.serie", "serie").andWhere("serie.id = :serieId", {
+        serieId: scope.serieId,
+      });
+    }
+
+    return qb;
   }
 
   /**

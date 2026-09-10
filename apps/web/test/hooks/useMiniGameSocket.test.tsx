@@ -49,6 +49,7 @@ const session = (
   roundDurationMs: 20000,
   serverTime: 1000,
   forfeitedBy: null,
+  params: { setId: null, serieId: null, packStyle: "standard" },
   players: [],
   currentItem: null,
   ...overrides,

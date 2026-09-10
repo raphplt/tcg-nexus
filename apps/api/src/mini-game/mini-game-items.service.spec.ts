@@ -7,6 +7,7 @@ import { PokemonCardDetails } from "../card/entities/pokemon-card-details.entity
 import { Listing } from "../marketplace/entities/listing.entity";
 import { SealedProduct } from "../sealed-product/entities/sealed-product.entity";
 import { PokemonSet } from "../pokemon-set/entities/pokemon-set.entity";
+import { RARITY_LABELS, RARITY_TIERS, RarityTier } from "./booster";
 import { MiniGameItemsService, shuffle } from "./mini-game-items.service";
 
 function makeCard(id: string, trend: number | null): Card {
@@ -34,6 +35,7 @@ describe("MiniGameItemsService", () => {
 
   const cardQb = {
     leftJoinAndSelect: jest.fn().mockReturnThis(),
+    leftJoin: jest.fn().mockReturnThis(),
     where: jest.fn().mockReturnThis(),
     andWhere: jest.fn().mockReturnThis(),
     orderBy: jest.fn().mockReturnThis(),
@@ -168,25 +170,53 @@ describe("MiniGameItemsService", () => {
     });
   });
 
-  describe("buildCaseOpeningPacks", () => {
-    it("builds one pack of six per player per round", async () => {
+  describe("booster pools and packs", () => {
+    it("samples every tier within the scope and tags cards with their tier", async () => {
+      // Fresh instances per query, as TypeORM returns them.
+      cardQb.getMany.mockImplementation(async () => [
+        makeCard("x", 2),
+        makeCard("y", 0),
+      ]);
+
+      const pools = await service.loadBoosterPools({ serieId: "sv" }, 5);
+
+      expect(cardQb.getMany).toHaveBeenCalledTimes(6);
+      expect(cardQb.andWhere).toHaveBeenCalledWith(
+        expect.stringContaining("ct.rarity IN (:...labels)"),
+        { labels: RARITY_LABELS[RarityTier.Secret] },
+      );
+      expect(cardQb.leftJoin).toHaveBeenCalledWith("set.serie", "serie");
+      expect(cardQb.andWhere).toHaveBeenCalledWith("serie.id = :serieId", {
+        serieId: "sv",
+      });
+      for (const tier of RARITY_TIERS) {
+        expect(pools[tier].map((c) => c.id)).toEqual(["x"]);
+        expect(pools[tier][0]!.rarityTier).toBe(tier);
+      }
+    });
+
+    it("lets a set restriction win over a series restriction", async () => {
+      cardQb.getMany.mockResolvedValue([]);
+      await service.loadBoosterPools({ setId: "sv01", serieId: "sv" }, 5);
+      expect(cardQb.andWhere).toHaveBeenCalledWith("set.id = :setId", {
+        setId: "sv01",
+      });
+      expect(cardQb.leftJoin).not.toHaveBeenCalledWith("set.serie", "serie");
+    });
+
+    it("builds one pack per player per round in the requested style", async () => {
       cardQb.getMany.mockResolvedValue(
-        Array.from({ length: 24 }, (_, i) => makeCard(`c${i}`, 1)),
+        Array.from({ length: 10 }, (_, i) => makeCard(`c${i}`, 1)),
       );
 
-      const packs = await service.buildCaseOpeningPacks(2, 2);
+      const packs = await service.buildCaseOpeningPacks(2, 2, {
+        style: "chase",
+      });
 
       expect(packs).toHaveLength(2);
       expect(packs[0]).toHaveLength(2);
-      expect(packs[1]![1]).toHaveLength(6);
-      expect(packs[0]![0]![0]!.id).toBe("c0");
-      expect(packs[1]![1]![5]!.id).toBe("c23");
-    });
-
-    it("reuses a short pool rather than refusing the duel", async () => {
-      cardQb.getMany.mockResolvedValue([makeCard("only", 1)]);
-      const packs = await service.buildCaseOpeningPacks(1, 2);
-      expect(packs[0]![1]!.every((c) => c.id === "only")).toBe(true);
+      expect(packs[1]![1]).toHaveLength(3);
+      expect(new Set(packs[1]![1]!.map((c) => c.id)).size).toBe(3);
     });
 
     it("fails when no priced card exists at all", async () => {

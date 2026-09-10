@@ -4,10 +4,37 @@ import type { SealedProduct } from "./sealed-product";
 /** Two-player mini-games served by the `/mini-game` WebSocket namespace. */
 export type MiniGameType = "case_opening" | "juste_prix";
 
+/** Booster styles of the Case Opening mini-game (see the API `booster.ts`). */
+export type PackStyle = "standard" | "premium" | "chase";
+
+export const PACK_STYLES: PackStyle[] = ["standard", "premium", "chase"];
+
+/** Rarity tiers, from least to most desirable. Mirrors the API enum. */
+export enum RarityTier {
+  Common = 0,
+  Uncommon = 1,
+  Rare = 2,
+  Holo = 3,
+  Ultra = 4,
+  Secret = 5,
+}
+
+/** A card drawn into a booster, tagged with the tier it was drawn from. */
+export type BoosterCard = PokemonCardType & { rarityTier?: RarityTier };
+
 /** Parameters sent when joining the matchmaking queue. */
 export interface MiniGameQueueParams {
   setId?: string;
+  serieId?: string;
+  packStyle?: PackStyle;
   roundCount?: number;
+}
+
+export interface CaseOpeningPacksResponse {
+  style: PackStyle;
+  composition: Partial<Record<RarityTier, number>>[];
+  /** `packs[round][player]`. */
+  packs: BoosterCard[][][];
 }
 
 /** One Juste Prix round as served by `GET /mini-game/juste-prix/items`. */
@@ -48,7 +75,7 @@ export interface MiniGamePlayerState {
   /** Only the rounds already revealed. */
   guesses: MiniGameRoundGuess[];
   /** Case Opening: boosters opened so far, cards with their pricing. */
-  openedPacks: PokemonCardType[][];
+  openedPacks: BoosterCard[][];
 }
 
 export interface MiniGameSessionState {
@@ -65,6 +92,12 @@ export interface MiniGameSessionState {
   serverTime: number;
   /** Set when the duel ended because a player left. */
   forfeitedBy: number | null;
+  /** Options both players agreed on when queuing. */
+  params: {
+    setId: string | null;
+    serieId: string | null;
+    packStyle: PackStyle;
+  };
   players: MiniGamePlayerState[];
   currentItem: JustePrixPublicItem | null;
 }

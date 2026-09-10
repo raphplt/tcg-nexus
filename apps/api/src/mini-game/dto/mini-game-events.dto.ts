@@ -1,6 +1,7 @@
 import { Type } from "class-transformer";
 import {
   IsEnum,
+  IsIn,
   IsInt,
   IsNotEmpty,
   IsNumber,
@@ -10,6 +11,7 @@ import {
   Min,
   ValidateNested,
 } from "class-validator";
+import { PACK_STYLES, type PackStyle } from "../booster";
 
 export const MIN_ROUND_COUNT = 1;
 export const MAX_ROUND_COUNT = 20;
@@ -22,11 +24,22 @@ export enum MiniGameType {
 }
 
 export class JoinQueueParamsDto {
+  /** Restrict the cards to one set. Wins over `serieId`. */
   @IsOptional()
   @IsString()
   setId?: string;
 
-  // borné : sinon le serveur génère `2 x roundCount` requêtes ORDER BY RANDOM()
+  /** Restrict the cards to every set of one series. */
+  @IsOptional()
+  @IsString()
+  serieId?: string;
+
+  /** Case Opening booster style. */
+  @IsOptional()
+  @IsIn(PACK_STYLES)
+  packStyle?: PackStyle;
+
+  // Bounded: the server draws `2 x roundCount` packs per duel.
   @IsOptional()
   @Type(() => Number)
   @IsInt()

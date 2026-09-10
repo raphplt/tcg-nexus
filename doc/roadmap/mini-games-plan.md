@@ -11,8 +11,9 @@
 | Gateway (phase 2, points 1 à 6 et 8) | **Livré** 2026-09-10 | `MiniGameItemsService` (cartes Pokémon avec prix réel, scellés au prix moyen des annonces, libellés localisés par joueur), timer serveur Juste Prix, estimations masquées jusqu'au reveal, matchmaking sur paramètres identiques, grâce de reconnexion 20 s puis forfait, erreur explicite quand le catalogue est vide. 42 tests. |
 | Socle web (phase 1, hors passe i18n des autres jeux) | **Livré** 2026-09-10 | `useMiniGameSocket`, `useCountdown`, `utils/miniGames/pricing.ts` (miroir de l'API), composants `MiniGames/*` (en-tête, cartes de mode, salon en ligne, résultat, erreur, avis de déconnexion). |
 | Juste Prix (phase 3) | **Livré** 2026-09-10 | Page réécrite en composants, items via `GET /mini-game/juste-prix/items` (1 appel, prix réels, plancher 1 € pour les cartes), reveal qui ne s'efface plus, plus d'`alert`, saisie décimale validée, i18n complète FR/EN, choix du nombre de manches. Tests : reducers solo/local, hook socket, parcours solo complet. |
-| Persistance des scores (phase 2, point 7) | À faire | Prévu avec le lot Case Opening. |
-| Case Opening, Who's That Pokémon, Pokedle, Hub, Smash or Pass | À faire | — |
+| Case Opening (phase 3) | **Livré** 2026-09-10 | Boosters tirés par palier de rareté (`booster.ts` : 6 paliers, labels FR/EN, 3 styles Standard / Premium / Chasse), périmètre au choix : catalogue, série ou set d'une série, en solo, local et en ligne (matchmaking sur options identiques). Endpoint `GET /mini-game/case-opening/packs`. Page réécrite en composants, roulette allégée (23 images basse résolution), handoff local supprimé, hits mis en avant, i18n complète. Tests : règles de booster, reducer de duel, parcours local complet. |
+| Persistance des scores (phase 2, point 7) | À faire | Lot dédié après les jeux solo. |
+| Who's That Pokémon, Pokedle, Hub, Smash or Pass | À faire | — |
 
 ## 1. Constat global
 
@@ -189,11 +190,22 @@ Ordre par sévérité.
 - Redis adapter socket.io si déploiement multi-instance.
 - Portage mobile de Who's That Pokémon et Pokedle une fois la logique extraite en fonctions pures (candidat à un paquet `packages/mini-games-core`).
 
-## 5. Ordre d'exécution proposé
+## 5. Ordre d'exécution
 
-1. Phase 0 (décisions, 1 réunion).
-2. Phase 2 points 1 à 4 (gateway : libellés, prix, anti-triche, timer) **et** Phase 3 Juste Prix point 1 (reveal effacé) : ce sont les bloquants du mode en ligne.
-3. Phase 1 (socle web + i18n + suppression des fallbacks).
-4. Phase 3 : Juste Prix → Case Opening → Who's That Pokémon → Pokedle → Hub → Smash or Pass.
-5. Phase 2 points 5 à 8 (matchmaking, déconnexion, persistance, tests).
-6. Phase 4.
+Fait au 2026-09-10 : phase 0 (décisions prises telles que recommandées), phase 2
+points 1 à 6 et 8, phase 1 hors passe i18n des jeux restants, phase 3 Juste
+Prix et Case Opening. Détail dans la section 0.
+
+Reste, dans cet ordre, un lot par jeu avec bilan à la fin de chacun :
+
+1. **Who's That Pokémon** (M) : leurres tirés côté serveur par espèce et localisés, suppression de la liste de noms français en dur, masque qui cache le nom imprimé, cibles non répétées, score persisté.
+2. **Pokedle** (L) : cible par espèce, recherche dédoublonnée et bornée, image masquée jusqu'à la fin, mode quotidien avec partage et streak, dropdown accessible.
+3. **Persistance des scores** (phase 2, point 7) : entité `MiniGameResult`, endpoints historique et classement, déclencheurs `challenge` / `badge`. Lot dédié, branché ensuite sur les quatre jeux.
+4. **Hub** (S) : enum de modes typé, badge « Connexion requise », record personnel depuis l'historique.
+5. **Smash or Pass** (S) : reclassement en « Découverte » hors hub, préchargement, exclusion des cartes déjà possédées, layout mobile.
+6. **Phase 4** : E2E à deux clients par jeu en ligne, budget perf mobile.
+7. **Phase 5**, optionnelle : Redis adapter, portage mobile.
+
+Hors plan mais noté : la formule de score Juste Prix et la table des paliers de
+rareté sont dupliquées web / API, épinglées par des tests identiques des deux
+côtés. Un paquet `packages/mini-games-core` les réunirait.

@@ -6,6 +6,8 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { Public } from "../auth/decorators/public.decorator";
+import { PACK_COMPOSITIONS } from "./booster";
+import { CaseOpeningPacksQueryDto } from "./dto/case-opening-packs-query.dto";
 import { JustePrixItemsQueryDto } from "./dto/juste-prix-items-query.dto";
 import { MiniGameItemsService } from "./mini-game-items.service";
 import {
@@ -54,6 +56,37 @@ export class MiniGameController {
         maxSpeedBonus: JUSTE_PRIX_MAX_SPEED_BONUS,
       },
       items,
+    };
+  }
+
+  /**
+   * Boosters for a solo or local Case Opening duel, drawn by rarity slot
+   * from a set, a series or the whole catalog. Cards keep their pricing: the
+   * client values each pack as it opens it.
+   */
+  @Public()
+  @Get("case-opening/packs")
+  @ApiOperation({
+    summary: "Draw the boosters of a solo or local Case Opening duel",
+  })
+  @ApiOkResponse({
+    description:
+      "`packs[round][player]` arrays of localized cards with pricing, plus the slot composition of the chosen style.",
+  })
+  @ApiServiceUnavailableResponse({
+    description: "The scope holds no priced Pokémon card.",
+  })
+  async getCaseOpeningPacks(@Query() query: CaseOpeningPacksQueryDto) {
+    const style = query.style ?? "standard";
+    const packs = await this.items.buildCaseOpeningPacks(
+      query.count ?? 3,
+      query.players ?? 2,
+      { setId: query.setId, serieId: query.serieId, style },
+    );
+    return {
+      style,
+      composition: PACK_COMPOSITIONS[style],
+      packs,
     };
   }
 }

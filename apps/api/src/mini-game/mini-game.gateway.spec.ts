@@ -221,6 +221,41 @@ describe("MiniGameGateway", () => {
       expect(mockItems.buildJustePrixItems).toHaveBeenCalledWith(3, undefined);
     });
 
+    it("keeps duels apart by booster style and series", async () => {
+      await gateway.handleJoinQueue(
+        {
+          gameType: MiniGameType.CASE_OPENING,
+          params: { roundCount: 3, serieId: "sv", packStyle: "premium" },
+        },
+        client(1),
+      );
+      const otherStyle = await gateway.handleJoinQueue(
+        {
+          gameType: MiniGameType.CASE_OPENING,
+          params: { roundCount: 3, serieId: "sv", packStyle: "chase" },
+        },
+        client(2),
+      );
+      expect(otherStyle.status).toBe("queued");
+
+      const match = await gateway.handleJoinQueue(
+        {
+          gameType: MiniGameType.CASE_OPENING,
+          params: { roundCount: 3, serieId: "sv", packStyle: "premium" },
+        },
+        client(3),
+      );
+      expect(match.status).toBe("matched");
+      expect(mockItems.buildCaseOpeningPacks).toHaveBeenCalledWith(3, 2, {
+        setId: undefined,
+        serieId: "sv",
+        style: "premium",
+      });
+
+      const state = eventsTo("sock-3", "minigame_state_update")[0]?.payload;
+      expect(state).toBeUndefined();
+    });
+
     it("tells each player who they are and never ships the items", async () => {
       const c1 = client(1);
       const c2 = client(2);
