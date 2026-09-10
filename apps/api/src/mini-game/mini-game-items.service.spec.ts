@@ -94,6 +94,20 @@ describe("MiniGameItemsService", () => {
       expect(cardQb.limit).toHaveBeenCalledWith(4);
     });
 
+    it("drops cards under the requested price floor", async () => {
+      cardQb.getMany.mockResolvedValue([
+        makeCard("cheap", 0.04),
+        makeCard("ok", 1.5),
+        makeCard("energy", 0.15),
+        makeCard("rare", 12),
+      ]);
+
+      const cards = await service.drawPricedCards(2, undefined, { minPrice: 1 });
+
+      expect(cards.map((c) => c.id)).toEqual(["ok", "rare"]);
+      expect(cardQb.limit).toHaveBeenCalledWith(8);
+    });
+
     it("applies the set filter when given", async () => {
       cardQb.getMany.mockResolvedValue([]);
       await service.drawPricedCards(1, "sv01");

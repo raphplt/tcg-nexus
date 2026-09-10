@@ -22,6 +22,12 @@ export const CASE_OPENING_PACK_SIZE = 6;
 const JUSTE_PRIX_CARD_SHARE = 0.6;
 
 /**
+ * Cheapest card worth guessing, in euros. Below that, the 20 cent tolerance
+ * makes nearly any low guess "right" and basic energies dominate the draw.
+ */
+export const JUSTE_PRIX_MIN_CARD_PRICE = 1;
+
+/**
  * Draws and prices the items the mini-games are played with.
  *
  * Every draw is restricted to Pokémon cards and to items with a real market
@@ -46,10 +52,16 @@ export class MiniGameItemsService {
    *
    * @param count Number of cards wanted.
    * @param setId Optional set restriction.
+   * @param options `minPrice` drops cards below that value (in euros).
    * @returns Up to `count` distinct cards, fewer when the catalog runs short.
    */
-  async drawPricedCards(count: number, setId?: string): Promise<Card[]> {
+  async drawPricedCards(
+    count: number,
+    setId?: string,
+    options: { minPrice?: number } = {},
+  ): Promise<Card[]> {
     if (count <= 0) return [];
+    const minPrice = options.minPrice ?? 0;
 
     const qb = this.cardRepository
       .createQueryBuilder("card")
@@ -78,13 +90,20 @@ export class MiniGameItemsService {
       qb.andWhere("set.id = :setId", { setId });
     }
 
-    // Over-fetch: a JSON price can be present yet unusable (zero, negative).
+    // Over-fetch: a JSON price can be present yet unusable (zero, negative,
+    // or under the floor), and the floor is checked in code because the value
+    // comes from whichever source is available first.
     const candidates = await qb
       .orderBy("RANDOM()")
-      .limit(count * 2)
+      .limit(count * (minPrice > 0 ? 4 : 2))
       .getMany();
 
-    return candidates.filter((card) => cardMarketValue(card) !== null).slice(0, count);
+    return candidates
+      .filter((card) => {
+        const value = cardMarketValue(card);
+        return value !== null && value >= minPrice;
+      })
+      .slice(0, count);
   }
 
   /**
@@ -148,7 +167,9 @@ export class MiniGameItemsService {
     const wantedSealed = roundCount - wantedCards;
 
     const sealed = await this.drawPricedSealedProducts(wantedSealed);
-    const cards = await this.drawPricedCards(roundCount - sealed.length, setId);
+    const cards = await this.drawPricedCards(roundCount - sealed.length, setId, {
+      minPrice: JUSTE_PRIX_MIN_CARD_PRICE,
+    });
 
     const items: JustePrixItem[] = [
       ...cards.map((card): JustePrixItem => ({
