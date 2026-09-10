@@ -20,34 +20,38 @@ L'enregistrement `api.tcg-nexus.org` est donc déjà prêt pour Swagger. Il ne f
 créer ni `swagger.tcg-nexus.org`, ni nouvel enregistrement pour l'API. Seule la
 route de la documentation manque :
 
-| Nom | Type | Tunnel | État attendu |
+| Nom | Affichage DNS | Tunnel | État attendu |
 |---|---|---|---|
 | `api.tcg-nexus.org` | Tunnel | `tcg-nexus-main` | déjà présent |
 | `docs.tcg-nexus.org` | Tunnel | `tcg-nexus-main` | à créer |
 
 ### Ajouter la route Docusaurus
 
-Si les routes sont gérées depuis la page DNS montrée dans la capture :
+**Tunnel n'est pas un type sélectionnable dans le formulaire DNS.** Cloudflare
+utilise ce libellé dans la liste DNS pour représenter une route créée et gérée
+par Cloudflare Tunnel. Il ne faut donc pas utiliser le bouton **Add record** de
+la page DNS pour cette opération.
 
-1. ouvrir **Cloudflare → tcg-nexus.org → DNS → Records** ;
-2. cliquer sur **Add record** ;
-3. sélectionner le type **Tunnel** ;
-4. saisir `docs` comme nom ;
-5. sélectionner `tcg-nexus-main` comme tunnel, puis enregistrer.
+Créer la route depuis le tunnel :
+
+1. ouvrir **Cloudflare → Networking → Tunnels** ;
+2. sélectionner `tcg-nexus-main` ;
+3. ouvrir l'onglet **Routes** ;
+4. cliquer sur **Add route**, puis choisir **Published application** ;
+5. saisir `docs` comme sous-domaine et `tcg-nexus.org` comme domaine ;
+6. saisir `http://localhost:80` dans **Service URL** ;
+7. cliquer sur **Add route**.
 
 Le résultat doit être identique à la ligne `api.tcg-nexus.org` : type
 **Tunnel**, contenu `tcg-nexus-main`, statut **Proxied** et TTL **Auto**.
-
-Si le tunnel utilise aussi des règles *Published application routes*, ajouter
-ou vérifier la règle suivante :
 
 | Public hostname | Service d'origine |
 |---|---|
 | `docs.tcg-nexus.org` | `http://localhost:80` |
 
-Quand le *Public Hostname* est créé depuis la configuration du tunnel,
-Cloudflare peut créer automatiquement l'enregistrement DNS correspondant. Dans
-ce cas, ne pas le créer une deuxième fois depuis la page DNS.
+L'ajout de cette *Published application route* crée et gère l'entrée DNS
+correspondante. La page DNS l'affiche alors avec le type **Tunnel** même si ce
+type n'apparaît pas dans la liste du formulaire DNS standard.
 
 Le tunnel doit cibler le proxy Coolify sur `localhost:80`, et non directement
 les ports `3001` ou `3002`. Coolify reçoit le nom d'hôte original et choisit le
@@ -153,4 +157,5 @@ route d'origine cible bien `http://localhost:80`.
 - [Docusaurus — déploiement](https://docusaurus.io/docs/deployment)
 - [NestJS — OpenAPI/Swagger](https://docs.nestjs.com/openapi/introduction)
 - [Cloudflare — publier une application avec Tunnel](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/routing-to-tunnel/)
+- [Cloudflare — créer une route Published application](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/get-started/create-remote-tunnel/#2a-publish-an-application)
 - [Cloudflare Access — chemins d'application](https://developers.cloudflare.com/cloudflare-one/access-controls/policies/app-paths/)
