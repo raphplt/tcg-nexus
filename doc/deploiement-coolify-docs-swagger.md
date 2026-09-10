@@ -9,36 +9,51 @@ Swagger fait partie de l'application NestJS. Il ne faut donc pas créer un
 conteneur Swagger séparé : l'interface et le document OpenAPI sont générés par
 la version exacte de l'API en cours d'exécution.
 
-## 1. Préparer Cloudflare
+## 1. Routage Cloudflare utilisé par le projet
 
-Utiliser une seule des deux configurations suivantes selon la façon dont la VM
-est exposée.
+La zone `tcg-nexus.org` utilise le tunnel Cloudflare `tcg-nexus-main`. Les
+routes `api.tcg-nexus.org`, `coolify.tcg-nexus.org`, `tcg-nexus.org` et
+`www.tcg-nexus.org` apparaissent déjà comme des enregistrements de type
+**Tunnel**, avec le statut **Proxied**.
 
-### Avec un Cloudflare Tunnel
+L'enregistrement `api.tcg-nexus.org` est donc déjà prêt pour Swagger. Il ne faut
+créer ni `swagger.tcg-nexus.org`, ni nouvel enregistrement pour l'API. Seule la
+route de la documentation manque :
 
-Ajouter deux *Public Hostnames* au tunnel existant :
+| Nom | Type | Tunnel | État attendu |
+|---|---|---|---|
+| `api.tcg-nexus.org` | Tunnel | `tcg-nexus-main` | déjà présent |
+| `docs.tcg-nexus.org` | Tunnel | `tcg-nexus-main` | à créer |
+
+### Ajouter la route Docusaurus
+
+Si les routes sont gérées depuis la page DNS montrée dans la capture :
+
+1. ouvrir **Cloudflare → tcg-nexus.org → DNS → Records** ;
+2. cliquer sur **Add record** ;
+3. sélectionner le type **Tunnel** ;
+4. saisir `docs` comme nom ;
+5. sélectionner `tcg-nexus-main` comme tunnel, puis enregistrer.
+
+Le résultat doit être identique à la ligne `api.tcg-nexus.org` : type
+**Tunnel**, contenu `tcg-nexus-main`, statut **Proxied** et TTL **Auto**.
+
+Si le tunnel utilise aussi des règles *Published application routes*, ajouter
+ou vérifier la règle suivante :
 
 | Public hostname | Service d'origine |
 |---|---|
 | `docs.tcg-nexus.org` | `http://localhost:80` |
-| `api.tcg-nexus.org` | `http://localhost:80` |
 
-Le proxy Coolify reçoit les requêtes sur le port 80 et les route grâce au nom
-d'hôte. Ne pas ajouter en parallèle des enregistrements A vers la VM pour ces
-mêmes noms.
+Quand le *Public Hostname* est créé depuis la configuration du tunnel,
+Cloudflare peut créer automatiquement l'enregistrement DNS correspondant. Dans
+ce cas, ne pas le créer une deuxième fois depuis la page DNS.
 
-### Avec une IP publique
-
-Créer deux enregistrements A, tous deux avec le proxy Cloudflare activé :
-
-| Type | Nom | Cible |
-|---|---|---|
-| A | `docs` | IP publique de la VM |
-| A | `api` | IP publique de la VM |
-
-Dans Cloudflare, utiliser le mode SSL/TLS **Full (strict)** après émission des
-certificats d'origine par Coolify. Les ports 80 et 443 de la VM doivent être
-accessibles par le proxy Coolify.
+Le tunnel doit cibler le proxy Coolify sur `localhost:80`, et non directement
+les ports `3001` ou `3002`. Coolify reçoit le nom d'hôte original et choisit le
+bon conteneur : `api.tcg-nexus.org` vers l'API et `docs.tcg-nexus.org` vers
+Docusaurus. Aucun port applicatif ni adresse IP publique de la VM n'a besoin
+d'être exposé dans Cloudflare.
 
 ## 2. Déployer Docusaurus dans Coolify
 
@@ -125,9 +140,9 @@ Résultat attendu :
 - le bouton **Swagger API** de Docusaurus ouvre l'URL de production.
 
 Si Coolify affiche `No available server`, vérifier en priorité le statut du
-conteneur, le port interne et le contrôle de santé. Si Cloudflare renvoie une
-erreur TLS 52x avec une exposition par IP publique, vérifier le certificat
-Coolify et le mode **Full (strict)**.
+conteneur, le port interne et le contrôle de santé. Si Cloudflare affiche une
+erreur 502 ou 503, vérifier ensuite que `tcg-nexus-main` est connecté et que sa
+route d'origine cible bien `http://localhost:80`.
 
 ## Documentation de référence
 
@@ -137,5 +152,5 @@ Coolify et le mode **Full (strict)**.
 - [Coolify — variables de build et de runtime](https://coolify.io/docs/knowledge-base/environment-variables)
 - [Docusaurus — déploiement](https://docusaurus.io/docs/deployment)
 - [NestJS — OpenAPI/Swagger](https://docs.nestjs.com/openapi/introduction)
-- [Cloudflare — mode Full (strict)](https://developers.cloudflare.com/ssl/origin-configuration/ssl-modes/full-strict/)
+- [Cloudflare — publier une application avec Tunnel](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/routing-to-tunnel/)
 - [Cloudflare Access — chemins d'application](https://developers.cloudflare.com/cloudflare-one/access-controls/policies/app-paths/)
