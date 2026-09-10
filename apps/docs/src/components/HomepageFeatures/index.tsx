@@ -11,32 +11,34 @@ type FeatureItem = {
 
 const FeatureList: FeatureItem[] = [
   {
-    title: "Monorepo unifié",
+    title: "Écosystème Monorepo & Mobile",
     Svg: require("@site/static/img/undraw_docusaurus_mountain.svg").default,
     description: (
       <>
-        Next.js, NestJS, microservice TCGdex et librairies partagées orchestrés
-        par Turborepo pour un développement cohérent.
+        Next.js 16, NestJS, application mobile Expo React Native avec scan de
+        cartes physiques, microservices Vision et Fetch, orchestrés par
+        Turborepo.
       </>
     ),
   },
   {
-    title: "Back-end prêt à l’emploi",
+    title: "Moteur Compétitif & IA Locale",
     Svg: require("@site/static/img/undraw_docusaurus_tree.svg").default,
     description: (
       <>
-        API NestJS avec Swagger, validation, guards JWT et scripts de seed pour
-        alimenter rapidement la base PostgreSQL.
+        Tournois suisses officiels, moteur de règles temps réel, similarité
+        vectorielle pgvector et diagnostics de decks déterministes sans dépendance
+        externe.
       </>
     ),
   },
   {
-    title: "Ops simplifiés",
+    title: "Marketplace & Ops Cloud",
     Svg: require("@site/static/img/undraw_docusaurus_react.svg").default,
     description: (
       <>
-        Démarrage rapide en Docker ou en local, commandes centralisées et guides
-        pour tester et livrer sereinement.
+        Réservations de stock pessimistes, grand livre de settlement vendeur,
+        déploiement continu Coolify et routage sécurisé Cloudflare Tunnel.
       </>
     ),
   },

@@ -1,114 +1,146 @@
 ---
-title: Installation & démarrage
+title: Installation & Prise en main
 ---
 
-## Prérequis
+Ce guide vous accompagne pas à pas pour installer et exécuter l'ensemble de la plateforme **TCG Nexus** sur votre poste de développement.
 
-- Node.js 20+ recommandé (le repo fonctionne à partir de 18 pour l’API/web, mais la doc Docusaurus demande 20)
-- npm 10+
-- Docker + Docker Compose (pour la base Postgres et l’API dockerisée)
-- PostgreSQL 15+ si vous préférez une base locale hors Docker
+---
 
-## Cloner et installer
+## 1. Prérequis système
+
+- **Node.js 20+** (LTS recommandé)
+- **npm 10+**
+- **Docker & Docker Compose** (pour PostgreSQL avec `pgvector` et le microservice Vision)
+- **Python 3.12** (optionnel, uniquement si vous développez sur le microservice Vision hors Docker)
+
+---
+
+## 2. Cloner le dépôt et installer les dépendances
 
 ```bash
 git clone https://github.com/raphplt/tcg-nexus.git
 cd tcg-nexus
+
+# Installer toutes les dépendances des applications et packages du monorepo
 npm install
 ```
 
-## Variables d’environnement
+---
 
-1. Copiez les exemples :
+## 3. Configuration des variables d'environnement
+
+Copiez les fichiers d'exemples dans chaque application concernée :
 
 ```bash
-cp .env.example .env
+# Variables Docker racine
+cp env.example .env
+
+# Configuration de l'API NestJS
 cp apps/api/.env.example apps/api/.env
+
+# Configuration du Front Web Next.js
 cp apps/web/.env.example apps/web/.env
+
+# Configuration de l'App Mobile Expo (optionnel)
+cp apps/mobile/.env.example apps/mobile/.env
 ```
 
-2. Ajustez les valeurs selon votre contexte : le strict nécessaire pour démarrer en local est la base et les secrets JWT ; le reste a des valeurs par défaut ou désactive proprement la fonctionnalité concernée si absent.
+### Paramètres clés pour le développement local
 
+Dans `apps/api/.env` :
+- `DATABASE_HOST=localhost`
+- `DATABASE_PORT=5432`
+- `DATABASE_USER=postgres`
+- `DATABASE_PASSWORD=postgres`
+- `DATABASE_NAME=tcg_nexus`
+- `DATABASE_MIGRATIONS_RUN=false` (en développement, la synchronisation TypeORM initialise les entités)
+- `JWT_SECRET=votre-secret-de-dev`
+- `JWT_REFRESH_SECRET=votre-secret-refresh-de-dev`
+- `PORT=3001`
+- `FRONTEND_URL=http://localhost:3000`
+
+Dans `apps/web/.env` :
+- `NEXT_PUBLIC_API_URL=http://localhost:3001`
+
+---
+
+## 4. Démarrer l'environnement de développement
+
+### Option A : Démarrage complet via Turborepo (Recommandé)
+
+1. Lancez les services d'infrastructure Docker (PostgreSQL et Vision) :
+   ```bash
+   cd apps/api && npm run docker:db
+   ```
+2. Revenez à la racine et démarrez toutes les applications en parallèle :
+   ```bash
+   npm run dev
+   ```
+   Cette commande lance simultanément le serveur de dev Next.js (port 3000) et l'API NestJS en mode watch (port 3001).
+
+### Option B : Démarrage ciblé service par service
+
+Dans des terminaux séparés :
 ```bash
-# apps/api/.env — essentiel
-DATABASE_HOST=localhost
-DATABASE_PORT=5432
-DATABASE_USER=postgres
-DATABASE_PASSWORD=postgres
-DATABASE_NAME=tcg_nexus
-DATABASE_MIGRATIONS_RUN=false   # true en prod ; en dev, synchronize suffit (voir Base de données ci-dessous)
-JWT_SECRET=change-me
-JWT_REFRESH_SECRET=change-me-too
-JWT_EXPIRES_IN=15m
-JWT_REFRESH_EXPIRES_IN=30d
-PORT=3001
-
-# apps/api/.env — fonctionnalités optionnelles (dégradées proprement si absentes)
-OCR_ENGINE=tesseract             # scan de cartes : tesseract (défaut) ou vision (nécessite GOOGLE_VISION_API_KEY)
-VISION_SERVICE_URL=http://localhost:8000
-R2_ACCOUNT_ID=...                # stockage Cloudflare R2 (images de sets/séries) ; uploads désactivés si absent
-R2_ACCESS_KEY_ID=...
-R2_SECRET_ACCESS_KEY=...
-STRIPE_SECRET_KEY=...            # marketplace ; checkout désactivé proprement si absent
-STRIPE_WEBHOOK_SECRET=...
-SMTP_HOST=...                    # emails transactionnels
-
-# apps/web/.env
-NEXT_PUBLIC_API_URL=http://localhost:3001
-```
-
-Liste exhaustive à jour dans `apps/api/.env.example`. Voir aussi [API NestJS](../backend/api) pour le détail des variables liées à chaque module, et [Base de données](../architecture/database) pour `DATABASE_MIGRATIONS_RUN` vs `synchronize`.
-
-## Lancer l’environnement de dev
-
-Option 1 : tout via Turborepo (front + API en parallèle) :
-
-```bash
-npm run dev
-```
-
-Option 2 : services séparés :
-
-```bash
-# Démarrer Postgres en Docker
+# Terminal 1 : Base de données + Vision
 cd apps/api && npm run docker:db
 
-# Lancer l’API NestJS
-npm run start:dev
+# Terminal 2 : API NestJS
+cd apps/api && npm run start:dev
 
-# Dans un autre terminal, lancer le front Next.js
-cd ../web
-npm run dev
+# Terminal 3 : Front-end Next.js
+cd apps/web && npm run dev
+
+# Terminal 4 : Documentation Docusaurus
+cd apps/docs && npm start
 ```
 
-## Construire et servir
+---
 
-```bash
-# Build front + API via Turborepo
-npm run build
+## 5. Initialiser les données de démonstration (Seeds)
 
-# Build / run un service précis
-cd apps/web && npm run build && npm start
-cd apps/api && npm run build && npm run start:prod
-```
-
-## Base de données : synchronize vs migrations
-
-En dev, `synchronize` (TypeORM) recrée le schéma automatiquement à partir des entités — pratique, mais il gère mal certains changements structurels (ex. transformation d'une clé primaire). Certaines migrations dans `apps/api/src/migrations/` existent justement pour ces cas que `synchronize` ne sait pas appliquer proprement sur une base qui contient déjà des données.
-
-Si l'API refuse de démarrer avec une erreur `QueryFailedError` pendant la synchronisation du schéma (le message ressemble à un problème de connexion mais n'en est pas un), la base est probablement restée sur un schéma plus ancien pendant que `synchronize` tentait une transformation qu'il ne sait pas faire sans perte de données :
+Une fois PostgreSQL et l'API démarrés, alimentez la base avec les données de référence :
 
 ```bash
 cd apps/api
-npm run migration:baseline   # marque comme déjà appliquées les migrations dont l'effet est déjà présent
-npm run migration:run        # joue les migrations restantes
+
+# Initialiser le catalogue Pokémon complet et les tournois de test
+npm run seed
+
+# Créer les comptes utilisateurs de démonstration
+npm run seed:users
+
+# Initialiser le référentiel des états de cartes (NM, Played...)
+npm run seed:cardstates
+
+# Synchroniser les effets de cartes parsés pour l'IA
+npm run sync:effects
+
+# Calculer les vecteurs d'archétypes pour la similarité pgvector
+npm run embed:decks
 ```
 
-`migration:baseline` est idempotent et sans danger à relancer.
+---
 
-## Documentation Docusaurus
+## 6. URLs d'accès aux services locaux
 
-```bash
-cd apps/docs
-npm start   # http://localhost:3000
-```
+| Service | URL locale | Identifiants / Remarques |
+|---|---|---|
+| **Application Web** | `http://localhost:3000` | Accès public et espace membre |
+| **API Backend** | `http://localhost:3001` | Préfixe des routes : `/api` |
+| **Swagger API** | `http://localhost:3001/api/docs` | Documentation interactive des endpoints |
+| **Documentation** | `http://localhost:3000` (ou 3002) | Portail technique Docusaurus |
+| **Microservice Vision** | `http://localhost:8000/health` | Sonde de santé FastAPI |
+| **Base PostgreSQL** | `localhost:5432` | `postgres` / `postgres` (base: `tcg_nexus`) |
+
+---
+
+## 7. Gestion de la base de données : Synchronize vs Migrations
+
+- En développement, TypeORM utilise `synchronize: true` pour générer automatiquement les tables à partir des entités TypeScript.
+- Si vous rencontrez une erreur de schéma lors d'une mise à jour de branche, exécutez la mise à niveau :
+  ```bash
+  cd apps/api
+  npm run migration:baseline   # Enregistre les migrations déjà existantes
+  npm run migration:run        # Exécute les migrations incrémentales
+  ```

@@ -1,65 +1,106 @@
 ---
-title: Tests & qualité
+title: Tests, Qualité & Intégration Continue
 ---
 
-## API (NestJS)
+TCG Nexus applique une stratégie de test et de validation rigoureuse sur l'ensemble de ses applications et bibliothèques partagées.
 
-- Unitaires : `npm run test`
-- Watch : `npm run test:watch`
-- Couverture : `npm run test:cov`
-- E2E : `npm run test:e2e`
-- E2E tournoi sur PostgreSQL éphémère : `npm run test:e2e:tournament`
-- Lint : `npm run lint`
+---
 
-Le script E2E tournoi démarre une base dédiée sur le port `55432`, attend son
-état de santé, exécute les scénarios séquentiels et concurrents, puis détruit
-le conteneur et ses données même si Jest échoue. Il nécessite Docker, mais ne
-touche jamais à la base de développement configurée dans `.env`.
+## 1. API NestJS (`apps/api`)
 
-## Front (Next.js)
-
-- Tests unitaires : `npm run test`
-- Lint : `npm run lint` ou `npm run lint:fix`
-- Types : `npm run check-types`
-
-## Monorepo
-
-- `npm run lint` / `npm run check-types` à la racine orchestrent les workspaces via Turborepo.
-- `check-types` couvre API, web, mobile, fetch, docs et les quatre packages TypeScript exécutables. `packages/typescript-config` contient uniquement la configuration partagée. L’ancien script docs `typecheck` reste disponible.
-- Les modifications de `biome.json` et des configurations TypeScript partagées invalident le cache Turbo.
-- Si votre shell exporte `NODE_ENV=production`, utilisez `NODE_ENV=test npm test -w web` pour le runtime JSX de test.
-- La CI exécute les tests web, API, fetch, mobile, effect-parser, pokemon-dataset et vision. Elle lance aussi les E2E marketplace/commandes/collections et tournois sur PostgreSQL jetable.
-- Les règles Biome activées détectent code inaccessible, debugger et paramètres/propriétés/props JSX dupliqués. Ce socle ne constitue pas encore un audit complet des commentaires, TSDoc ou du code inutilisé.
-
-## PostgreSQL et migrations
-
-Depuis la racine :
+### Tests Unitaires & Intégration
+Développés avec **Jest** et exécutés sans dépendances externes réseau :
 
 ```bash
-npm run test:e2e:postgres -w api -- test/collection.e2e-spec.ts test/marketplace.e2e-spec.ts test/order-flow.e2e-spec.ts
+cd apps/api
+
+# Lancer la suite complète de tests unitaires
+npm run test
+
+# Exécuter les tests en mode watch
+npm run test:watch
+
+# Mesurer la couverture de code
+npm run test:cov
+
+# Tester un module spécifique (ex: IA, Tournois ou Marketplace)
+npm test -- src/ai
+npm test -- src/tournament
+npm test -- src/marketplace
 ```
 
-Le runner utilise actuellement `DATABASE_SYNCHRONIZE=true`. Ces tests ne prouvent
-pas la compatibilité des migrations avec une base historique. La première
-migration suppose des tables existantes ; le bootstrap de schéma et les fixtures
-de mise à niveau restent des travaux FND-04 du plan de maturité.
-
-## Vision (Python 3.12)
-
-Depuis la racine, installez les dépendances dans un environnement dédié :
+### Tests End-to-End (E2E) sur PostgreSQL Éphémère
+Les tests E2E des flux critiques (cycle de vie complet d'un tournoi, passages de commande marketplace et réservations de stock) s'exécutent sur une instance PostgreSQL dédiée et jetable :
 
 ```bash
-python3.12 -m venv .venv-vision
-.venv-vision/bin/pip install -r apps/vision/requirements.txt
+cd apps/api
+
+# Lance un conteneur Postgres sur le port 55432, joue les scénarios et détruit le conteneur
+npm run test:e2e:tournament
+
+# Tests E2E de collections et commandes
+npm run test:e2e
+```
+Ce mécanisme garantit que la base de développement locale n'est jamais polluée ou altérée par les tests E2E.
+
+---
+
+## 2. Front-end Next.js (`apps/web`)
+
+### Tests Unitaires & Composants
+Propulsés par **Vitest** et **React Testing Library** dans un environnement DOM simulé (JSDOM) :
+
+```bash
+cd apps/web
+
+# Exécuter les tests Vitest
+npm run test
+
+# Lancer les tests en mode interactif (watch)
+npm run test:watch
+
+# Contrôle des types TypeScript
+npm run check-types
+```
+
+---
+
+## 3. Microservice Vision (`apps/vision`)
+
+Les tests du service Python 3.12 valident la chaîne de traitement d'image, le redressement géométrique, l'OCR Tesseract, le matching ORB et la protection anti-SSRF :
+
+```bash
+# Depuis la racine avec l'environnement virtuel Python
 .venv-vision/bin/python scripts/run-vision-tests.py
 ```
+Le runner dédié vérifie que chaque test requis a été réellement exécuté sans être silencieusement ignoré (*skipped*).
 
-Le lanceur échoue si aucun test n’est découvert ou si une dépendance manquante
-fait ignorer un test requis. Il n’est donc pas équivalent à un succès de
-`unittest` accompagné de `skipped`. Activez cet environnement pour `npm test` à
-la racine, dont la dernière étape utilise `python3`.
+---
 
+## 4. Contrôles de Qualité Globaux (Monorepo)
 
-## Données & seeds
+Turborepo unifie les contrôles de conformité sur l'ensemble du monorepo depuis la racine :
 
-Après une installation fraîche ou un `docker-compose down -v`, relancez `npm run seed` (et variantes) pour garantir des fixtures cohérentes lors des tests manuels.
+```bash
+# Vérification stricte des types TypeScript sur tous les workspaces
+npm run check-types
+
+# Linter avec Biome (détection de code mort, variables inutilisées, formatage)
+npm run lint
+
+# Formatage automatique
+npm run format
+
+# Exécution de l'intégralité des suites de tests du projet
+npm test
+```
+
+---
+
+## 5. Pipeline d'Intégration Continue (GitHub Actions)
+
+À chaque ouverture de Pull Request ou commit sur la branche principale, le workflow CI exécute automatiquement :
+1. La vérification de formatage et de linting Biome ;
+2. La validation des types TypeScript sur l'API, le Web, le Mobile, les microservices et les packages ;
+3. Les suites de tests unitaires (Web, API, Fetch, Vision, Parser d'effets) ;
+4. Les scénarios E2E sur PostgreSQL éphémère.

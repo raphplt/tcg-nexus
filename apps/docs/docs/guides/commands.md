@@ -1,51 +1,100 @@
 ---
-title: Commandes utiles
+title: Référence des Commandes Utiles
 ---
 
-### Racine (Turborepo)
+Cette page récapitule l'ensemble des commandes disponibles dans le monorepo, classées par application et par domaine fonctionnel.
 
-- `npm run dev` : lance les scripts `dev` de chaque app (Next.js + NestJS).
-- `npm run build` : build orchestré via Turborepo.
-- `npm run lint` / `npm run check-types` : linting/TS sur les workspaces.
-- `npm run seed` : exécute le script de seed de l’API.
+---
 
-### API (`apps/api`)
+## 1. Racine du Monorepo (Turborepo)
 
-- `npm run start:dev` : NestJS en mode watch.
-- `npm run start:prod` : démarre la version compilée (`dist`).
-- `npm run build` : build TypeScript -> `dist/`.
-- `npm run seed` / `npm run seed:users` / `npm run seed:cardstates` : remplissage des données.
-- `npm run docker:db` / `docker:db-down` / `docker:db-logs` : cycle de vie Postgres (+ vision) via `docker-compose.yml` (racine).
-- `npm run docker:up` / `docker:down` / `docker:logs` : stack complète (postgres, vision, api, web, docs) via `docker-compose.deploy.yml` (racine), orientée déploiement.
-- `npm run test` / `test:watch` / `test:cov` / `test:e2e` : tests Jest.
+| Commande | Action |
+|---|---|
+| `npm run dev` | Lance en parallèle les serveurs de développement (Next.js + NestJS). |
+| `npm run build` | Compile l'ensemble des applications et packages du monorepo. |
+| `npm run check-types` | Contrôle strict des types TypeScript (`tsc --noEmit`) sur tous les workspaces. |
+| `npm run lint` | Exécute le linter Biome sur l'ensemble du code source. |
+| `npm run lint:fix` | Corrige automatiquement les erreurs de linting détectées. |
+| `npm run format` | Formate l'ensemble des fichiers selon les règles du projet. |
+| `npm test` | Exécute les suites de tests unitaires sur tous les workspaces. |
 
-### Front-end (`apps/web`)
+---
 
-- `npm run dev` : serveur Next.js (App Router) sur le port 3000.
-- `npm run build` puis `npm start` : build + serveur de prod.
-- `npm run lint` / `npm run lint:fix` : linting Biome.
-- `npm run check-types` : vérification TypeScript.
-- `npm run test` : tests unitaires Vitest.
+## 2. API Backend (`apps/api`)
+
+### Cycle de vie & Démarrage
+- `npm run start:dev` : démarre NestJS en mode écoute/rechargement à chaud.
+- `npm run start:prod` : exécute la version compilée en production (`dist/`).
+- `npm run build` : compile le code TypeScript vers le dossier `dist/`.
+
+### Base de données & Docker
+- `npm run docker:db` : démarre les conteneurs locaux PostgreSQL (avec `pgvector`) et Vision.
+- `npm run docker:db-logs` : affiche les journaux de PostgreSQL et Vision.
+- `npm run docker:db-down` : arrête les conteneurs de développement.
+- `npm run docker:up` : lance l'intégralité de la pile de production (`docker-compose.deploy.yml`).
+- `npm run docker:down` : arrête la pile de production.
+
+### Migrations TypeORM
+- `npm run migration:show` : affiche l'état des migrations (appliquées ou en attente).
+- `npm run migration:run` : applique les migrations en attente.
+- `npm run migration:baseline` : aligne l'historique des migrations pour une base synchronisée.
+- `npm run schema:drift` : vérifie l'absence de dérive entre les entités et le schéma physique.
+
+### Données & Seeds
+- `npm run seed` : peuple le catalogue de cartes, les séries, les sets et les tournois.
+- `npm run seed:users` : génère les comptes utilisateurs de démonstration (admin, modérateur, joueurs).
+- `npm run seed:cardstates` : initialise le référentiel des états d'usure des cartes.
+- `npm run sync:effects` : parse et synchronise les effets structurés des cartes.
+- `npm run embed:cards` : calcule les vecteurs d'embeddings d'illustrations via CLIP.
+- `npm run embed:decks` : calcule les vecteurs d'archétypes de decks pour `pgvector`.
+- `npm run seed:prod` : procédure de seed sécurisée pour la production (requiert `ALLOW_DEMO_SEED=true`).
+
+### Tests
+- `npm run test` : exécute les tests unitaires avec Jest.
+- `npm run test:watch` : lance Jest en mode interactif.
+- `npm run test:cov` : génère le rapport de couverture de code.
+- `npm run test:e2e` : lance les tests End-to-End.
+- `npm run test:e2e:tournament` : lance les scénarios E2E de tournois sur une base Postgres isolée.
+
+---
+
+## 3. Front-end Web (`apps/web`)
+
+- `npm run dev` : démarre le serveur de développement Next.js sur `http://localhost:3000`.
+- `npm run build` : prépare le build de production optimisé dans `.next/`.
+- `npm start` : démarre le serveur de production Next.js.
+- `npm run test` : exécute les tests unitaires et de composants avec Vitest.
+- `npm run test:watch` : exécute Vitest en mode écoute continue.
+- `npm run lint` / `npm run lint:fix` : contrôle et correction automatique du code avec Biome.
+- `npm run check-types` : vérification des types TypeScript.
+
+---
+
+## 4. Documentation Docusaurus (`apps/docs`)
+
+- `npm start` : démarre le serveur de documentation en local (avec rechargement à chaud).
+- `npm run build` : génère le site statique prêt pour le déploiement dans `build/`.
+- `npm run serve` : sert localement le dossier statique généré pour vérification.
+- `npm run check-types` : vérifie la validité des types TypeScript dans la documentation.
+
+---
+
+## 5. Application Mobile (`apps/mobile`)
+
+- `npm run dev` : lance le serveur de bundling Metro via Expo.
+- `npm run android` : compile et exécute sur un émulateur ou appareil Android connecté.
+- `npm run ios` : compile et exécute sur le simulateur iOS (sous macOS).
+- `npm run check-types` : vérification des types TypeScript.
+- `npm run lint` : contrôle du code avec Biome.
+
+---
+
+## 6. Microservices & Packages
+
+### Microservice Vision (`apps/vision`)
+- `docker compose up -d vision` : démarre le microservice dans Docker sur le port `8000`.
+- `.venv-vision/bin/python scripts/run-vision-tests.py` : exécute la suite de tests unitaires Python.
 
 ### Microservice Fetch (`apps/fetch`)
-
-- `npm start` : lance l’API Express (port 3005 par défaut).
-- `npm run update-data` : script `update-data.ts` (mise à jour des données TCGdex).
-
-### Documentation (`apps/docs`)
-
-- `npm start` : serveur Docusaurus en dev (port 3000 par défaut).
-- `npm run build` : génération statique.
-- `npm run serve` : sert le build localement.
-
-### Mobile (`apps/mobile`)
-
-- `npm run dev` : lance Expo (Metro bundler).
-- `npm run android` / `npm run ios` : build + lancement natif via Expo.
-- `npm run web` : Expo en mode web.
-- `npm run build` : build de production via EAS Build (pas de build local).
-
-### Vision (`apps/vision`, Python/FastAPI)
-
-- `uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload` : lance le microservice OCR en local (nécessite `pip install -r requirements.txt` et `tesseract-ocr`).
-- `docker compose up -d vision` (depuis la racine) : lance le service via Docker.
+- `npm start` : lance le serveur Express sur le port `3005`.
+- `npm run update-data` : synchronise les données récentes depuis TCGdex.

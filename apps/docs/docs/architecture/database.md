@@ -2,126 +2,124 @@
 title: Schéma de la base de données
 ---
 
-Cette section documente le modèle physique de données (schéma PostgreSQL via TypeORM) de **TCG Nexus**. Elle présente les entités majeures du système, leurs relations ainsi qu'un diagramme conceptuel complet.
+Cette section documente le modèle physique de données (schéma PostgreSQL via TypeORM avec extension `pgvector`) de **TCG Nexus**. Elle présente l'organisation conceptuelle globale, les diagrammes entité-association et la description des entités majeures.
 
-## Diagramme entité-association (ERD)
+---
 
-Le diagramme ci-dessous illustre l'organisation globale de la base de données et les dépendances entre les différents modules applicatifs (Utilisateurs, Decks, Tournois, Matchs, Récompenses/Social).
+## 1. Diagramme entité-association global (ERD)
+
+### Compétition, Joueurs & Matchs
 
 ```mermaid
 erDiagram
-    USER ||--|| PLAYER : "a pour profil"
-    USER ||--o{ DECK : "possède"
+    USER ||--|| PLAYER : "possède un profil"
+    USER ||--o{ DECK : "est auteur de"
     USER ||--o{ TOURNAMENT_ORGANIZER : "organise"
     USER ||--o{ NOTIFICATION : "reçoit"
-    USER ||--o{ DEVICE_TOKEN : "possède des"
+    USER ||--o{ DEVICE_TOKEN : "enregistre"
 
     PLAYER ||--o{ TOURNAMENT_REGISTRATION : "s'inscrit à"
     PLAYER ||--o{ RANKING : "participe au classement"
     PLAYER ||--o{ STATISTICS : "génère des"
 
-    TOURNAMENT ||--o{ TOURNAMENT_REGISTRATION : "comprend"
-    TOURNAMENT ||--o{ TOURNAMENT_ORGANIZER : "géré par"
-    TOURNAMENT ||--o{ TOURNAMENT_REWARD : "propose"
-    TOURNAMENT ||--|| TOURNAMENT_PRICING : "détient"
-    TOURNAMENT ||--o{ MATCH : "contient"
-    TOURNAMENT ||--o{ RANKING : "évalue"
-    TOURNAMENT ||--o{ TOURNAMENT_NOTIFICATION : "envoie"
+    TOURNAMENT ||--o{ TOURNAMENT_REGISTRATION : "enregistre"
+    TOURNAMENT ||--o{ TOURNAMENT_ORGANIZER : "est géré par"
+    TOURNAMENT ||--o{ TOURNAMENT_REWARD : "attribue"
+    TOURNAMENT ||--|| TOURNAMENT_PRICING : "définit"
+    TOURNAMENT ||--o{ MATCH : "comprend"
+    TOURNAMENT ||--o{ TOURNAMENT_NOTIFICATION : "diffuse"
 
-    TOURNAMENT_REGISTRATION ||--o{ REGISTRATION_PAYMENT : "est réglé par"
-
-    MATCH ||--|| ONLINE_MATCH_SESSION : "se joue sur"
-    MATCH ||--o{ STATISTICS : "possède des"
+    MATCH ||--o{ ONLINE_MATCH_SESSION : "se joue via"
     MATCH }o--|| PLAYER : "playerA / playerB / winner"
+    MATCH ||--o{ STATISTICS : "enregistre"
 
-    DECK ||--o{ SAVED_DECK : "sauvegardé comme"
+    DECK ||--o{ DECK_CARD : "contient"
+    DECK ||--o{ DECK_SNAPSHOT : "gèle pour tournoi"
+    DECK ||--o| DECK_EMBEDDING : "possède un vecteur"
 ```
 
-Ce diagramme couvre uniquement le domaine tournoi/match. Trois autres domaines existent, détaillés plus bas : **catalogue & traductions**, **marketplace & panier**, **decks & collections**.
+### Catalogue, Marketplace, Grand Livre & Inventaire
 
 ```mermaid
 erDiagram
     CARD ||--o{ CARD_TRANSLATION : "traduit en"
+    CARD ||--o| CARD_EMBEDDING : "possède un vecteur CLIP"
     CARD }o--|| POKEMON_SET : "appartient à"
     POKEMON_SET }o--|| POKEMON_SERIE : "appartient à"
-    POKEMON_SET ||--o{ POKEMON_SET_TRANSLATION : "traduit en"
-    POKEMON_SERIE ||--o{ POKEMON_SERIE_TRANSLATION : "traduit en"
-    SEALED_PRODUCT ||--o{ SEALED_PRODUCT_LOCALE : "traduit en"
-    SEALED_PRODUCT }o--|| POKEMON_SET : "appartient à"
+    SEALED_PRODUCT }o--|| POKEMON_SET : "rattaché à"
 
-    USER ||--o{ LISTING : "vend"
+    USER ||--o{ LISTING : "publie"
     USER ||--o{ ORDER : "achète"
-    USER ||--|| USER_CART : "possède"
-    CARD ||--o{ LISTING : "référencée par"
-    SEALED_PRODUCT ||--o{ LISTING : "référencé par"
-    LISTING ||--o{ CART_ITEM : "ajoutée au panier"
-    USER_CART ||--o{ CART_ITEM : "contient"
-    ORDER ||--o{ ORDER_ITEM : "contient"
-    ORDER ||--o{ PAYMENT_TRANSACTION : "réglée par"
-    LISTING ||--o{ ORDER_ITEM : "snapshotée dans"
+    USER ||--|| USER_CART : "détient"
+    USER ||--|| SELLER_SETTLEMENT_ACCOUNT : "détient compte vendeur"
 
+    LISTING ||--o{ CART_ITEM : "ajouté au panier"
+    ORDER ||--o{ ORDER_ITEM : "contient (snapshot)"
+    ORDER ||--o{ PAYMENT_TRANSACTION : "réglée par"
+    ORDER ||--o{ RECEIPT_IMPORT : "réceptionné dans collection"
+
+    SELLER_SETTLEMENT_ACCOUNT ||--o{ SELLER_LEDGER_ENTRY : "enregistre les mouvements"
     USER ||--o{ COLLECTION : "possède"
     COLLECTION ||--o{ COLLECTION_ITEM : "contient"
-    CARD ||--o{ COLLECTION_ITEM : "référencée par"
-    SEALED_PRODUCT ||--o{ COLLECTION_ITEM : "référencé par"
-    CARD_STATE ||--o{ COLLECTION_ITEM : "qualifie"
+    COLLECTION_ITEM ||--o{ INVENTORY_MOVEMENT : "trace chaque copie"
+```
+
+### Gamification, Social & Support
+
+```mermaid
+erDiagram
+    USER ||--o{ USER_BADGE : "obtient"
+    USER ||--o{ USER_CHALLENGE : "participe à"
+    USER ||--o{ USER_FOLLOW : "suit / est suivi"
+    USER ||--o{ FEED_EVENT : "génère / consulte"
+    USER ||--o{ SUPPORT_TICKET : "ouvre"
+    SUPPORT_TICKET ||--o{ SUPPORT_MESSAGE : "contient les échanges"
+    BADGE ||--o{ USER_BADGE : "décerné via"
+    CHALLENGE ||--o{ USER_CHALLENGE : "assigné via"
 ```
 
 ---
 
-## Liste des entités majeures
+## 2. Description des domaines de données
 
-### 1. Utilisateurs et Joueurs (`User` / `Player`)
+### Utilisateurs, Profils & Authentification
+- **`User`** : compte utilisateur principal (identifiants, mot de passe hashé avec sel, rôle RBAC `admin` / `moderator` / `user`, préférence linguistique `preferredLocale`, flag `isPro`).
+- **`Player`** : profil de joueur public (points d'expérience `xp`, niveau `level`, cote de classement `elo`, statistiques de victoires/défaites).
 
-- **`User`** : Gère l'authentification et les métadonnées de base (email, mot de passe hashé, prénom, nom, rôle système : `ADMIN`, `MODERATOR`, `USER`).
-- **`Player`** : Profil public de joueur. Il contient le score d'expérience (`xp`), le niveau (`level`), le score d'appariement (`elo`), et pointe vers un compte `User` via une relation `@OneToOne`.
+### Tournois & Matchs
+- **`Tournament`** : paramétrage d'un tournoi (nom, format `Standard`/`Expanded`, structure en rondes suisses ou arbre à élimination, statut de cycle de vie, horloge officielle du round actif).
+- **`TournamentRegistration`** : inscription d'un joueur, validation du check-in et statut de présence.
+- **`DeckSnapshot`** : copie figée de la liste de 60 cartes déposée par le joueur avant le début du tournoi (TRN-02), avec audit de conformité et dérogations d'arbitrage.
+- **`Match`** : rencontre planifiée entre deux compétiteurs pour un round précis.
+- **`OnlineMatchSession`** : session temps réel attachée à un match (`serializedState` du moteur de règles, seed pseudo-aléatoire et journal complet des actions pour reconnexion et replay).
 
-### 2. Tournois (`Tournament` et associés)
+### Catalogue Pokémon & Internationalisation
+- **`Card`** (module `pokemon-card`) : données factuelles de la carte (identifiant unique, numéro dans l'extension, points de vie, rareté, cote de marché).
+- **`CardTranslation`** : données localisées (nom, texte des capacités et attaques, URL de l'illustration spécifique à la langue).
+- **`PokemonSet`** / **`PokemonSerie`** : arborescence des séries et des sets, avec tables de traduction associées (`PokemonSetTranslation`, `PokemonSerieTranslation`).
+- **`SealedProduct`** / **`SealedProductLocale`** : produits scellés (boosters, tripacks, Elite Trainer Boxes, displays) rattachés aux sets.
+- **`Translation`** : surcouche de dictionnaire d'interface modifiable en ligne par les administrateurs.
 
-- **`Tournament`** : Stocke les détails d'un tournoi (nom, description, dates de début/fin, format de jeu, statut : `draft`, `registration_open`, `registration_closed`, `in_progress`, `finished`, `cancelled`).
-- **`TournamentRegistration`** : Représente la liaison entre un `Player` et un `Tournament` avec un statut d'inscription (`PENDING`, `CONFIRMED`, `CANCELLED`) et l'indicateur de présence (`checkedIn`).
-- **`TournamentPricing`** : Paramètres financiers du tournoi (prix d'inscription).
-- **`TournamentReward`** : Liste des lots attribués selon le classement final.
-- **`TournamentOrganizer`** : Associe des `User` pour co-gérer l'administration du tournoi avec un rôle spécifique (`owner`, `admin`, `moderator`, `judge`).
+### Marketplace, Grand Livre Vendeur & Inventaire
+- **`Listing`** : offre de vente d'une carte ou d'un produit scellé (`productKind`), prix, devise, état d'usure, quantité disponible et frais de port figés.
+- **`UserCart`** / **`CartItem`** : panier d'achat persistant par utilisateur (une seule devise acceptée par panier).
+- **`Order`** / **`OrderItem`** : commande multi-vendeurs avec réservation pessimiste de stock. `OrderItem` conserve un **snapshot immuable** des informations de l'article au moment de l'achat.
+- **`PaymentTransaction`** : traçabilité du paiement Stripe et des compensations financières éventuelles.
+- **`SellerLedgerEntry`** : grand livre comptable immuable traçant chaque centime (fonds sous séquestre `pending`, disponibles `available`, bloqués `on_hold` ou versés `paid_out`).
+- **`InventoryMovement`** : journal des copies physiques d'un item de collection (copies disponibles, réservées pour vente ou vendues).
+- **`ReceiptImport`** : bons d'importation certifiant la réception physique d'une commande dans la collection de l'acheteur.
 
-### 3. Matchs et Sessions de jeu (`Match` / `OnlineMatchSession`)
+### Decks, Collections & IA
+- **`Deck`** / **`DeckCard`** : composition d'un deck de 60 cartes avec visibilité publique ou privée et association de format.
+- **`Collection`** / **`CollectionItem`** : inventaire personnel de l'utilisateur (cartes et scellé) avec états d'usure (`CardState`).
+- **`CardEmbedding`** : vecteur de caractéristiques visuelles de 512 dimensions produit par CLIP via le microservice Vision.
+- **`DeckEmbedding`** : vecteur d'archétype moyen calculé dans PostgreSQL via l'extension `pgvector` pour la recherche de decks similaires.
 
-- **`Match`** : Représente une rencontre entre deux joueurs dans un round précis d'un tournoi.
-  - Liaisons : `playerA` (Joueur A), `playerB` (Joueur B), et `winner` (Vainqueur).
-  - Statut : `scheduled`, `in_progress`, `finished`, `cancelled`, `forfeit`.
-- **`OnlineMatchSession`** : Session de jeu temps réel attachée à un `Match`. Stocke l'état complet sérialisé du moteur de jeu (`serializedState`), le seed aléatoire, et l'historique des actions (`eventLog`) pour la reconnexion et le replay.
-
-### 4. Statistiques et Classements (`Statistics` / `Ranking`)
-
-- **`Ranking`** : Tableau de bord des performances cumulées d'un joueur au sein d'un tournoi (nombre de victoires, défaites, nuls, total de points, win-rate).
-- **`Statistics`** : Métriques détaillées enregistrées pour chaque joueur à la fin d'un match (points marqués, victoire/défaite, rôles).
-
-### 5. Catalogue Pokémon et traductions (`Card`, `PokemonSet`, `PokemonSerie` + traductions)
-
-- **`Card`** (module `pokemon-card`) : données non linguistiques d'une carte (identifiants, HP, types, prix marché TCGPlayer/CardMarket, légalité, rattachement à un `PokemonSet`).
-- **`CardTranslation`** (`card_translation`, clé primaire `(cardId, locale)`) : champs dépendant de la langue — nom, texte, capacités/attaques traduites, **et l'image** (TCGdex sert une image par langue). Aucune langue n'est canonique ; ajouter une langue n'affecte pas les autres.
-- **`PokemonSet`** / **`PokemonSerie`** : hiérarchie set → série. Chacun a sa table de traduction (`PokemonSetTranslation`, `PokemonSerieTranslation`) pour nom/logo localisés.
-- **`SealedProduct`** : produits scellés (displays, ETB…), distincts des cartes, rattachés à un `PokemonSet`. **`SealedProductLocale`** (clé composite `(sealedProductId, locale)`) porte le nom localisé — remplace un ancien champ `nameEn` qui contenait en réalité du texte français.
-- **`Translation`** (`translation`, unique sur `(locale, key)`) : surcouche éditable des dictionnaires de traduction de l'interface (hors catalogue) — seules les clés modifiées depuis l'administration y sont stockées, le reste vient des fichiers de dictionnaire versionnés. Exposée via `GET/PUT /translations`, voir [Traductions](../backend/translations).
-- `User.preferredLocale` stocke la langue préférée de chaque utilisateur (défaut `fr`).
-
-### 6. Marketplace, panier et paiements (`Listing`, `Order`, `OrderItem`, `PaymentTransaction`, `UserCart`)
-
-Détaillé dans [Marketplace & paiements](../backend/marketplace) (cycle de vie complet, réservation de stock, snapshot). Résumé structurel :
-
-- **`Listing`** : une annonce référence *soit* une `Card` *soit* un `SealedProduct` (discriminant `productKind`), porte `price`/`currency`/`quantityAvailable`, et `shippingCost`/`handlingTimeDays` (frais de port figés à la publication).
-- **`UserCart`** / **`CartItem`** : panier persistant par utilisateur, une ligne par `Listing` ajoutée (contrainte unique `(cart, listing)`).
-- **`Order`** / **`OrderItem`** : une commande regroupe des lignes multi-vendeurs. `OrderItem` **recopie** (snapshot) le nom, l'image, l'état, la langue et le vendeur de la `Listing` au moment de l'achat — la ligne reste lisible même si l'annonce est supprimée depuis.
-- **`PaymentTransaction`** : trace un paiement Stripe rattaché à une `Order` (méthode, statut, montant, devise).
-
-### 7. Decks et collections (`Deck`, `Collection`, `CollectionItem`, `CardState`)
-
-- **`Deck`** : liste de cartes d'un utilisateur, visibilité publique/privée, rattaché à un `DeckFormat`. Les cartes du deck sont dans `DeckCard` (relation many-to-many avec quantité).
-- **`Collection`** : ensemble nommé d'items appartenant à un utilisateur (peut représenter une collection réelle ou une wishlist/favoris selon l'usage côté service).
-- **`CollectionItem`** : référence *soit* une `Card` *soit* un `SealedProduct` (discriminant `productKind`, même pattern que `Listing`), avec un état (`CardState` pour les cartes, `SealedCondition` pour le scellé).
-- **`CardState`** : référentiel des états de carte (Near Mint, Played…), seedé via `npm run seed:cardstates`, réutilisé par le marketplace et les collections.
-
-### 8. Notifications (`Notification`, `DeviceToken`)
-
-- **`Notification`** : notification in-app d'un utilisateur (titre, corps, lu/non lu, `type`). Les notifications récentes sont traduites à la volée via `translationKey` + `data` (paramètres) plutôt que par titre/corps figés — voir [Notifications](../backend/notifications).
-- **`DeviceToken`** : jetons de notification push (Expo/FCM) rattachés à un utilisateur, un par appareil enregistré depuis le mobile.
+### Gamification, Social, Support & Outbox
+- **`Badge`** / **`UserBadge`** : hauts faits débloqués par les utilisateurs.
+- **`Challenge`** / **`UserChallenge`** : défis et quêtes avec suivi de progression et gains de récompenses.
+- **`UserFollow`** : relations d'abonnement entre membres de la communauté.
+- **`FeedEvent`** : événements publiés dans le fil d'actualité des utilisateurs abonnés.
+- **`SupportTicket`** / **`SupportMessage`** : réclamations et fils d'assistance utilisateur.
+- **`OutboxMessage`** / **`ProcessedEvent`** : modèle transactionnel Outbox garantissant la publication fiable et idempotente des événements de domaine.
+- **`AuditLog`** : journal de traçabilité des actions administratives sensibles.

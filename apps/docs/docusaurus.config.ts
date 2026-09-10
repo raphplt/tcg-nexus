@@ -21,19 +21,14 @@ const config: Config = {
   // Set the production url of your site here
   url: docsUrl,
   // Set the /<baseUrl>/ pathname under which your site is served
-  // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: "/",
 
-  // GitHub pages deployment config.
-  // If you aren't using GitHub pages, you don't need these.
-  organizationName: "raphplt", // Usually your GitHub org/user name.
-  projectName: "tcg-nexus-docs", // Usually your repo name.
+  // GitHub pages deployment config
+  organizationName: "raphplt",
+  projectName: "tcg-nexus-docs",
 
   onBrokenLinks: "throw",
 
-  // Even if you don't use internationalization, you can use this field to set
-  // useful metadata like html lang. For example, if your site is Chinese, you
-  // may want to replace "en" with "zh-Hans".
   i18n: {
     defaultLocale: "fr",
     locales: ["fr"],
@@ -56,7 +51,6 @@ const config: Config = {
   ],
 
   themeConfig: {
-    // Replace with your project's social card
     image: "img/docusaurus-social-card.jpg",
     colorMode: {
       respectPrefersColorScheme: true,
@@ -90,42 +84,78 @@ const config: Config = {
       style: "dark",
       links: [
         {
-          title: "Guides",
+          title: "Guides & Architecture",
           items: [
             {
               label: "Prise en main",
               to: "/docs/guides/installation",
             },
+            {
+              label: "Architecture Monorepo",
+              to: "/docs/architecture/monorepo",
+            },
+            {
+              label: "Schéma Base de Données",
+              to: "/docs/architecture/database",
+            },
+            {
+              label: "Packages Partagés",
+              to: "/docs/architecture/packages",
+            },
           ],
         },
         {
-          title: "Backend",
+          title: "Backend & Moteurs",
           items: [
             {
               label: "API NestJS",
               to: "/docs/backend/api",
             },
             {
-              label: "Fetch TCGdex",
-              to: "/docs/services/fetch",
+              label: "Marketplace & Grand Livre",
+              to: "/docs/backend/marketplace",
+            },
+            {
+              label: "Tournois & Matches",
+              to: "/docs/backend/tournaments",
+            },
+            {
+              label: "Module IA & Analyse",
+              to: "/docs/backend/ai",
+            },
+            {
+              label: "Mini-jeux",
+              to: "/docs/backend/mini-games",
             },
           ],
         },
         {
-          title: "More",
+          title: "Front & Exploitation",
           items: [
             {
-              label: "Front Next.js",
+              label: "Front-end Next.js",
               to: "/docs/frontend/web",
             },
             {
-              label: "GitHub",
+              label: "Application Mobile Expo",
+              to: "/docs/frontend/mobile",
+            },
+            {
+              label: "Microservice Vision & CLIP",
+              to: "/docs/services/vision",
+            },
+            {
+              label: "Déploiement en Production",
+              to: "/docs/ops/deployment",
+            },
+            {
+              label: "Dépôt GitHub",
               href: "https://github.com/raphplt/tcg-nexus",
             },
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} TCG Nexus.`,
+      copyright: `Copyright © ${new Date().getFullYear()} TCG Nexus. Tous droits réservés.`,
     },
     prism: {
       theme: prismThemes.github,

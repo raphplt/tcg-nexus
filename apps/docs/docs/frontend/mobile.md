@@ -1,52 +1,80 @@
 ---
-title: Mobile (Expo)
+title: Application Mobile (Expo)
 ---
 
-Application **Expo / React Native** (`apps/mobile`), centrée sur le scan de cartes en conditions réelles (appareil photo) et un accès nomade à la collection, aux decks et aux tournois.
+L'application mobile de **TCG Nexus** (`apps/mobile`) est développée avec **React Native** et le framework **Expo 56**. Elle offre une expérience nomade centrée sur la reconnaissance de cartes physiques par photo et le suivi en temps réel des collections et tournois.
 
-## Stack
+---
 
-- **Expo 56** + **React Native 0.85** + **React 19**, routing via `expo-router` (file-based, comme le App Router web).
-- État : **zustand**.
-- HTTP : **axios** (`services/api.ts`), tokens stockés via `expo-secure-store` (`services/secureApi.ts`, `services/tokenStorage.ts`).
-- Caméra : `expo-camera` ; retouche image (recadrage/compression) : `expo-image-manipulator`.
-- Notifications push : `expo-notifications` + `expo-device` (enregistrement de token, voir [Notifications](../backend/notifications)).
-- Types de scan partagés avec l'API via le package interne `@repo/scan-contract`.
+## 1. Stack technique
 
-## Routing
+- **Moteur** : **Expo 56** + **React Native 0.85** + **React 19**.
+- **Navigation** : **Expo Router** (routage basé sur le système de fichiers, équivalent à l'App Router de Next.js).
+- **Gestion d'état** : **zustand** pour la persistance locale légère.
+- **Réseau & Sécurité** : **axios** avec stockage chiffré des jetons de session via `expo-secure-store`.
+- **Prise de vue** : `expo-camera` pour la capture en continu et `expo-image-manipulator` pour la compression et le recadrage.
+- **Contrats partagés** : utilisation directe du package `@repo/scan-contract` pour garantir la synchronisation des types de requêtes/réponses avec l'API.
 
-- `app/(auth)/auth` et `app/auth` : écrans de connexion/inscription.
-- `app/(protected)/(tabs)` : navigation par onglets une fois connecté — `index` (accueil), `scan`, `collection`, `decks`, `tournaments`, `profile`.
+---
 
-## Scan de cartes
+## 2. Navigation & Écrans (`app/`)
 
-Deux pipelines coexistent (`services/scan.service.ts` vs `services/scanner/`), voir [Scan de cartes](../backend/scan) côté API pour le détail serveur :
+- `app/(auth)/` : écrans d'authentification (connexion et inscription).
+- `app/(protected)/` : zone authentifiée :
+  - `(tabs)/index` : écran d'accueil avec actualités et raccourcis ;
+  - `(tabs)/scan` : interface du scanner de cartes physiques avec visée caméra en réalité augmentée ;
+  - `(tabs)/collection` : consultation de sa collection et de sa liste d'envies (wishlist) ;
+  - `(tabs)/decks` : consultation de ses listes de decks ;
+  - `(tabs)/tournaments` : suivi de ses tournois et de ses matches ;
+  - `(tabs)/profile` : profil public, niveau ELO, statistiques et paramètres ;
+  - `notifications` : centre de réception des notifications push et in-app.
 
-1. **Pipeline serveur** (`scan.service.ts`) : envoie la/les photo(s) brute(s) à `POST /scan/recognize` — l'API délègue le prétraitement et l'OCR au microservice [Vision](../services/vision).
-2. **Pipeline client** (`services/scanner/` : `card-detector`, `zone-ocr`, `visual-matcher`, `candidate-ranker`, orchestré par `card-resolver.ts`) : détection/recadrage de la carte et **OCR effectués côté mobile** via une API cloud (Google Cloud Vision ou OCR.space, selon la clé configurée — `EXPO_PUBLIC_GOOGLE_VISION_API_KEY` / `EXPO_PUBLIC_OCR_SPACE_API_KEY`), un score de correspondance visuelle local, puis un appel à `POST /pokemon-card/scan-match` pour ne faire matcher que le texte déjà extrait contre le catalogue.
+---
 
-## Configuration
+## 3. Les deux pipelines de Scan de cartes
 
-```bash
-# apps/mobile/.env
+Le mobile supporte deux modes d'exécution pour reconnaître une carte Pokémon :
+
+### Mode 1 : Pipeline Serveur (`POST /scan/recognize`)
+- Le smartphone capture une ou plusieurs photos de la carte physique et les expédie en `multipart/form-data` vers l'API NestJS.
+- L'API délègue le traitement lourd au microservice [Vision](../services/vision) (recadrage, redressement de perspective, OCR multi-frame Tesseract).
+- L'API effectue ensuite le matching de catalogue et renvoie la carte candidate scorée.
+- Idéal lorsque le smartphone dispose d'une bonne connectivité Internet.
+
+### Mode 2 : Pipeline On-Device (`POST /pokemon-card/scan-match`)
+- Le smartphone exécute la détection de contour et l'extraction de zones d'intérêt directement en local.
+- L'OCR du texte est exécuté via un service cloud rapide (Google Cloud Vision ou OCR.space configuré via variable d'environnement).
+- Le mobile envoie uniquement les métadonnées textuelles extraites (`cardName`, `localId`, `setName`, `setNumber`) à l'endpoint léger `POST /pokemon-card/scan-match`.
+- Réduit considérablement la consommation de bande passante réseau.
+
+---
+
+## 4. Configuration d'environnement (`apps/mobile/.env`)
+
+```dotenv
+# URL de l'API backend
 EXPO_PUBLIC_API_URL=http://localhost:3001/api
 
-# Une option OCR au choix pour le pipeline client :
-EXPO_PUBLIC_OCR_SPACE_API_KEY=      # gratuit, 25 000 req/mois, sans CB
-EXPO_PUBLIC_GOOGLE_VISION_API_KEY=  # nécessite facturation GCP active
+# Option OCR pour le pipeline on-device (au choix) :
+EXPO_PUBLIC_OCR_SPACE_API_KEY=votre_cle_ocr_space      # gratuit, 25 000 requêtes/mois
+EXPO_PUBLIC_GOOGLE_VISION_API_KEY=votre_cle_gcp       # nécessite facturation Google Cloud
 ```
 
-## Démarrage & build
+---
+
+## 5. Commandes de développement
 
 ```bash
 cd apps/mobile
-npm run dev       # Expo (Metro), scanner le QR code avec Expo Go ou un dev client
-npm run android    # build + lancement natif Android
-npm run ios        # build + lancement natif iOS
-npm run build      # renvoie vers EAS Build (pas de build local packagée)
+
+# Démarrer le serveur de développement Metro
+npm run dev
+
+# Lancer sur émulateur ou appareil connecté
+npm run android
+npm run ios
+
+# Vérification du code
+npm run lint
+npm run check-types
 ```
-
-## Qualité
-
-- Lint : `npm run lint` (Biome)
-- Types : `npm run check-types`

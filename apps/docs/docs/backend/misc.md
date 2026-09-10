@@ -1,77 +1,66 @@
 ---
-title: Autres modules
+title: Recherche, Panier & Modules Utilitaires
 ---
 
-Modules à périmètre plus restreint, regroupés ici plutôt qu'en pages dédiées.
+Cette page documente les modules transverses et utilitaires de l'API qui complètent les grands domaines métier.
 
-## Classement global (`/ranking`)
+---
 
-Distinct du classement scopé à un tournoi (voir [Tournois](./tournaments)) : ELO/XP global d'un joueur, toutes compétitions confondues.
+## 1. Panier d'achat (`/user-cart`)
 
-- `POST /ranking` (ADMIN/MODERATOR) : créer une entrée de classement.
-- `GET /ranking/global` : classement global.
-- `GET /ranking/me` : classement du joueur courant.
-- `GET /ranking/elo/me` : détail ELO du joueur courant.
-- `GET /ranking` : liste (filtres).
-- `GET /ranking/:id` / `PATCH /ranking/:id` / `DELETE /ranking/:id` : CRUD.
+Le panier persistant prépare le checkout sur la place de marché (voir [Marketplace & Paiements](./marketplace)) :
 
-## Produits scellés (`/sealed-products`)
+- **Règle de devise unique** : un panier ne peut combiner des articles libellés dans des devises distinctes (l'ajout d'une annonce dans une devise différente est rejeté).
+- Une ligne de panier référence une annonce (`Listing`) avec une quantité demandée.
 
-Catalogue des produits scellés (displays, ETB…), distinct des cartes ([Cartes Pokémon](./cards)) mais suivant le même pattern lecture publique / écriture admin. Traductions du nom via `SealedProductLocale`, voir [Traductions](./translations).
+### Endpoints
+- `GET /user-cart/me` (JWT) : panier de l'utilisateur connecté avec détail des lignes, sous-totaux et frais de port prévisionnels.
+- `POST /user-cart/items` (JWT) : ajouter une annonce au panier.
+- `PATCH /user-cart/items/:id` (JWT) : ajuster la quantité d'une ligne de panier.
+- `DELETE /user-cart/items/:id` (JWT) : retirer un article du panier.
+- `DELETE /user-cart/me/clear` (JWT) : vider l'ensemble du panier.
 
-- `GET /sealed-products`, `/paginated`, `/recent`, `/popular` (public) : listes.
-- `GET /sealed-products/:id` (public) : détail.
-- `GET /sealed-products/:id/stats` (public) : statistiques (prix marketplace associés).
-- `POST` / `PATCH /:id` / `DELETE /:id` (ADMIN, MODERATOR) : CRUD.
-- `POST /sealed-products/seed` (ADMIN) : seed initial.
+---
 
-## Panier (`/user-cart`)
+## 2. Moteur de recherche unifié (`/search`)
 
-Panier persistant, alimente le checkout marketplace (voir [Marketplace & paiements](./marketplace)). Une ligne par annonce (`Listing`) ajoutée.
+Recherche globale plein-texte à travers l'ensemble des entités du catalogue (cartes, extensions, séries et produits scellés) :
 
-- `GET /user-cart/me` : panier de l'utilisateur courant.
-- `GET /user-cart/:id` : détail d'un panier.
-- `POST /user-cart/items` : ajouter une annonce au panier.
-- `PATCH /user-cart/items/:id` : modifier la quantité d'une ligne.
-- `DELETE /user-cart/items/:id` : retirer une ligne.
-- `DELETE /user-cart/me/clear` : vider son panier.
-- `DELETE /user-cart/:id` : supprimer un panier.
+- `GET /search` (Public) : recherche générale avec filtres et pagination.
+- `GET /search/suggestions` (Public) : autocomplétion rapide pour les barres de recherche de l'interface.
+- `GET /search/suggestions/preview` (Public) : aperçu enrichi avec vignettes et correspondances exactes.
+- `GET /search/suggestions/detail` (Public) : autocomplétion avec détails des extensions associées.
 
-## Recherche transverse (`/search`)
+---
 
-Recherche unifiée à travers le catalogue (cartes, sets…), avec suggestions.
+## 3. Tableau de bord & Statistiques (`/dashboard`, `/statistics`)
 
-- `GET /search` : recherche principale.
-- `GET /search/suggestions`, `/suggestions/preview`, `/suggestions/detail` : autocomplétion à granularité croissante.
+### Tableau de bord agrégé (`/dashboard`)
+Fournit un point d'entrée unique optimisé pour l'écran d'accueil connecté :
+- `GET /dashboard` (JWT) : agrège la valeur estimée de la collection, les tournois actifs et à venir, les notifications non lues, les commandes en cours de livraison et les défis prêts à être réclamés.
 
-## Gamification (`/badges`, `/challenges`)
+### Métriques & Fréquentation (`/statistics`)
+- Collecte et analyse les métriques d'activité sur la plateforme (volumes d'échanges, cartes les plus recherchées, taux de conversion en tournois).
 
-- `GET /badges/user/:userId` : badges obtenus par un utilisateur.
-- `GET /challenges/active` : défis actifs.
-- `POST /challenges/:id/claim` : réclamer la récompense d'un défi complété.
+---
 
-## Tableau de bord (`/dashboard`)
+## 4. Opérations Administratives (`/admin/ops`)
 
-- `GET /dashboard` : agrégation de données pour l'écran d'accueil connecté (stats perso, activité récente…).
+Réservé aux profils `admin`, ce module regroupe les fonctions de maintenance système et de surveillance :
 
-## Analyse & Similarité de Decks (`/ai`)
+- `GET /admin/ops/metrics` : compteurs d'intégrité (messages Outbox en échec, compensations de paiement en attente, réservations de stock périmées).
+- `POST /admin/ops/orders/expire-stale` : balayage d'expiration des réservations de stock abandonnées.
+- `GET /admin/ops/settlement/reconcile` : vérification comptable de l'équilibre entre les entrées du grand livre vendeur et les soldes réels.
+- `GET /admin/ops/payments/compensation` : liste des paiements tardifs nécessitant une compensation financière.
+- `POST /admin/ops/payments/:id/compensate` : exécution d'un remboursement compensatoire audité sous clé d'idempotence.
 
-- `POST /ai/decks/analyze` (public, throttled) : analyse un pool de cartes ad-hoc non persisté (`AnalyzePoolDto`) via le moteur déterministe local et retourne une évaluation complète (`DeckInsightsDto`).
-- `GET /ai/decks/:id/similar` (public) : liste les decks publics les plus proches en espace d'archétype via similarité vectorielle locale (pgvector).
-- `GET /ai/decks/:id/suggestions` (public) : suggère des cartes fréquemment jouées par les decks similaires et absentes du deck de référence.
+---
 
-## Suivi social (`/users/:id/follow`)
+## 5. Modules Spécialisés
 
-Routes montées sur le préfixe `/users` (module séparé `user-follow`).
+Les fonctionnalités suivantes disposent de leur propre documentation détaillée :
 
-- `POST /users/:id/follow` : suivre un utilisateur.
-- `DELETE /users/:id/follow` : ne plus suivre.
-- `GET /users/:id/followers` / `GET /users/:id/following` : listes.
-
-## Contenu éditorial et support
-
-- `article`, `faq`, `feed` : contenu éditorial et fil d'activité, CRUD simple.
-- `support-ticket` (`/support/tickets`) : `POST` (créer un ticket), `POST /:id/messages` (répondre), `GET` (lister les siens), `GET /:id` et `GET /:id/messages` (détail/fil), `PATCH /:id/close` (clôturer).
-- `mail` : envoi d'emails transactionnels (pas de controller public, service interne consommé par `auth`, `marketplace`, `notification`).
-- `storage` : upload vers Cloudflare R2 (images de sets/séries), pas de controller public.
-- `mini-game` : mini-jeu, uniquement une gateway WebSocket, périmètre restreint.
+- **[Module IA & Deck Insights](./ai)** : moteur déterministe local, détection d'archétypes et similarité vectorielle `pgvector`.
+- **[Mini-jeux](./mini-games)** : Le Juste Prix et Case Opening (boosters), modes solo/local REST et duels multijoueurs WebSocket.
+- **[Gamification & Réseau Social](./social-gamification)** : Badges, défis, relations d'abonnement et classement mondial ELO/XP.
+- **[Support & Contenu](./support-editorial)** : Tickets d'assistance, blog, FAQ dynamique, modèle outbox et stockage Cloudflare R2.

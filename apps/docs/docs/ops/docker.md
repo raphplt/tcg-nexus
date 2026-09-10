@@ -1,58 +1,87 @@
 ---
-title: Docker & base de données
+title: Docker & Environnements Conteneurisés
 ---
 
-Guide rapide (reprend `doc/README-Docker.md`).
+TCG Nexus fournit des configurations Docker prêtes à l'emploi aussi bien pour accélérer le développement local que pour orchestrer la production.
 
-## Démarrage express
+---
+
+## 1. Environnement de Développement Local (`docker-compose.yml`)
+
+Pour le développement au quotidien, la racine du monorepo propose un fichier `docker-compose.yml` allégé qui fournit les deux dépendances d'infrastructure nécessaires à l'API :
+1. **`postgres`** : base de données PostgreSQL 15 équipée de l'extension vectorielle **`pgvector`** (port `5432`).
+2. **`vision`** : microservice Python FastAPI de traitement d'image et d'OCR Tesseract (port `8000`).
+
+### Démarrage rapide
 
 ```bash
-cp env.example .env       # variables DB racine
+# 1. Copier les variables d'environnement de la base
+cp env.example .env
+
+# 2. Démarrer PostgreSQL et Vision en arrière-plan
 cd apps/api
-npm run docker:db         # lance PostgreSQL
-npm run start:dev         # API NestJS locale
+npm run docker:db
+
+# 3. Lancer l'API en développement local
+npm run start:dev
 ```
 
-Services :
-- API : http://localhost:3001
-- Swagger : http://localhost:3001/api/docs
-- Postgres : localhost:5432 (postgres/postgres par défaut)
-
-## Cycle de vie Postgres
+### Commandes utiles du cycle de vie Docker local
 
 ```bash
-npm run docker:db         # up
-npm run docker:db-logs    # logs
-npm run docker:db-down    # arrêt
+cd apps/api
+npm run docker:db         # Lance les conteneurs postgres et vision
+npm run docker:db-logs    # Affiche les logs en continu
+npm run docker:db-down    # Arrête les conteneurs locaux
 ```
 
-Connexion manuelle :
+### Connexion directe au client PostgreSQL
 
 ```bash
-docker-compose exec postgres psql -U postgres -d tcg_nexus
+docker exec -it tcg-nexus-postgres psql -U postgres -d tcg_nexus
 ```
 
-## Seeds
+Pour réinitialiser complètement la base de données locale et ses volumes :
+```bash
+docker compose down -v
+```
+
+---
+
+## 2. Peuplement des données initiales (Seeds)
+
+Une fois la base PostgreSQL démarrée, exécutez les scripts de seed pour alimenter votre environnement :
 
 ```bash
+cd apps/api
+
+# Données principales (séries, sets, cartes Pokémon, tournois de démonstration)
 npm run seed
+
+# Comptes utilisateurs de test avec rôles variés (admin, moderator, joueurs)
 npm run seed:users
+
+# Référentiel des états d'usure des cartes (Near Mint, Played, etc.)
 npm run seed:cardstates
+
+# Synchronisation des effets structurés pour le moteur de règles et l'IA
+npm run sync:effects
+
+# Pré-calcul des vecteurs d'archétypes pour la similarité pgvector
+npm run embed:decks
 ```
 
-Le compose racine lance aussi un service **`vision`** (microservice Python d'OCR, port 8000, `apps/vision`), utilisé par le scan de cartes — voir [Scan de cartes](../backend/scan).
+---
 
-## Stack complète (API + Web + Docs + DB + Vision)
+## 3. Pile de Déploiement Complète (`docker-compose.deploy.yml`)
 
-Pour une stack full-docker de type production, un second fichier compose existe à la racine : `docker-compose.deploy.yml`. Il construit et lance `postgres`, `vision`, `api`, `web` et `docs`.
+Pour simuler ou déployer l'intégralité de la plateforme dans des conteneurs isolés (API, Web, Docs, Vision, PostgreSQL), le fichier `docker-compose.deploy.yml` est utilisé :
 
 ```bash
 cd apps/api
-npm run docker:up      # docker-compose -f ../../docker-compose.deploy.yml up
-npm run docker:down
-npm run docker:logs
+npm run docker:up      # Démarre tous les conteneurs en configuration de production
+npm run docker:logs    # Affiche les logs de l'ensemble des conteneurs
+npm run docker:down    # Stoppe la pile complète
 ```
 
-Ce fichier est pensé pour un déploiement (variables `FRONTEND_URL`, `COOKIE_DOMAIN`, `NODE_ENV=production` en dur) : pour du développement local, préférez `npm run docker:db` + `npm run start:dev`.
-
-Pour nettoyer complètement : `docker-compose down -v`.
+Pour les spécificités du déploiement en production sur la VM avec Coolify et Cloudflare Tunnel, consultez le guide [Déploiement en Production & Cloudflare](./deployment).

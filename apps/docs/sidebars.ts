@@ -1,5 +1,8 @@
 import type { SidebarsConfig } from "@docusaurus/plugin-content-docs";
 
+/**
+ * Sidebars configuration for Docusaurus documentation portal.
+ */
 const sidebars: SidebarsConfig = {
   docsSidebar: [
     "intro",
@@ -11,24 +14,31 @@ const sidebars: SidebarsConfig = {
     {
       type: "category",
       label: "Architecture",
-      items: ["architecture/monorepo", "architecture/database"],
+      items: [
+        "architecture/monorepo",
+        "architecture/database",
+        "architecture/packages",
+      ],
     },
     {
       type: "category",
-      label: "Backend",
+      label: "Backend API",
       items: [
         "backend/api",
         "backend/auth",
         "backend/users",
-        "backend/tournaments",
-        "backend/matches",
-        "backend/marketplace",
         "backend/cards",
         "backend/decks",
         "backend/collections",
-        "backend/translations",
-        "backend/scan",
+        "backend/marketplace",
+        "backend/tournaments",
+        "backend/matches",
+        "backend/ai",
+        "backend/mini-games",
         "backend/notifications",
+        "backend/translations",
+        "backend/social-gamification",
+        "backend/support-editorial",
         "backend/misc",
       ],
     },
@@ -40,12 +50,12 @@ const sidebars: SidebarsConfig = {
     {
       type: "category",
       label: "Services",
-      items: ["services/fetch", "services/vision"],
+      items: ["services/vision", "services/fetch"],
     },
     {
       type: "category",
-      label: "Ops",
-      items: ["ops/docker", "ops/tests"],
+      label: "Ops & Déploiement",
+      items: ["ops/docker", "ops/tests", "ops/deployment"],
     },
   ],
 };
