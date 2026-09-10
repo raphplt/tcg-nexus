@@ -24,8 +24,8 @@ import {
 } from "../common/enums/fulfillment-status";
 import { ProductKind } from "../common/enums/product-kind";
 import { UserRole } from "../common/enums/user";
+import { CatalogLocalizationService } from "../card/catalog-localization.service";
 import { PaginatedResult, PaginationHelper } from "../helpers/pagination";
-import { DEFAULT_LOCALE } from "../translation/supported-locales";
 import { User } from "../user/entities/user.entity";
 import { CartItem } from "../user_cart/entities/cart-item.entity";
 import { UserCartService } from "../user_cart/user_cart.service";
@@ -104,6 +104,7 @@ export class OrderService {
     private readonly stripeService: StripeService,
     private readonly userCartService: UserCartService,
     private readonly cardPopularityService: CardPopularityService,
+    private readonly catalogLocalization: CatalogLocalizationService,
     private readonly dataSource: DataSource,
     private readonly eventEmitter: EventEmitter2,
     private readonly auditService: AuditService,
@@ -209,6 +210,10 @@ export class OrderService {
       );
     }
     const currency = currencies[0];
+
+    // Card, set and sealed product labels only live in translation tables: the
+    // order snapshot would otherwise persist empty names.
+    await this.catalogLocalization.resolveLabels(cartItems);
 
     const order = await this.reserveStockAndCreateOrder(
       cartItems,
@@ -633,17 +638,11 @@ export class OrderService {
     };
   }
 
-  /**
-   * Label used in checkout error messages. Sealed products carry no name of
-   * their own: it is read from the loaded translations, preferring the default
-   * locale.
-   */
+  /** Requires labels resolved by `CatalogLocalizationService.resolveLabels`. */
   private describeItem(item: CartItem): string {
     const { listing } = item;
-    const locales = listing.sealedProduct?.locales ?? [];
-    const sealedName =
-      locales.find((locale) => locale.locale === DEFAULT_LOCALE)?.name ??
-      locales[0]?.name;
+    const sealedName = (listing.sealedProduct as { name?: string } | null)
+      ?.name;
 
     return listing.pokemonCard?.name ?? sealedName ?? "Produit inconnu";
   }

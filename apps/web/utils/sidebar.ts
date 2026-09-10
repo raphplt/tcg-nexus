@@ -81,6 +81,12 @@ const mainNavItems: NavItem[] = [
     subItems: [
       { labelKey: "browse", href: "/tournaments", icon: Search },
       {
+        labelKey: "myTournaments",
+        href: "/tournaments/me",
+        icon: Trophy,
+        requireAuth: true,
+      },
+      {
         labelKey: "createTournament",
         href: "/tournaments/create",
         icon: Plus,
@@ -123,11 +129,6 @@ const userNavItems: NavItem[] = [
     requireAuth: true,
     subItems: [
       { labelKey: "overview", href: "/dashboard", icon: LayoutDashboard },
-      {
-        labelKey: "myTournaments",
-        href: "/dashboard/my-tournaments",
-        icon: Trophy,
-      },
     ],
   },
   {

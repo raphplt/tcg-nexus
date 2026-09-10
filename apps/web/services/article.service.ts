@@ -45,7 +45,7 @@ export const articleService = {
 
 function serverApiBaseUrl(): string {
   if (API_BASE_URL.startsWith("http")) return API_BASE_URL;
-  return process.env.API_URL ?? "http://localhost:3001/api";
+  return process.env.API_INTERNAL_URL ?? "http://localhost:3001/api";
 }
 
 function buildServerApiUrl(path: string): URL {

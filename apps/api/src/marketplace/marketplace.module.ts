@@ -8,6 +8,7 @@ import { SupportTicket } from "src/support-ticket/entities/support-ticket.entity
 import { User } from "src/user/entities/user.entity";
 import { AuditModule } from "../audit/audit.module";
 import { OutboxModule } from "../outbox/outbox.module";
+import { CatalogLocalizationModule } from "../translation/catalog-localization.module";
 import { UserCartModule } from "../user_cart/user_cart.module";
 import { CardPopularityController } from "./card-popularity.controller";
 import { CardPopularityScheduler } from "./card-popularity.scheduler";
@@ -89,6 +90,7 @@ import { WebhookController } from "./webhook.controller";
     UserCartModule,
     AuditModule,
     OutboxModule,
+    CatalogLocalizationModule,
   ],
 
   controllers: [

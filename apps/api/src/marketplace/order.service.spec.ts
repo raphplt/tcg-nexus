@@ -7,6 +7,7 @@ import { Currency } from "../common/enums/currency";
 import { FulfillmentStatus } from "../common/enums/fulfillment-status";
 import { User } from "../user/entities/user.entity";
 import { UserCartService } from "../user_cart/user_cart.service";
+import { CatalogLocalizationService } from "../card/catalog-localization.service";
 import { CardPopularityService } from "./card-popularity.service";
 import { Listing } from "./entities/listing.entity";
 import { Order, OrderStatus } from "./entities/order.entity";
@@ -35,6 +36,7 @@ describe("OrderService", () => {
   let auditService: any;
   let outboxService: any;
   let manager: any;
+  let catalogLocalization: any;
 
   const buyer = { id: 1, firstName: "Ada", lastName: "L" } as User;
 
@@ -102,6 +104,7 @@ describe("OrderService", () => {
     eventEmitter = { emit: jest.fn() };
     auditService = { record: jest.fn().mockResolvedValue({ id: "audit-1" }) };
     outboxService = { record: jest.fn().mockResolvedValue({ id: "outbox-1" }) };
+    catalogLocalization = { resolveLabels: jest.fn(async (payload) => payload) };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -144,6 +147,10 @@ describe("OrderService", () => {
         { provide: EventEmitter2, useValue: eventEmitter },
         { provide: AuditService, useValue: auditService },
         { provide: OutboxService, useValue: outboxService },
+        {
+          provide: CatalogLocalizationService,
+          useValue: catalogLocalization,
+        },
       ],
     }).compile();
 
@@ -212,6 +219,71 @@ describe("OrderService", () => {
           quantity: 2,
         }),
       );
+    });
+
+    it("resolves translated labels before snapshotting the product", async () => {
+      userCartService.findCartByUserId.mockResolvedValue({
+        cartItems: [
+          buildCartItem({ pokemonCard: { id: "card-1", set: { id: "base" } } }),
+        ],
+      });
+      catalogLocalization.resolveLabels.mockImplementation(
+        async (items: any[]) => {
+          for (const { listing } of items) {
+            listing.pokemonCard.name = "Pikachu";
+            listing.pokemonCard.image = "pikachu.png";
+            listing.pokemonCard.set.name = "Base";
+          }
+          return items;
+        },
+      );
+      manager.findOne.mockResolvedValue({
+        id: 10,
+        price: 10,
+        quantityAvailable: 5,
+        expiresAt: null,
+      });
+
+      await service.startCheckout(dto, buyer);
+
+      const savedOrder = manager.save.mock.calls[0][1];
+      expect(savedOrder.orderItems[0]).toEqual(
+        expect.objectContaining({
+          productName: "Pikachu",
+          productImage: "pikachu.png",
+          productSetName: "Base",
+        }),
+      );
+    });
+
+    it("names sealed products from their resolved translation", async () => {
+      userCartService.findCartByUserId.mockResolvedValue({
+        cartItems: [
+          buildCartItem({
+            pokemonCard: null,
+            productKind: "sealed",
+            sealedCondition: "SEALED",
+            sealedProduct: { id: "sv04-etb", productType: "ETB" },
+          }),
+        ],
+      });
+      catalogLocalization.resolveLabels.mockImplementation(
+        async (items: any[]) => {
+          items[0].listing.sealedProduct.name = "ETB Faille Paradoxe";
+          return items;
+        },
+      );
+      manager.findOne.mockResolvedValue({
+        id: 10,
+        price: 10,
+        quantityAvailable: 5,
+        expiresAt: null,
+      });
+
+      await service.startCheckout(dto, buyer);
+
+      const savedOrder = manager.save.mock.calls[0][1];
+      expect(savedOrder.orderItems[0].productName).toBe("ETB Faille Paradoxe");
     });
 
     it("prices the order from the database, not from the cart snapshot", async () => {

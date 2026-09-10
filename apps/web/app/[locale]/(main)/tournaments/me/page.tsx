@@ -157,34 +157,34 @@ export default function MyTournamentsPage() {
           </div>
         </div>
 
-        {/* Top-Level Mode Selector: Player vs Organizer */}
-        <div className="flex items-center gap-2 border-b border-border/60 pb-3">
-          <Button
-            variant={mainTab === "player" ? "default" : "ghost"}
-            onClick={() => setMainTab("player")}
-            className="flex items-center gap-2 font-medium"
-          >
-            <UserCheck className="w-4 h-4" />
-            Mes Participations ({playerTournaments.length})
-          </Button>
+        {/* Top-Level Mode Selector: Player vs Organizer (organizer view only shown to actual tournament managers) */}
+        {hasOrganizedTournaments && (
+          <div className="flex items-center gap-2 border-b border-border/60 pb-3">
+            <Button
+              variant={mainTab === "player" ? "default" : "ghost"}
+              onClick={() => setMainTab("player")}
+              className="flex items-center gap-2 font-medium"
+            >
+              <UserCheck className="w-4 h-4" />
+              Mes Participations ({playerTournaments.length})
+            </Button>
 
-          <Button
-            variant={mainTab === "organizer" ? "default" : "ghost"}
-            onClick={() => setMainTab("organizer")}
-            className="flex items-center gap-2 font-medium relative"
-          >
-            <Shield className="w-4 h-4 text-amber-500" />
-            Tournois Organisés
-            {organizedTournaments.length > 0 && (
+            <Button
+              variant={mainTab === "organizer" ? "default" : "ghost"}
+              onClick={() => setMainTab("organizer")}
+              className="flex items-center gap-2 font-medium relative"
+            >
+              <Shield className="w-4 h-4 text-amber-500" />
+              Tournois Organisés
               <Badge variant="secondary" className="ml-1 text-xs">
                 {organizedTournaments.length}
               </Badge>
-            )}
-          </Button>
-        </div>
+            </Button>
+          </div>
+        )}
 
         {/* View 1: Player Tournaments */}
-        {mainTab === "player" && (
+        {(mainTab === "player" || !hasOrganizedTournaments) && (
           <div className="space-y-6">
             {!user?.player ? (
               <div className="max-w-xl mx-auto text-center bg-card/60 p-8 rounded-2xl border">
