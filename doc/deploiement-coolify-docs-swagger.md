@@ -37,7 +37,7 @@ la VM, ouvre une connexion **sortante** vers Cloudflare. Aucun accès entrant à
 la VM à travers le VPN n'est nécessaire. Le chemin d'une requête est donc :
 
 ```text
-Navigateur → Cloudflare → tcg-nexus-main → localhost:80 → proxy Coolify → conteneur
+Navigateur → Cloudflare → tcg-nexus-main → service local vérifié → conteneur
 ```
 
 Il ne faut pas enregistrer l'écran DNS de type A montré dans la capture.
@@ -56,29 +56,62 @@ Créer la route depuis le tunnel :
 3. ouvrir l'onglet **Routes** ;
 4. cliquer sur **Add route**, puis choisir **Published application** ;
 5. saisir `docs` comme sous-domaine et `tcg-nexus.org` comme domaine ;
-6. saisir `http://localhost:80` dans **Service URL** ;
+6. saisir l'URL locale vérifiée dans **Service URL** ;
 7. cliquer sur **Add route**.
 
-Avant de valider, ouvrir si nécessaire la route existante
-`api.tcg-nexus.org` et reprendre exactement son **Service URL**. Si elle utilise
-déjà `http://localhost:80`, employer la même valeur pour `docs`.
+### Déterminer le Service URL avec certitude
+
+Ouvrir la route existante `api.tcg-nexus.org` dans `tcg-nexus-main` et relever
+son **Service URL**. Cela indique comment l'installation actuelle est routée :
+
+- si l'API utilise `http://localhost:3001`, le tunnel cible directement les
+  ports publiés sur la VM ;
+- si l'API utilise `http://localhost:80`, le tunnel passe par le proxy Coolify.
+  Coolify sélectionne ensuite le conteneur à partir du nom d'hôte ;
+- si l'API utilise une adresse VPN, `cloudflared` tourne probablement sur une
+  autre machine du VPN ou utilise explicitement l'interface VPN.
+
+Le déploiement Docusaurus recommandé dans ce guide est une application Coolify
+avec un domaine et un port interne `3002`. Dans cette configuration, commencer
+par tester le proxy Coolify sur le port 80. Depuis une session SSH ouverte à
+travers le VPN :
+
+```bash
+curl -I -H 'Host: docs.tcg-nexus.org' http://127.0.0.1:80/
+```
+
+Une réponse HTTP de Coolify (`200`, `301` ou `302`) confirme que le **Service
+URL** doit être `http://localhost:80`. Si cette requête échoue et que le projet
+est déployé avec `docker-compose.deploy.yml`, tester le port publié directement :
+
+```bash
+curl -I http://127.0.0.1:3002/
+```
+
+Une réponse Docusaurus en `200` confirme alors
+`http://localhost:3002`. Ne créer la route Cloudflare qu'après avoir obtenu une
+réponse avec l'un de ces deux tests.
+
+Le mot `localhost` désigne la machine sur laquelle le connecteur `cloudflared`
+s'exécute. Vérifier son emplacement avec `sudo systemctl status cloudflared` ou
+`docker ps`. S'il tourne dans un conteneur ou sur une autre machine, exécuter le
+test depuis cet environnement : son `localhost` ne désigne pas forcément la VM
+Coolify.
 
 Le résultat doit être identique à la ligne `api.tcg-nexus.org` : type
 **Tunnel**, contenu `tcg-nexus-main`, statut **Proxied** et TTL **Auto**.
 
-| Public hostname | Service d'origine |
+| Public hostname | Service d'origine vérifié |
 |---|---|
-| `docs.tcg-nexus.org` | `http://localhost:80` |
+| `docs.tcg-nexus.org` | `http://localhost:80` ou `http://localhost:3002` selon le test ci-dessus |
 
 L'ajout de cette *Published application route* crée et gère l'entrée DNS
 correspondante. La page DNS l'affiche alors avec le type **Tunnel** même si ce
 type n'apparaît pas dans la liste du formulaire DNS standard.
 
-Le tunnel doit cibler le proxy Coolify sur `localhost:80`, et non directement
-les ports `3001` ou `3002`. Coolify reçoit le nom d'hôte original et choisit le
-bon conteneur : `api.tcg-nexus.org` vers l'API et `docs.tcg-nexus.org` vers
-Docusaurus. Aucun port applicatif ni adresse IP publique de la VM n'a besoin
-d'être exposé dans Cloudflare.
+Ni le port 80 ni le port 3002 n'ont besoin d'être accessibles depuis Internet.
+Ils doivent uniquement être joignables depuis l'environnement où `cloudflared`
+s'exécute ; le tunnel transporte ensuite la requête par sa connexion sortante.
 
 ## 2. Déployer Docusaurus dans Coolify
 
@@ -167,7 +200,7 @@ Résultat attendu :
 Si Coolify affiche `No available server`, vérifier en priorité le statut du
 conteneur, le port interne et le contrôle de santé. Si Cloudflare affiche une
 erreur 502 ou 503, vérifier ensuite que `tcg-nexus-main` est connecté et que sa
-route d'origine cible bien `http://localhost:80`.
+route d'origine cible le Service URL vérifié ci-dessus.
 
 ## Documentation de référence
 
