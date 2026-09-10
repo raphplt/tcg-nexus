@@ -2765,7 +2765,20 @@
     "analysisUnavailable": "Impossible d'analyser le deck pour le moment.",
     "analysisError": "Impossible d'analyser le deck",
     "exported": "Deck exporté avec succès",
-    "exportError": "Impossible d'exporter le deck"
+    "exportError": "Impossible d'exporter le deck",
+    "saveToLibrary": "Ajouter à ma bibliothèque",
+    "savedInLibrary": "Dans ma bibliothèque",
+    "removeFromLibrary": "Retirer de ma bibliothèque",
+    "copyToMyDecks": "Copier dans mes decks",
+    "copying": "Copie en cours…",
+    "clonedSuccess": "Deck copié dans vos decks !",
+    "cloneError": "Impossible de copier ce deck",
+    "loginRequired": "Connectez-vous pour effectuer cette action",
+    "back": "Retour",
+    "exportJson": "Exporter JSON",
+    "share": "Partager",
+    "edit": "Éditer le deck",
+    "duplicate": "Dupliquer le deck"
   },
   "DeckSuggestions": {
     "noSuggestions": "Aucun ajustement recommandé",

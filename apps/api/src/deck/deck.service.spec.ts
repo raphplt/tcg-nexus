@@ -546,6 +546,26 @@ describe("DeckService", () => {
       );
       expect(result.id).toBe(2);
     });
+
+    it("clones a public deck for another user", async () => {
+      const deck = {
+        id: 1,
+        name: "Community Deck",
+        isPublic: true,
+        user: { id: 99 },
+        format: { id: "fmt" },
+        cards: [],
+      };
+      deckRepo.findOne.mockResolvedValue(deck);
+      deckRepo.create.mockReturnValue({ id: 3, name: "Community Deck (copy)" });
+      deckRepo.save.mockResolvedValue({ id: 3 });
+      deckRepo.findOne
+        .mockResolvedValueOnce(deck)
+        .mockResolvedValueOnce({ ...deck, id: 3 });
+
+      const result = await service.cloneDeck(1, { id: 1, role: UserRole.USER } as any);
+      expect(result.id).toBe(3);
+    });
   });
 
   describe("incrementViews", () => {

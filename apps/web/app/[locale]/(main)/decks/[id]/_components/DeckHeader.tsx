@@ -4,10 +4,14 @@ import { Button } from "@/components/ui/button";
 import { H1 } from "@/components/Shared/Titles";
 import {
   ArrowLeft,
+  Bookmark,
+  BookmarkCheck,
   Calendar,
+  Copy,
   Download,
   Edit3,
   Layers,
+  Loader2,
   Share2,
   User as UserIcon,
 } from "lucide-react";
@@ -15,25 +19,73 @@ import Image from "next/image";
 import { Link, useRouter } from "@/i18n/navigation";
 import { getCardImage } from "@/utils/images";
 import { Separator } from "@/components/ui/separator";
+import { useTranslations } from "next-intl";
+import { useAuth } from "@/contexts/AuthContext";
+import { useSavedDeckIds, useToggleSavedDeck } from "@/hooks/useSavedDecks";
+import toast from "react-hot-toast";
 
-interface DeckHeaderProps {
+/**
+ * Props for the DeckHeader component.
+ */
+export interface DeckHeaderProps {
   deck: Deck;
   isOwner: boolean;
   onShare: () => void;
   onExport: () => void;
+  onClone: () => void;
   isSharePending: boolean;
   isExportPending: boolean;
+  isClonePending: boolean;
 }
 
+/**
+ * Renders the top header banner and actionable controls for a deck detail view.
+ *
+ * @param props - Deck details, ownership state, and action callbacks.
+ * @returns Header hero section with cover image, metadata badges, and action buttons.
+ */
 export function DeckHeader({
   deck,
   isOwner,
   onShare,
   onExport,
+  onClone,
   isSharePending,
   isExportPending,
+  isClonePending,
 }: DeckHeaderProps) {
+  const t = useTranslations("DeckDetail");
   const router = useRouter();
+  const { user } = useAuth();
+  const { data: savedIds } = useSavedDeckIds();
+  const { save, remove, isPending: isSavePending } = useToggleSavedDeck();
+
+  const isSaved = !!savedIds?.includes(deck.id);
+  const canSave = !isOwner && deck.isPublic;
+
+  const handleToggleSave = () => {
+    if (!user) {
+      toast.error(t("loginRequired"));
+      router.push("/auth/login");
+      return;
+    }
+    if (isSavePending) return;
+    if (isSaved) {
+      remove(deck.id);
+    } else {
+      save(deck.id);
+    }
+  };
+
+  const handleClone = () => {
+    if (!user) {
+      toast.error(t("loginRequired"));
+      router.push("/auth/login");
+      return;
+    }
+    onClone();
+  };
+
   const coverCard =
     deck?.cards?.find((c) => c.card?.image)?.card ||
     deck?.cards?.[0]?.card ||
@@ -42,7 +94,7 @@ export function DeckHeader({
   return (
     <>
       <div className="relative">
-        <div className=" w-full bg-linear-to-r from-primary/20 via-background to-secondary/20" />
+        <div className="w-full bg-linear-to-r from-primary/20 via-background to-secondary/20" />
         <Image
           src={getCardImage(coverCard, "low")}
           alt={coverCard?.name || "Cover"}
@@ -96,10 +148,10 @@ export function DeckHeader({
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline" onClick={() => router.back()}>
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Retour
+              {t("back")}
             </Button>
             <Button
               variant="outline"
@@ -107,8 +159,49 @@ export function DeckHeader({
               disabled={isExportPending}
             >
               <Download className="w-4 h-4 mr-2" />
-              Exporter JSON
+              {t("exportJson")}
             </Button>
+
+            {canSave && (
+              <Button
+                variant={isSaved ? "secondary" : "outline"}
+                onClick={handleToggleSave}
+                disabled={isSavePending}
+                title={isSaved ? t("removeFromLibrary") : t("saveToLibrary")}
+              >
+                {isSaved ? (
+                  <BookmarkCheck className="w-4 h-4 mr-2 text-primary" />
+                ) : (
+                  <Bookmark className="w-4 h-4 mr-2" />
+                )}
+                <span>
+                  {isSaved ? t("savedInLibrary") : t("saveToLibrary")}
+                </span>
+              </Button>
+            )}
+
+            {(deck.isPublic || isOwner) && (
+              <Button
+                variant="outline"
+                onClick={handleClone}
+                disabled={isClonePending}
+                title={isOwner ? t("duplicate") : t("copyToMyDecks")}
+              >
+                {isClonePending ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Copy className="w-4 h-4 mr-2" />
+                )}
+                <span>
+                  {isClonePending
+                    ? t("copying")
+                    : isOwner
+                      ? t("duplicate")
+                      : t("copyToMyDecks")}
+                </span>
+              </Button>
+            )}
+
             {isOwner && (
               <>
                 <Button
@@ -117,11 +210,11 @@ export function DeckHeader({
                   disabled={isSharePending}
                 >
                   <Share2 className="w-4 h-4 mr-2" />
-                  Partager
+                  {t("share")}
                 </Button>
                 <Button onClick={() => router.push(`/decks/${deck.id}/update`)}>
                   <Edit3 className="w-4 h-4 mr-2" />
-                  Éditer le deck
+                  {t("edit")}
                 </Button>
               </>
             )}

@@ -129,6 +129,16 @@ export const decksService = {
     return authedFetch("POST", `/deck/${id}/share`);
   },
 
+  /**
+   * Clones an existing public or owned deck into the user's personal collection.
+   *
+   * @param id Target deck identifier.
+   * @returns Newly cloned deck.
+   */
+  async cloneDeck(id: number): Promise<Deck> {
+    return authedFetch("POST", `/deck/${id}/clone`);
+  },
+
   async getDeckForImport(code: string): Promise<Deck> {
     return fetcher<Deck>(`/deck/import/${code}`);
   },

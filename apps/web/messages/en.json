@@ -2765,7 +2765,20 @@
     "analysisUnavailable": "Could not analyse the deck at the moment.",
     "analysisError": "Could not analyse the deck",
     "exported": "Deck exported",
-    "exportError": "Could not export the deck"
+    "exportError": "Could not export the deck",
+    "saveToLibrary": "Add to my library",
+    "savedInLibrary": "In my library",
+    "removeFromLibrary": "Remove from library",
+    "copyToMyDecks": "Copy to my decks",
+    "copying": "Copying…",
+    "clonedSuccess": "Deck copied to your decks!",
+    "cloneError": "Could not copy this deck",
+    "loginRequired": "Please log in to perform this action",
+    "back": "Back",
+    "exportJson": "Export JSON",
+    "share": "Share",
+    "edit": "Edit deck",
+    "duplicate": "Duplicate deck"
   },
   "DeckSuggestions": {
     "noSuggestions": "No adjustment recommended",

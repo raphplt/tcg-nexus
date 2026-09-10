@@ -456,13 +456,17 @@ export class DeckService {
       relations: ["user", "format", "cards", "cards.card"],
     });
     if (!deck) throw new NotFoundException("Deck not found");
-    if (deck.user.id !== user.id && user.role !== UserRole.ADMIN) {
+    if (
+      !deck.isPublic &&
+      deck.user?.id !== user.id &&
+      user.role !== UserRole.ADMIN
+    ) {
       throw new ForbiddenException("Not allowed to clone this deck");
     }
 
     const cloned = this.decksRepository.create({
       name: `${deck.name} (copy)`,
-      isPublic: deck.isPublic,
+      isPublic: deck.user?.id === user.id ? deck.isPublic : false,
       user,
       format: deck.format,
     });

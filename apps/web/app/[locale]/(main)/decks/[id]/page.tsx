@@ -3,7 +3,8 @@
 import { useTranslations } from "next-intl";
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "@/i18n/navigation";
 import { decksService } from "@/services/decks.service";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "react-hot-toast";
@@ -23,6 +24,8 @@ import { ShareDialog } from "./_components/ShareDialog";
 export default function DeckDetailsPage() {
   const t = useTranslations("DeckDetail");
   const { id } = useParams();
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const deckId = id as string;
 
@@ -85,6 +88,19 @@ export default function DeckDetailsPage() {
     },
   });
 
+  const cloneMutation = useMutation({
+    mutationFn: () => decksService.cloneDeck(Number(deckId)),
+    onSuccess: (clonedDeck) => {
+      queryClient.invalidateQueries({ queryKey: ["user-decks"] });
+      queryClient.invalidateQueries({ queryKey: ["my-decks"] });
+      toast.success(t("clonedSuccess"));
+      router.push(`/decks/${clonedDeck.id}`);
+    },
+    onError: () => {
+      toast.error(t("cloneError"));
+    },
+  });
+
   const handleShare = () => {
     shareMutation.mutate();
   };
@@ -96,6 +112,15 @@ export default function DeckDetailsPage() {
   const handleAnalyze = () => {
     setAnalysisError(null);
     analyzeMutation.mutate();
+  };
+
+  const handleClone = () => {
+    if (!user) {
+      toast.error(t("loginRequired"));
+      router.push("/auth/login");
+      return;
+    }
+    cloneMutation.mutate();
   };
 
   const deck = data as Deck;
@@ -134,8 +159,10 @@ export default function DeckDetailsPage() {
             isOwner={isOwner || false}
             onShare={handleShare}
             onExport={handleExport}
+            onClone={handleClone}
             isSharePending={shareMutation.isPending}
             isExportPending={exportMutation.isPending}
+            isClonePending={cloneMutation.isPending}
           />
           <DeckStats deck={deck} />
         </Card>
