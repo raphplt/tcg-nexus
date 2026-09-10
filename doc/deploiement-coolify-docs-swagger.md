@@ -25,6 +25,23 @@ route de la documentation manque :
 | `api.tcg-nexus.org` | Tunnel | `tcg-nexus-main` | déjà présent |
 | `docs.tcg-nexus.org` | Tunnel | `tcg-nexus-main` | à créer |
 
+### Pourquoi ne pas créer un enregistrement A ?
+
+`docs` est le nom du sous-domaine ; `A` serait le type d'enregistrement DNS.
+Un enregistrement A doit contenir une IPv4 que Cloudflare peut joindre depuis
+Internet. Ce n'est pas adapté ici, car la VM est derrière un VPN et n'expose
+pas d'IPv4 publique directement accessible.
+
+Cloudflare Tunnel fonctionne dans le sens inverse : `cloudflared`, exécuté sur
+la VM, ouvre une connexion **sortante** vers Cloudflare. Aucun accès entrant à
+la VM à travers le VPN n'est nécessaire. Le chemin d'une requête est donc :
+
+```text
+Navigateur → Cloudflare → tcg-nexus-main → localhost:80 → proxy Coolify → conteneur
+```
+
+Il ne faut pas enregistrer l'écran DNS de type A montré dans la capture.
+
 ### Ajouter la route Docusaurus
 
 **Tunnel n'est pas un type sélectionnable dans le formulaire DNS.** Cloudflare
@@ -41,6 +58,10 @@ Créer la route depuis le tunnel :
 5. saisir `docs` comme sous-domaine et `tcg-nexus.org` comme domaine ;
 6. saisir `http://localhost:80` dans **Service URL** ;
 7. cliquer sur **Add route**.
+
+Avant de valider, ouvrir si nécessaire la route existante
+`api.tcg-nexus.org` et reprendre exactement son **Service URL**. Si elle utilise
+déjà `http://localhost:80`, employer la même valeur pour `docs`.
 
 Le résultat doit être identique à la ligne `api.tcg-nexus.org` : type
 **Tunnel**, contenu `tcg-nexus-main`, statut **Proxied** et TTL **Auto**.
