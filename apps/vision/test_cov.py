@@ -71,7 +71,9 @@ def report(counts):
     for path in app_modules():
         executable, functions = analyze(path)
         covered = {line for line in executable if (path, line) in hits}
-        hit_functions = [f for f in functions if f & {l for (p, l) in hits if p == path}]
+        hit_functions = [
+            f for f in functions if f & {l for (p, l) in hits if p == path}
+        ]
 
         lines_covered += len(covered)
         lines_total += len(executable)
@@ -125,7 +127,9 @@ def write_summary(total, result):
             "total": result.testsRun,
         },
     }
-    with open(os.path.join(COVERAGE_DIR, "coverage-summary.json"), "w", encoding="utf-8") as handle:
+    with open(
+        os.path.join(COVERAGE_DIR, "coverage-summary.json"), "w", encoding="utf-8"
+    ) as handle:
         json.dump(summary, handle, indent=2)
     return summary
 
@@ -136,14 +140,18 @@ def main():
     def run_suite():
         # Discovery must happen inside runfunc: it imports the modules under
         # test, and their top-level lines would otherwise never be traced.
-        suite = unittest.defaultTestLoader.discover(os.path.dirname(os.path.abspath(__file__)))
+        suite = unittest.defaultTestLoader.discover(
+            os.path.dirname(os.path.abspath(__file__))
+        )
         return unittest.TextTestRunner(verbosity=1).run(suite)
 
     result = tracer.runfunc(run_suite)
 
     rows, total = report(tracer.results().counts)
 
-    print("\n=============================== Coverage summary ===============================")
+    print(
+        "\n=============================== Coverage summary ==============================="
+    )
     print(f"{'file':<28} | {'line %':>8} | {'lines':>10} | {'funcs %':>8}")
     print("-" * 66)
     for row in rows:
@@ -154,12 +162,16 @@ def main():
     print(
         f"{'all files':<28} | {total['lines']:>7.2f}% | {total['lines_ratio']:>10} | {total['functions']:>7.2f}%"
     )
-    print("================================================================================\n")
+    print(
+        "================================================================================\n"
+    )
 
     write_summary(total, result)
 
     if result.skipped:
-        print(f"NOTE: {len(result.skipped)} test(s) skipped — install requirements.txt to run them.\n")
+        print(
+            f"NOTE: {len(result.skipped)} test(s) skipped — install requirements.txt to run them.\n"
+        )
 
     return 0 if result.wasSuccessful() else 1
 

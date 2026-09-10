@@ -47,6 +47,7 @@ class TestUrlGuard(unittest.TestCase):
         with self.assertRaises(UnsafeUrlError) as ctx:
             assert_safe_url("https://localhost/secret")
         self.assertIn("interne", str(ctx.exception).lower())
+
     def test_is_public_address_ipv6(self):
         self.assertTrue(_is_public_address("2001:4860:4860::8888"))
         self.assertFalse(_is_public_address("::1"))

@@ -2,10 +2,9 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 import numpy as np
-from PIL import Image
-
 from app import embed
 from app.embed import _to_pil, artwork_crop, embed_artwork, embed_many
+from PIL import Image
 
 
 class TestEmbed(unittest.TestCase):
@@ -60,10 +59,12 @@ class TestEmbed(unittest.TestCase):
         mock_model.encode_image.return_value = MockTensor()
         mock_preprocess.return_value = MagicMock()
 
-        with patch.object(embed, "HAS_CLIP", True), \
-             patch.object(embed, "torch", mock_torch), \
-             patch.object(embed, "_model", mock_model), \
-             patch.object(embed, "_preprocess", mock_preprocess):
+        with (
+            patch.object(embed, "HAS_CLIP", True),
+            patch.object(embed, "torch", mock_torch),
+            patch.object(embed, "_model", mock_model),
+            patch.object(embed, "_preprocess", mock_preprocess),
+        ):
             vectors = embed_many([self.sample_bgr])
             self.assertEqual(vectors, [[0.1, 0.2, 0.3]])
 

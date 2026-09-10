@@ -4,7 +4,6 @@ from unittest.mock import MagicMock, patch
 
 import cv2
 import numpy as np
-
 from app.match import (
     _art,
     _descriptors,

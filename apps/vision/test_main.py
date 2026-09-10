@@ -4,9 +4,8 @@ from unittest.mock import patch
 
 import cv2
 import numpy as np
-from fastapi.testclient import TestClient
-
 from app.main import app
+from fastapi.testclient import TestClient
 
 
 def _create_test_image_b64() -> str:
@@ -33,7 +32,9 @@ class TestMainApi(unittest.TestCase):
         self.assertIn("rois", data)
 
     def test_preprocess_endpoint_invalid_image(self):
-        response = self.client.post("/preprocess", json={"image": "invalid_base64_string"})
+        response = self.client.post(
+            "/preprocess", json={"image": "invalid_base64_string"}
+        )
         self.assertEqual(response.status_code, 400)
         self.assertIn("detail", response.json())
 
@@ -56,7 +57,9 @@ class TestMainApi(unittest.TestCase):
             "/match",
             json={
                 "image": self.test_b64,
-                "candidates": [{"id": "card-1", "url": "https://example.com/card1.png"}],
+                "candidates": [
+                    {"id": "card-1", "url": "https://example.com/card1.png"}
+                ],
             },
         )
         self.assertEqual(response.status_code, 200)
@@ -108,7 +111,6 @@ class TestMainApi(unittest.TestCase):
             self.assertEqual(health_res.status_code, 200)
 
     def test_direct_endpoint_function_calls(self):
-        from fastapi import HTTPException
         from app.main import (
             EmbedRequest,
             MatchRequest,
@@ -120,6 +122,7 @@ class TestMainApi(unittest.TestCase):
             preprocess_batch_endpoint,
             preprocess_endpoint,
         )
+        from fastapi import HTTPException
 
         self.assertEqual(health(), {"status": "ok"})
 
@@ -149,4 +152,3 @@ class TestMainApi(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

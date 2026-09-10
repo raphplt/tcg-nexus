@@ -4,7 +4,6 @@ from unittest.mock import MagicMock, patch
 
 import cv2
 import numpy as np
-
 from app import pipeline
 from app.pipeline import (
     MAX_WARP_W,
@@ -26,7 +25,6 @@ from app.pipeline import (
     _tighten_to_card,
     _to_card,
     _warp_card,
-    preprocess,
     preprocess_many,
 )
 
@@ -164,18 +162,26 @@ class TestPipeline(unittest.TestCase):
     def test_orient_upright(self):
         # When pytesseract is None or HAS_OCR is False
         with patch.object(pipeline, "HAS_OCR", False):
-            self.assertEqual(_orient_upright(self.sample_card).shape, self.sample_card.shape)
+            self.assertEqual(
+                _orient_upright(self.sample_card).shape, self.sample_card.shape
+            )
 
         # When image_to_osd throws
-        with patch("app.pipeline.pytesseract.image_to_osd", side_effect=Exception("OSD error")):
-            self.assertEqual(_orient_upright(self.sample_card).shape, self.sample_card.shape)
+        with patch(
+            "app.pipeline.pytesseract.image_to_osd", side_effect=Exception("OSD error")
+        ):
+            self.assertEqual(
+                _orient_upright(self.sample_card).shape, self.sample_card.shape
+            )
 
         # When orientation confidence is too low
         with patch(
             "app.pipeline.pytesseract.image_to_osd",
             return_value={"orientation_conf": 0.5, "rotate": 90},
         ):
-            self.assertEqual(_orient_upright(self.sample_card).shape, self.sample_card.shape)
+            self.assertEqual(
+                _orient_upright(self.sample_card).shape, self.sample_card.shape
+            )
 
         # When rotate is 90, 180, 270
         for angle in [90, 180, 270]:
