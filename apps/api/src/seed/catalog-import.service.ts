@@ -142,11 +142,6 @@ export class CatalogImportService {
     const translations: DeepPartial<PokemonSerieTranslation>[] = [];
 
     for (const [id, perLocale] of byId) {
-      const fallback = this.pickFallback(perLocale, locales) as {
-        name?: string;
-        logo?: string;
-      };
-
       await this.serieRepository.upsert({ id, game: CardGame.Pokemon }, ["id"]);
 
       for (const locale of locales) {
@@ -243,7 +238,7 @@ export class CatalogImportService {
     return imported;
   }
 
-  // --- Cartes ---------------------------------------------------------------
+  // --- Cards ----------------------------------------------------------------
 
   private async importCards(locales: DatasetLocale[]) {
     const knownSetIds = new Set(
@@ -295,7 +290,7 @@ export class CatalogImportService {
     return { cardsCreated, cardsUpdated, translations: translationCounts };
   }
 
-  /** Importe les cartes d'un set, toutes langues confondues. */
+  /** Imports the cards of a set, across all languages. */
   private async importSetCards(
     setId: string,
     perLocale: Map<string, Record<string, DatasetCard>>,
@@ -357,7 +352,7 @@ export class CatalogImportService {
     return { created, updated, translations };
   }
 
-  /** Champs de jeu, identiques dans toutes les langues. */
+  /** Gameplay fields, identical across all languages. */
   private async saveCardDetails(
     perLocale: Map<string, Record<string, DatasetCard>>,
     idByTcgDexId: Map<string, string>,
@@ -440,7 +435,7 @@ export class CatalogImportService {
     return counts;
   }
 
-  // --- Utilitaires ----------------------------------------------------------
+  // --- Utilities ------------------------------------------------------------
 
   /**
    * First locale available for this entity, in fallback order.

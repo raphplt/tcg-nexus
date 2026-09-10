@@ -605,7 +605,6 @@ export class CollectionService {
       };
     }
 
-    // Build query with filters
     const queryBuilder = this.collectionItemRepository
       .createQueryBuilder("item")
       .leftJoinAndSelect("item.pokemonCard", "pokemonCard")

@@ -1,7 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { Card } from "src/card/entities/card.entity";
-import { CardState } from "src/card-state/entities/card-state.entity";
 import { CollectionItem } from "src/collection-item/entities/collection-item.entity";
 import { Currency } from "src/common/enums/currency";
 import { ProductKind } from "src/common/enums/product-kind";

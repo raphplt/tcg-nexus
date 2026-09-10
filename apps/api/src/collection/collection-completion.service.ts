@@ -2,7 +2,6 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Card } from "src/card/entities/card.entity";
 import { CollectionItem } from "src/collection-item/entities/collection-item.entity";
-import { CompletionPolicy } from "src/common/enums/completion-policy";
 import { ProductKind } from "src/common/enums/product-kind";
 import { UserRole } from "src/common/enums/user";
 import { User } from "src/user/entities/user.entity";
@@ -75,7 +74,6 @@ export class CollectionCompletionService {
       policyOverride ??
       (collection.completionPolicy === "master" ? "master" : "base");
 
-    // Fetch all owned items in this collection
     const ownedItems = await this.itemRepo.find({
       where: { collection: { id: collectionId } },
       relations: ["pokemonCard", "pokemonCard.set"],

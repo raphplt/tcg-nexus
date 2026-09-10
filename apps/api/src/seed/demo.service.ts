@@ -232,7 +232,6 @@ export class DemoService {
       }
     }
 
-    // Reset/build bracket matches
     await this.resetDemoTournament();
 
     // 3. Prepare Demo Articles

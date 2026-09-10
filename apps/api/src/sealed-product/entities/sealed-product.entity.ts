@@ -15,8 +15,8 @@ import { SealedProductType } from "../enums/sealed-product-type.enum";
 import { SealedProductLocale } from "./sealed-product-locale.entity";
 
 /**
- * Contenu détaillé d'un produit scellé.
- * Ex : { boosterCount: 8, promos: ["sv4-12"], accessories: true }
+ * Detailed contents of a sealed product.
+ * E.g.: { boosterCount: 8, promos: ["sv4-12"], accessories: true }
  */
 export interface SealedProductContents {
   boosterCount?: number;
@@ -29,7 +29,7 @@ export interface SealedProductContents {
 @Index(["productType"])
 @Index(["pokemonSet", "productType"])
 export class SealedProduct {
-  /** Slug stable, ex : "sv04-etb-001" */
+  /** Stable slug, e.g. "sv04-etb-001" */
   @PrimaryColumn()
   id: string;
 
@@ -59,8 +59,8 @@ export class SealedProduct {
   upc?: string;
 
   /**
-   * Chemin relatif dans le bucket R2 (sans le base URL).
-   * Ex : "pokecardex/AQ/Booster_Aquapolis_Arcanin.png"
+   * Relative path in the R2 bucket (without the base URL).
+   * E.g.: "pokecardex/AQ/Booster_Aquapolis_Arcanin.png"
    *
    * NOTE: packaging is translated in reality, but Pokécardex only publishes
    * the French artwork and no English source exists. The image stays on the

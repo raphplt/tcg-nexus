@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Card } from "src/card/entities/card.entity";
 import { CollectionItem } from "src/collection-item/entities/collection-item.entity";
 import { Currency } from "src/common/enums/currency";
 import { ProductKind } from "src/common/enums/product-kind";

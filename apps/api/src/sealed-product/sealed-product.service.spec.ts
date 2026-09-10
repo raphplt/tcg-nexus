@@ -14,7 +14,6 @@ import {
   SealedSortBy,
 } from "./dto/sealed-product-filter.dto";
 import { SealedProduct } from "./entities/sealed-product.entity";
-import { SealedProductLocale } from "./entities/sealed-product-locale.entity";
 import { SealedProductType } from "./enums/sealed-product-type.enum";
 import { SealedProductService } from "./sealed-product.service";
 

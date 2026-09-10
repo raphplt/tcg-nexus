@@ -68,25 +68,21 @@ export class SearchService {
     const offset = (page - 1) * limit;
     const results: SearchResultItem[] = [];
 
-    // Search Pokémon cards
     if (type === "all" || type === "cards") {
       const cardResults = await this.searchPokemonCards(searchTerm, limit);
       results.push(...cardResults);
     }
 
-    // Search tournaments
     if (type === "all" || type === "tournaments") {
       const tournamentResults = await this.searchTournaments(searchTerm, limit);
       results.push(...tournamentResults);
     }
 
-    // Search players
     if (type === "all" || type === "players") {
       const playerResults = await this.searchPlayers(searchTerm, limit);
       results.push(...playerResults);
     }
 
-    // Search marketplace listings
     if (type === "all" || type === "marketplace") {
       const marketplaceResults = await this.searchMarketplace(
         searchTerm,
@@ -95,11 +91,9 @@ export class SearchService {
       results.push(...marketplaceResults);
     }
 
-    // Sort by relevance score
     const scoredResults = this.calculateRelevanceScores(results, searchTerm);
     const sortedResults = this.sortResults(scoredResults, sortBy, sortOrder);
 
-    // Paginate results
     const paginatedResults = sortedResults.slice(offset, offset + limit);
     const totalPages = Math.ceil(sortedResults.length / limit);
 

@@ -29,8 +29,8 @@ export class CollectionItem {
   collection: Collection;
 
   /**
-   * Discriminator : indique si cet item référence une carte ou un produit scellé.
-   * Exactement un de `pokemonCard` / `sealedProduct` doit être renseigné.
+   * Discriminator: indicates whether this item references a card or a sealed product.
+   * Exactly one of `pokemonCard` / `sealedProduct` must be set.
    */
   @Column({ type: "enum", enum: ProductKind, default: ProductKind.CARD })
   productKind: ProductKind;
@@ -57,7 +57,7 @@ export class CollectionItem {
   )
   sealedProduct?: SealedProduct | null;
 
-  /** État de la carte (NM, EX, ...). Nullable pour les produits scellés. */
+  /** Card condition (NM, EX, ...). Nullable for sealed products. */
   @ManyToOne(
     () => CardState,
     (cardState) => cardState.collectionItems,
@@ -68,7 +68,7 @@ export class CollectionItem {
   )
   cardState?: CardState | null;
 
-  /** État du produit scellé. Nullable pour les cartes. */
+  /** Sealed product condition. Nullable for cards. */
   @Column({ type: "enum", enum: SealedCondition, nullable: true })
   sealedCondition?: SealedCondition | null;
 

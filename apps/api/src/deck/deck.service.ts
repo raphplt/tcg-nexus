@@ -1,7 +1,6 @@
 import {
   BadRequestException,
   ForbiddenException,
-  HttpStatus,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
@@ -32,8 +31,8 @@ import { SavedDeck } from "./entities/saved-deck.entity";
 
 export type FindAllDecksParams = FindAllDecksQueryDto;
 
-// TypeORM injecte l'expression orderBy telle quelle : jamais la construire
-// à partir de l'entrée utilisateur
+// TypeORM injects the orderBy expression verbatim: never build it
+// from user input
 const DECK_SORT_COLUMNS: Record<DeckSortBy, string> = {
   [DeckSortBy.CREATED_AT]: "deck.createdAt",
   [DeckSortBy.UPDATED_AT]: "deck.updatedAt",
@@ -577,7 +576,7 @@ export class DeckService {
       .leftJoinAndSelect("cards.card", "card")
       .leftJoinAndSelect("card.pokemonDetails", "cardDetails")
       .where("savedUser.id = :userId", { userId: user.id })
-      // Un deck repassé en privé par son auteur disparaît des favoris
+      // A deck switched back to private by its author disappears from favorites
       .andWhere("deck.isPublic = true");
 
     if (formatId !== 0) {

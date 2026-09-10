@@ -35,7 +35,6 @@ import { User } from "../user/entities/user.entity";
 import { CatalogImportService } from "./catalog-import.service";
 import { SeedService } from "./seed.service";
 
-// Mock @faker-js/faker
 jest.mock("@faker-js/faker", () => ({
   faker: {
     person: {

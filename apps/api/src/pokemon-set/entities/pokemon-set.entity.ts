@@ -6,7 +6,7 @@ import { Column, Entity, ManyToOne, OneToMany, PrimaryColumn } from "typeorm";
 import { PokemonSetTranslation } from "./pokemon-set-translation.entity";
 
 /**
- * Objet embarqué pour le nombre de cartes dans le set
+ * Embedded object for the number of cards in the set
  */
 export class CardCount {
   @Column({ type: "int" })
@@ -26,7 +26,7 @@ export class CardCount {
 }
 
 /**
- * Objet embarqué pour la légalité du set en compétition
+ * Embedded object for the set's competitive legality
  */
 export class Legal {
   @Column()
@@ -37,7 +37,7 @@ export class Legal {
 }
 
 /**
- * Interface représentant un résumé de carte (CardBrief)
+ * Interface representing a card summary (CardBrief)
  */
 export class CardBrief {
   id: string;
@@ -88,7 +88,7 @@ export class PokemonSet {
   )
   sealedProducts: SealedProduct[];
 
-  /** Nom, logo et symbole du set, une ligne par langue activée. */
+  /** Set name, logo and symbol, one row per enabled language. */
   @OneToMany(
     () => PokemonSetTranslation,
     (translation) => translation.set,

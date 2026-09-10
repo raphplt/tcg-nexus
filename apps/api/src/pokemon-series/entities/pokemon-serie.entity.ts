@@ -6,12 +6,11 @@ import { PokemonSerieTranslation } from "./pokemon-serie-translation.entity";
 @Entity()
 export class PokemonSerie {
   @PrimaryColumn()
-  id: string; // Serie Unique ID
+  id: string;
 
   @Column({ type: "enum", enum: CardGame, default: CardGame.Pokemon })
   game: CardGame;
 
-  // Relation to sets belonging to this expansion series
   @OneToMany(
     () => PokemonSet,
     (pokemonSet) => pokemonSet.serie,

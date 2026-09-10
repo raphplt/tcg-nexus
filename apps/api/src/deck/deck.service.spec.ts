@@ -6,7 +6,6 @@ import { DeckMetricsService } from "../ai/engine/deck-metrics.service";
 import { CatalogLocalizationService } from "../card/catalog-localization.service";
 import { Card } from "../card/entities/card.entity";
 import { DeckCardRole } from "../common/enums/deckCardRole";
-import { PokemonCardsType } from "../common/enums/pokemonCardsType";
 import { DeckCard } from "../deck-card/entities/deck-card.entity";
 import { DeckFormat } from "../deck-format/entities/deck-format.entity";
 import { PaginationHelper } from "../helpers/pagination";
@@ -24,15 +23,6 @@ describe("DeckService", () => {
   let deckRepo: any;
   let deckShareRepo: any;
   let savedDeckRepo: any;
-
-  const withPokemonDetails = <T extends Record<string, any>>(card: T) => ({
-    ...card,
-    pokemonDetails: {
-      category: card.category,
-      types: card.types,
-      attacks: card.attacks,
-    },
-  });
 
   const createQueryBuilderMock = () => ({
     leftJoinAndSelect: jest.fn().mockReturnThis(),

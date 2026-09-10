@@ -14,7 +14,7 @@ export class TranslationService {
     private readonly repository: Repository<Translation>,
   ) {}
 
-  /** Overrides groupés par locale, prêts à être fusionnés avec les dictionnaires. */
+  /** Overrides grouped by locale, ready to be merged with the dictionaries. */
   async findAllGrouped(locale?: string): Promise<TranslationOverrides> {
     const where = isSupportedLocale(locale) ? { locale } : {};
     const rows = await this.repository.find({ where });

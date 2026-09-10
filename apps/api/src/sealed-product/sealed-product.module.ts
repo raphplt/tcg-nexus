@@ -1,4 +1,4 @@
-import { forwardRef, Module } from "@nestjs/common";
+import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { Listing } from "src/marketplace/entities/listing.entity";
 import { PriceHistory } from "src/marketplace/entities/price-history.entity";

@@ -7,7 +7,6 @@ import { PokemonSet } from "src/pokemon-set/entities/pokemon-set.entity";
 import { Card } from "src/card/entities/card.entity";
 import { PokemonCardDetails } from "src/card/entities/pokemon-card-details.entity";
 
-// Mocking TCGdex SDK
 jest.mock("@tcgdex/sdk", () => {
   return jest.fn().mockImplementation(() => {
     return {

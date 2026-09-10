@@ -13,14 +13,14 @@ import type {
 } from "./pokemon-card-details.entity";
 
 /**
- * Champs d'une carte qui dépendent de la langue.
+ * Language-dependent fields of a card.
  *
- * Aucune langue n'est canonique : `card` porte les données non linguistiques
- * (identifiants, hp, types, prix, légalité…) et chaque langue activée a sa
- * ligne ici. Ajouter une langue n'a donc aucun effet sur les autres.
+ * No language is canonical: `card` holds the non-linguistic data
+ * (identifiers, hp, types, prices, legality…) and each enabled language has its
+ * own row here. Adding a language therefore has no effect on the others.
  *
- * `image` en fait partie : le texte de la carte est imprimé sur l'illustration,
- * TCGdex sert bien une image par langue (`assets.tcgdex.net/<locale>/…`).
+ * `image` is one of them: the card text is printed on the artwork, and
+ * TCGdex does serve one image per language (`assets.tcgdex.net/<locale>/…`).
  */
 @Entity("card_translation")
 @Index(["locale", "name"])
@@ -75,7 +75,7 @@ export class CardTranslation {
   @Column({ type: "jsonb", nullable: true })
   attacks?: PokemonAttack[];
 
-  /** Date `updated` de la carte chez TCGdex, pour cette langue. */
+  /** TCGdex `updated` date of the card, for this language. */
   @Column({ name: "source_updated_at", nullable: true })
   sourceUpdatedAt?: string;
 }

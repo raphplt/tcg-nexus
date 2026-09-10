@@ -7,8 +7,8 @@ import {
 } from "typeorm";
 
 /**
- * Surcouche éditable des dictionnaires du dépôt : seules les clés modifiées
- * depuis l'administration sont stockées ici.
+ * Editable overlay on the repository's dictionaries: only keys modified
+ * from the admin panel are stored here.
  */
 @Entity({ name: "translation" })
 @Index(["locale", "key"], { unique: true })

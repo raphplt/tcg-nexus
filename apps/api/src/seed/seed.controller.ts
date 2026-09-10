@@ -25,17 +25,17 @@ export class SeedController {
     private readonly demoService: DemoService,
   ) {}
 
-  /** Importe séries, sets, cartes et traductions depuis le dataset local. */
+  /** Imports series, sets, cards and translations from the local dataset. */
   @Post("importCatalog")
   importCatalog() {
     return this.seedService.importPokemon();
   }
 
   /**
-   * Réaligne le jeu de données de démo sur le script de présentation.
+   * Realigns the demo dataset with the presentation script.
    *
-   * Idempotent et non destructif : recalcule les dates relatives, remet les
-   * compteurs aux valeurs annoncées et nettoie le décor.
+   * Idempotent and non-destructive: recomputes relative dates, resets the
+   * counters to the announced values and cleans up the surrounding scenery.
    */
   @Post("demo/refresh")
   refreshDemoDataset() {

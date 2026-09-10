@@ -11,14 +11,10 @@ import {
 } from "src/card-state/entities/card-state.entity";
 import { Collection } from "src/collection/entities/collection.entity";
 import { CollectionItem } from "src/collection-item/entities/collection-item.entity";
-import { CardGame } from "src/common/enums/cardGame";
 import { Currency } from "src/common/enums/currency";
-import { DeckCardRole } from "src/common/enums/deckCardRole";
-import { EnergyType } from "src/common/enums/energyType";
 import { ListingStatus } from "src/common/enums/listing-status";
-import { CardState, PokemonCardsType } from "src/common/enums/pokemonCardsType";
+import { CardState } from "src/common/enums/pokemonCardsType";
 import { ProductKind } from "src/common/enums/product-kind";
-import { TrainerType } from "src/common/enums/trainerType";
 import { UserRole } from "src/common/enums/user";
 import { Deck } from "src/deck/entities/deck.entity";
 import { DeckCard } from "src/deck-card/entities/deck-card.entity";
@@ -178,86 +174,12 @@ export class SeedService {
   ) {}
 
   /**
-   * Normalise une chaîne destinée au stockage : espaces superflus supprimés,
-   * forme Unicode canonique. Les accents sont conservés — « Pokémon » doit
-   * rester « Pokémon » en base.
+   * Normalizes a string intended for storage: extra whitespace removed,
+   * canonical Unicode form. Accents are preserved — "Pokémon" must
+   * stay "Pokémon" in the database.
    */
   cleanString(str: string): string {
     return str.normalize("NFC").trim();
-  }
-
-  /**
-   * Normalise une chaîne pour la *comparer* à une valeur connue (mapping des
-   * catégories, types de dresseur, types d'énergie). Ici la perte des accents
-   * est voulue : elle rend la comparaison insensible à la casse et aux
-   * diacritiques. Ne jamais utiliser pour une valeur stockée.
-   */
-  private normalizeForMapping(value?: string): string {
-    if (!value) return "";
-    return (
-      value
-        .normalize("NFKD")
-        // eslint-disable-next-line no-control-regex
-        .replace(/[^\x00-\x7F]/g, "")
-        .toLowerCase()
-        .trim()
-    );
-  }
-
-  private mapPokemonCategory(value?: string): PokemonCardsType | undefined {
-    const normalized = this.normalizeForMapping(value);
-    switch (normalized) {
-      case "pokemon":
-        return PokemonCardsType.Pokemon;
-      case "energie":
-      case "energy":
-        return PokemonCardsType.Energy;
-      case "dresseur":
-      case "trainer":
-        return PokemonCardsType.Trainer;
-      default:
-        return undefined;
-    }
-  }
-
-  private mapTrainerType(value?: string): TrainerType | undefined {
-    const normalized = this.normalizeForMapping(value);
-    switch (normalized) {
-      case "supporter":
-        return TrainerType.Supporter;
-      case "objet":
-      case "item":
-        return TrainerType.Item;
-      case "stade":
-      case "stadium":
-        return TrainerType.Stadium;
-      case "outil":
-      case "tool":
-        return TrainerType.Tool;
-      case "machine technique":
-      case "technical machine":
-        return TrainerType.TechnicalMachine;
-      default:
-        return undefined;
-    }
-  }
-
-  private mapEnergyType(value?: string): EnergyType | undefined {
-    const normalized = this.normalizeForMapping(value);
-    switch (normalized) {
-      case "de base":
-      case "basic":
-        return EnergyType.Basic;
-      case "special":
-      case "speciale":
-      case "speciales":
-      case "special energy":
-      case "speciale energie":
-      case "specialeenergie":
-        return EnergyType.Special;
-      default:
-        return undefined;
-    }
   }
 
   /**
@@ -438,7 +360,6 @@ export class SeedService {
     if (users.length > 0) {
       await this.userRepository.save(users);
 
-      // Create default collections for each new user
       for (const user of users) {
         await this.createDefaultCollections(user.id);
       }
@@ -534,7 +455,6 @@ export class SeedService {
       });
       await this.userRepository.save(newUser);
 
-      // Create default collections for new user
       await this.createDefaultCollections(newUser.id);
 
       const player = this.playerRepository.create({ user: newUser });
@@ -606,7 +526,6 @@ export class SeedService {
         });
         await this.tournamentRepository.save(tournament);
       }
-      // Assign players
       tournament.players = tData.playerIndexes.map((i) => players[i]);
       await this.tournamentRepository.save(tournament);
 
@@ -665,7 +584,7 @@ export class SeedService {
       tournament.pricing = pricing;
       await this.tournamentRepository.save(tournament);
 
-      // Organisateur
+      // Organizer
       if (user) {
         let organizer = await this.tournamentOrganizerRepository.findOne({
           where: { tournament: { id: tournament.id }, user: { id: user.id } },
@@ -796,7 +715,6 @@ export class SeedService {
       });
       await this.userRepository.save(newUser);
 
-      // Create default collections for new user
       await this.createDefaultCollections(newUser.id);
       users.push(newUser);
       currentUserCount++;
@@ -1090,7 +1008,7 @@ export class SeedService {
 
   /**
    * Seed test listings (dev only)
-   * Crée entre 0 et 5 offres pour un échantillon de cartes Pokémon (optimisé avec batch)
+   * Creates between 0 and 5 listings for a sample of Pokémon cards (batched for performance)
    */
   async seedListings() {
     const isProduction =
@@ -1126,11 +1044,9 @@ export class SeedService {
 
     // Create between 0 and 5 listings per card
     for (const card of cards) {
-      // Random listings count for current card (0 to 5)
       const listingCount = Math.floor(Math.random() * 6);
 
       for (let i = 0; i < listingCount; i++) {
-        // Pick random seller
         const randomSeller =
           sellers[Math.floor(Math.random() * sellers.length)];
 
@@ -1138,11 +1054,9 @@ export class SeedService {
         const basePrice = Math.random() * 99.5 + 0.5;
         const price = Math.round(basePrice * 100) / 100;
 
-        // Select random currency
         const currency =
           currencies[Math.floor(Math.random() * currencies.length)];
 
-        // Select random card condition state
         const cardState =
           cardStates[Math.floor(Math.random() * cardStates.length)];
 
@@ -1152,7 +1066,6 @@ export class SeedService {
         const status =
           Math.random() < 0.1 ? ListingStatus.INACTIVE : ListingStatus.ACTIVE;
 
-        // Instantiate listing entity
         const listing = this.listingRepository.create({
           seller: randomSeller,
           pokemonCard: card,
@@ -1216,7 +1129,7 @@ export class SeedService {
       savedCount += batch.length;
     }
 
-    // Sauvegarder l'historique de prix en batch
+    // Save price history in batches
     for (let i = 0; i < priceHistoriesToCreate.length; i += batchSize) {
       const batch = priceHistoriesToCreate.slice(i, i + batchSize);
       await this.priceHistoryRepository.save(batch);
@@ -2343,7 +2256,7 @@ export class SeedService {
       // Generate Bracket Matches
       // Quarterfinals (Round 1): Match 1 (0 vs 7), Match 2 (3 vs 4), Match 3 (1 vs 6), Match 4 (2 vs 5)
       // Match 1: Player 1 (seed 1) vs Player 8 (seed 8) -> Finished 2-0
-      const match1 = await this.matchRepository.save(
+      await this.matchRepository.save(
         this.matchRepository.create({
           tournament: ongoingTournament,
           playerA: seeded[0],
@@ -2358,7 +2271,7 @@ export class SeedService {
       );
 
       // Match 2: Player 4 (seed 4) vs Player 5 (seed 5) -> Finished 2-1
-      const match2 = await this.matchRepository.save(
+      await this.matchRepository.save(
         this.matchRepository.create({
           tournament: ongoingTournament,
           playerA: seeded[3],
