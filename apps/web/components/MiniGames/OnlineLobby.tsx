@@ -60,7 +60,10 @@ export function OnlineLobby({
                     {t("ready")}
                   </Badge>
                 ) : (
-                  <Badge variant="outline" className="mt-2 border border-border">
+                  <Badge
+                    variant="outline"
+                    className="mt-2 border border-border"
+                  >
                     {t("notReady")}
                   </Badge>
                 )}

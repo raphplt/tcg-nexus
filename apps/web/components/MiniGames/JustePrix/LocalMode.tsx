@@ -43,14 +43,25 @@ export function closestPlayer(
 }
 
 /** Pure turn logic of the local duel, kept out of the component for testing. */
-export function localReducer(state: LocalState, action: LocalAction): LocalState {
+export function localReducer(
+  state: LocalState,
+  action: LocalAction,
+): LocalState {
   switch (action.type) {
     case "guess": {
       if (state.turn === "p1") {
-        return { ...state, turn: "p2", guesses: { ...state.guesses, p1: action.value } };
+        return {
+          ...state,
+          turn: "p2",
+          guesses: { ...state.guesses, p1: action.value },
+        };
       }
       if (state.turn === "p2" && state.guesses.p1 !== null) {
-        const winner = closestPlayer(action.price, state.guesses.p1, action.value);
+        const winner = closestPlayer(
+          action.price,
+          state.guesses.p1,
+          action.value,
+        );
         return {
           ...state,
           turn: "reveal",
@@ -64,7 +75,8 @@ export function localReducer(state: LocalState, action: LocalAction): LocalState
     }
     case "next": {
       if (state.turn !== "reveal") return state;
-      if (state.round >= action.totalRounds) return { ...state, turn: "finished" };
+      if (state.round >= action.totalRounds)
+        return { ...state, turn: "finished" };
       return {
         ...state,
         round: state.round + 1,
@@ -85,18 +97,28 @@ interface LocalModeProps {
 }
 
 /** Two players on one device, secret guesses, closest wins the round. */
-export function LocalMode({ items, onReplay, onBack, onScoresChange }: LocalModeProps) {
+export function LocalMode({
+  items,
+  onReplay,
+  onBack,
+  onScoresChange,
+}: LocalModeProps) {
   const t = useTranslations("JustePrix");
   const tc = useTranslations("MiniGames.common");
   const locale = useLocale();
   const [state, dispatch] = useReducer(localReducer, initialLocalState);
   const item = items[state.round - 1];
 
-  const playerName = (player: Player) => t(player === "p1" ? "player1" : "player2");
+  const playerName = (player: Player) =>
+    t(player === "p1" ? "player1" : "player2");
 
   const guess = (value: number) => {
     if (!item) return;
-    const next = localReducer(state, { type: "guess", value, price: item.price });
+    const next = localReducer(state, {
+      type: "guess",
+      value,
+      price: item.price,
+    });
     dispatch({ type: "guess", value, price: item.price });
     if (next.scores !== state.scores) onScoresChange?.(next.scores);
   };
@@ -121,7 +143,9 @@ export function LocalMode({ items, onReplay, onBack, onScoresChange }: LocalMode
             <span className="text-amber-500">{t("perfectTie")}</span>
           ) : (
             <span className={p1 > p2 ? "text-blue-600" : "text-red-500"}>
-              {t("playerVictory", { player: playerName(p1 > p2 ? "p1" : "p2") })}
+              {t("playerVictory", {
+                player: playerName(p1 > p2 ? "p1" : "p2"),
+              })}
             </span>
           )}
         </h3>
@@ -141,7 +165,11 @@ export function LocalMode({ items, onReplay, onBack, onScoresChange }: LocalMode
   return (
     <div className="grid grid-cols-1 gap-8 pt-4 lg:grid-cols-12">
       <div className="lg:col-span-5">
-        <ItemShowcase item={item} round={state.round} totalRounds={items.length} />
+        <ItemShowcase
+          item={item}
+          round={state.round}
+          totalRounds={items.length}
+        />
       </div>
 
       <div className="space-y-4 lg:col-span-7">

@@ -37,7 +37,11 @@ export class PlayerController {
    */
   @Post()
   @ApiOperation({ summary: "Create a new player profile" })
-  @ApiResponse({ status: 201, description: "Player successfully created.", type: Player })
+  @ApiResponse({
+    status: 201,
+    description: "Player successfully created.",
+    type: Player,
+  })
   create(@Body() createPlayerDto: CreatePlayerDto) {
     return this.playerService.create(createPlayerDto);
   }
@@ -49,7 +53,11 @@ export class PlayerController {
    */
   @Get()
   @ApiOperation({ summary: "Retrieve all player profiles" })
-  @ApiResponse({ status: 200, description: "List of player profiles.", type: [Player] })
+  @ApiResponse({
+    status: 200,
+    description: "List of player profiles.",
+    type: [Player],
+  })
   findAll() {
     return this.playerService.findAll();
   }
@@ -63,15 +71,24 @@ export class PlayerController {
    */
   @Public()
   @Get(":id/tournament-history")
-  @ApiOperation({ summary: "Retrieve tournament history and ELO trajectory for a player" })
-  @ApiParam({ name: "id", description: "Player unique identifier", example: "1" })
+  @ApiOperation({
+    summary: "Retrieve tournament history and ELO trajectory for a player",
+  })
+  @ApiParam({
+    name: "id",
+    description: "Player unique identifier",
+    example: "1",
+  })
   @ApiQuery({
     name: "period",
     required: false,
     description: "Period filter (1m, 3m, 1y, all)",
     example: "all",
   })
-  @ApiResponse({ status: 200, description: "Player tournament history and statistics." })
+  @ApiResponse({
+    status: 200,
+    description: "Player tournament history and statistics.",
+  })
   getTournamentHistory(
     @Param("id") id: string,
     @Query("period") period?: string,
@@ -87,8 +104,16 @@ export class PlayerController {
    */
   @Get(":id")
   @ApiOperation({ summary: "Retrieve a player profile by ID" })
-  @ApiParam({ name: "id", description: "Player unique identifier", example: "1" })
-  @ApiResponse({ status: 200, description: "Matching player profile.", type: Player })
+  @ApiParam({
+    name: "id",
+    description: "Player unique identifier",
+    example: "1",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Matching player profile.",
+    type: Player,
+  })
   findOne(@Param("id") id: string) {
     return this.playerService.findOne(+id);
   }
@@ -102,8 +127,16 @@ export class PlayerController {
    */
   @Patch(":id")
   @ApiOperation({ summary: "Update a player profile by ID" })
-  @ApiParam({ name: "id", description: "Player unique identifier", example: "1" })
-  @ApiResponse({ status: 200, description: "Updated player profile.", type: Player })
+  @ApiParam({
+    name: "id",
+    description: "Player unique identifier",
+    example: "1",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Updated player profile.",
+    type: Player,
+  })
   update(@Param("id") id: string, @Body() updatePlayerDto: UpdatePlayerDto) {
     return this.playerService.update(+id, updatePlayerDto);
   }
@@ -116,10 +149,16 @@ export class PlayerController {
    */
   @Delete(":id")
   @ApiOperation({ summary: "Delete a player profile by ID" })
-  @ApiParam({ name: "id", description: "Player unique identifier", example: "1" })
-  @ApiResponse({ status: 200, description: "Player profile successfully deleted." })
+  @ApiParam({
+    name: "id",
+    description: "Player unique identifier",
+    example: "1",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Player profile successfully deleted.",
+  })
   remove(@Param("id") id: string) {
     return this.playerService.remove(+id);
   }
 }
-

@@ -27,7 +27,9 @@ export class ChallengeController {
    * @returns Array of active challenges with progression counters.
    */
   @Get("active")
-  @ApiOperation({ summary: "Retrieve current user active challenges and progress" })
+  @ApiOperation({
+    summary: "Retrieve current user active challenges and progress",
+  })
   async getActiveChallenges(@CurrentUser() user: User) {
     return this.challengeService.getActiveChallenges(user.id);
   }

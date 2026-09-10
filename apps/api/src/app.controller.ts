@@ -24,4 +24,3 @@ export class AppController {
     return this.appService.getHello();
   }
 }
-

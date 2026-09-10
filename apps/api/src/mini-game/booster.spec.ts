@@ -102,7 +102,12 @@ describe("booster rules", () => {
       small[RarityTier.Common] = ["c1"];
       small[RarityTier.Rare] = ["r1", "r2"];
 
-      const pack = drawPack(small, "premium", (c) => c, () => 0);
+      const pack = drawPack(
+        small,
+        "premium",
+        (c) => c,
+        () => 0,
+      );
       expect(pack).toHaveLength(6);
       // Three distinct cards exist: they are all used before any repeat.
       expect(new Set(pack.slice(0, 3))).toEqual(new Set(["r1", "r2", "c1"]));

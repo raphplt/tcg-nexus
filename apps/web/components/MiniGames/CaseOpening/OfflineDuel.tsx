@@ -2,7 +2,7 @@
 
 import { Loader2, Package, Play, RotateCcw, Trophy } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useReducer } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { BoosterCard } from "@/types/mini-game";
@@ -64,6 +64,15 @@ export function OfflineDuel({
   useEffect(() => {
     onScoresChange?.(state.scores);
   }, [state.scores, onScoresChange]);
+
+  // Reset the revealed card tray when transitioning between rounds or when the duel ends
+  const roundRef = useRef(state.round);
+  useEffect(() => {
+    if (roundRef.current !== state.round || state.stage === "finished") {
+      roundRef.current = state.round;
+      reveal.clear();
+    }
+  }, [state.round, state.stage, reveal]);
 
   const open = useCallback(() => {
     if (state.stage !== "idle") return;

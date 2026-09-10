@@ -137,8 +137,7 @@ export class CollectionController {
   @Get(":id/items")
   @Public()
   @ApiOperation({
-    summary:
-      "Retrieve collection items with pagination, filtering, and search",
+    summary: "Retrieve collection items with pagination, filtering, and search",
   })
   @ApiParam({ name: "id", description: "Collection ID" })
   @ApiResponse({

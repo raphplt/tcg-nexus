@@ -226,7 +226,9 @@ export class MiniGameGateway
     const userName = dbUser?.email?.split("@")[0] || `User_${user.id}`;
     const params: QueueParams = {
       setId: data.params?.setId || undefined,
-      serieId: data.params?.setId ? undefined : data.params?.serieId || undefined,
+      serieId: data.params?.setId
+        ? undefined
+        : data.params?.serieId || undefined,
       packStyle: data.params?.packStyle ?? "standard",
       roundCount: clampRoundCount(data.params?.roundCount),
     };
@@ -695,13 +697,11 @@ export class MiniGameGateway
     if (!packs || opened === 0) return [];
 
     return Promise.all(
-      packs
-        .slice(0, opened)
-        .map((roundPacks) =>
-          this.items.localizeCards(roundPacks[playerIndex] ?? [], locale, {
-            keepPricing: true,
-          }),
-        ),
+      packs.slice(0, opened).map((roundPacks) =>
+        this.items.localizeCards(roundPacks[playerIndex] ?? [], locale, {
+          keepPricing: true,
+        }),
+      ),
     );
   }
 

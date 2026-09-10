@@ -60,8 +60,18 @@ export class RankingController {
   @ApiOperation({ summary: "Retrieve global player rankings leaderboard" })
   @ApiQuery({ name: "page", required: false, type: Number, example: 1 })
   @ApiQuery({ name: "limit", required: false, type: Number, example: 20 })
-  @ApiQuery({ name: "period", required: false, type: String, example: "all-time" })
-  @ApiQuery({ name: "format", required: false, type: String, example: "Standard" })
+  @ApiQuery({
+    name: "period",
+    required: false,
+    type: String,
+    example: "all-time",
+  })
+  @ApiQuery({
+    name: "format",
+    required: false,
+    type: String,
+    example: "Standard",
+  })
   getGlobalRanking(
     @Query("page") page?: number,
     @Query("limit") limit?: number,
@@ -88,8 +98,18 @@ export class RankingController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Retrieve current user ranking position" })
-  @ApiQuery({ name: "period", required: false, type: String, example: "all-time" })
-  @ApiQuery({ name: "format", required: false, type: String, example: "Standard" })
+  @ApiQuery({
+    name: "period",
+    required: false,
+    type: String,
+    example: "all-time",
+  })
+  @ApiQuery({
+    name: "format",
+    required: false,
+    type: String,
+    example: "Standard",
+  })
   getMyRankingPosition(
     @CurrentUser() user: User,
     @Query("period") period?: string,

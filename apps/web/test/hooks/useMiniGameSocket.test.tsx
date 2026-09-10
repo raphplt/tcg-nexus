@@ -34,8 +34,12 @@ const io = vi.fn((..._args: unknown[]) => {
   return socket;
 });
 
-vi.mock("socket.io-client", () => ({ io: (...args: unknown[]) => io(...args) }));
-vi.mock("@/utils/socket", () => ({ getSocketBaseUrl: () => "http://api.test" }));
+vi.mock("socket.io-client", () => ({
+  io: (...args: unknown[]) => io(...args),
+}));
+vi.mock("@/utils/socket", () => ({
+  getSocketBaseUrl: () => "http://api.test",
+}));
 
 const session = (
   overrides: Partial<MiniGameSessionState> = {},
@@ -116,12 +120,19 @@ describe("useMiniGameSocket", () => {
     expect(result.current.selfId).toBe(7);
     expect(result.current.opponent).toEqual({ id: 9, name: "misty" });
 
-    act(() => socket.fire("minigame_state_update", session({ state: "waiting", round: 0 })));
+    act(() =>
+      socket.fire(
+        "minigame_state_update",
+        session({ state: "waiting", round: 0 }),
+      ),
+    );
     expect(result.current.session?.state).toBe("waiting");
 
     act(() => result.current.ready());
     act(() => result.current.submitGuess(12.5));
-    expect(socket.emit).toHaveBeenCalledWith("minigame_ready", { sessionId: "s1" });
+    expect(socket.emit).toHaveBeenCalledWith("minigame_ready", {
+      sessionId: "s1",
+    });
     expect(socket.emit).toHaveBeenCalledWith("minigame_submit_guess", {
       sessionId: "s1",
       guess: 12.5,
@@ -188,7 +199,8 @@ describe("useMiniGameSocket", () => {
 
   it("disconnects when disabled again", () => {
     const { result, rerender } = renderHook(
-      ({ enabled }: { enabled: boolean }) => useMiniGameSocket("juste_prix", enabled),
+      ({ enabled }: { enabled: boolean }) =>
+        useMiniGameSocket("juste_prix", enabled),
       { initialProps: { enabled: true } },
     );
     act(() => sockets[0]!.fire("connect"));

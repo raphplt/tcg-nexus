@@ -34,7 +34,13 @@ vi.mock("@/hooks/useMiniGameSocket", () => ({
 vi.mock("framer-motion", () => ({
   motion: {
     div: ({ children, ...props }: any) => {
-      const { initial: _i, animate: _a, exit: _e, transition: _t, ...rest } = props;
+      const {
+        initial: _i,
+        animate: _a,
+        exit: _e,
+        transition: _t,
+        ...rest
+      } = props;
       return <div {...rest}>{children}</div>;
     },
   },
@@ -91,7 +97,9 @@ describe("JustePrixGame (solo flow)", () => {
     fireEvent.click(screen.getByText("Jouer en solo"));
     expect(mockGetItems).toHaveBeenCalledWith(5);
 
-    await waitFor(() => expect(screen.getByText("Dracaufeu")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText("Dracaufeu")).toBeInTheDocument(),
+    );
     expect(screen.getByText("Manche 1 / 2")).toBeInTheDocument();
     expect(screen.getByText("Carte de collection")).toBeInTheDocument();
 
@@ -131,12 +139,16 @@ describe("JustePrixGame (solo flow)", () => {
     fireEvent.click(screen.getByText("Jouer en local"));
 
     await waitFor(() =>
-      expect(screen.getByText("Impossible de lancer la partie")).toBeInTheDocument(),
+      expect(
+        screen.getByText("Impossible de lancer la partie"),
+      ).toBeInTheDocument(),
     );
     expect(screen.queryByText("Dracaufeu")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByText("Réessayer"));
-    await waitFor(() => expect(screen.getByText("Dracaufeu")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText("Dracaufeu")).toBeInTheDocument(),
+    );
     expect(screen.getByText("Au tour de Joueur 1")).toBeInTheDocument();
   });
 });

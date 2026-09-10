@@ -57,4 +57,3 @@ export class StatisticsService {
     return `This action removes a #${id} statistic`;
   }
 }
-

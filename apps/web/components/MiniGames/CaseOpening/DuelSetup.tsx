@@ -1,7 +1,15 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Crown, Flame, Globe, Layers, Package, User, Users } from "lucide-react";
+import {
+  Crown,
+  Flame,
+  Globe,
+  Layers,
+  Package,
+  User,
+  Users,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import { ModeCard } from "@/components/MiniGames/ModeCard";
@@ -41,28 +49,37 @@ const ROUND_OPTIONS = [1, 3, 5] as const;
 
 const STYLE_META: Record<
   PackStyle,
-  { icon: typeof Package; labelKey: string; helpKey: string; size: number; accent: string }
+  {
+    icon: typeof Package;
+    labelKey: string;
+    helpKey: string;
+    size: number;
+    accent: string;
+  }
 > = {
   standard: {
     icon: Package,
     labelKey: "styleStandard",
     helpKey: "styleStandardHelp",
     size: 6,
-    accent: "border-blue-500/40 bg-blue-500/10 text-blue-600 dark:text-blue-400",
+    accent:
+      "border-blue-500/40 bg-blue-500/10 text-blue-600 dark:text-blue-400",
   },
   premium: {
     icon: Crown,
     labelKey: "stylePremium",
     helpKey: "stylePremiumHelp",
     size: 6,
-    accent: "border-purple-500/40 bg-purple-500/10 text-purple-600 dark:text-purple-400",
+    accent:
+      "border-purple-500/40 bg-purple-500/10 text-purple-600 dark:text-purple-400",
   },
   chase: {
     icon: Flame,
     labelKey: "styleChase",
     helpKey: "styleChaseHelp",
     size: 3,
-    accent: "border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+    accent:
+      "border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400",
   },
 };
 
@@ -74,7 +91,12 @@ interface DuelSetupProps {
 }
 
 /** Start screen: what to open, which booster type, how many, against whom. */
-export function DuelSetup({ options, onChange, onStart, isAuthenticated }: DuelSetupProps) {
+export function DuelSetup({
+  options,
+  onChange,
+  onStart,
+  isAuthenticated,
+}: DuelSetupProps) {
   const t = useTranslations("CaseOpening");
   const tm = useTranslations("MiniGames");
 
@@ -90,12 +112,15 @@ export function DuelSetup({ options, onChange, onStart, isAuthenticated }: DuelS
   const setsOfSerie = useMemo(
     () =>
       options.serieId
-        ? sets.filter((set: PokemonSetType) => set.serie?.id === options.serieId)
+        ? sets.filter(
+            (set: PokemonSetType) => set.serie?.id === options.serieId,
+          )
         : [],
     [sets, options.serieId],
   );
 
-  const update = (patch: Partial<DuelOptions>) => onChange({ ...options, ...patch });
+  const update = (patch: Partial<DuelOptions>) =>
+    onChange({ ...options, ...patch });
 
   const selectScope = (scope: ScopeKind) =>
     update({ scope, setId: scope === "set" ? options.setId : "" });
@@ -109,10 +134,14 @@ export function DuelSetup({ options, onChange, onStart, isAuthenticated }: DuelS
     <div className="mx-auto max-w-4xl space-y-6 pt-4">
       <Card className="tcg-surface bg-card shadow-sm">
         <CardContent className="space-y-6 p-6">
-          <H3 className="font-heading text-lg font-bold text-foreground">{t("setup")}</H3>
+          <H3 className="font-heading text-lg font-bold text-foreground">
+            {t("setup")}
+          </H3>
 
           <div className="space-y-2">
-            <p className="text-xs font-semibold text-muted-foreground">{t("scope")}</p>
+            <p className="text-xs font-semibold text-muted-foreground">
+              {t("scope")}
+            </p>
             <div className="flex flex-wrap gap-2">
               {(["all", "serie", "set"] as ScopeKind[]).map((scope) => (
                 <Button
@@ -184,7 +213,9 @@ export function DuelSetup({ options, onChange, onStart, isAuthenticated }: DuelS
           </div>
 
           <div className="space-y-2">
-            <p className="text-xs font-semibold text-muted-foreground">{t("style")}</p>
+            <p className="text-xs font-semibold text-muted-foreground">
+              {t("style")}
+            </p>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               {PACK_STYLES.map((style) => {
                 const meta = STYLE_META[style];
@@ -231,7 +262,10 @@ export function DuelSetup({ options, onChange, onStart, isAuthenticated }: DuelS
               value={String(options.roundCount)}
               onValueChange={(value) => update({ roundCount: Number(value) })}
             >
-              <SelectTrigger id="case-opening-rounds" className="w-40 bg-background font-semibold">
+              <SelectTrigger
+                id="case-opening-rounds"
+                className="w-40 bg-background font-semibold"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-popover font-semibold">

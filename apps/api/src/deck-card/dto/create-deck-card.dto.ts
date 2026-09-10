@@ -10,11 +10,18 @@ export class CreateDeckCardDto {
   @IsInt()
   deckId: number;
 
-  @ApiProperty({ description: "Catalog card unique identifier", example: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11" })
+  @ApiProperty({
+    description: "Catalog card unique identifier",
+    example: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+  })
   @IsString()
   cardId: string;
 
-  @ApiProperty({ description: "Quantity of this card in the deck", example: 4, minimum: 1 })
+  @ApiProperty({
+    description: "Quantity of this card in the deck",
+    example: 4,
+    minimum: 1,
+  })
   @IsInt()
   @Min(1)
   qty: number;

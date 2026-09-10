@@ -13,7 +13,10 @@ import { DeckCardRole } from "../../common/enums/deckCardRole";
 import { CreateDeckDto } from "./create-deck.dto";
 
 export class DeckCardDto {
-  @ApiProperty({ description: "Card UUID to add", example: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11" })
+  @ApiProperty({
+    description: "Card UUID to add",
+    example: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+  })
   @IsUUID()
   cardId: string;
 
@@ -45,7 +48,10 @@ export class UpdateCardDto {
 }
 
 export class DeckCardDeleteDto {
-  @ApiProperty({ description: "DeckCard association ID to delete", example: 10 })
+  @ApiProperty({
+    description: "DeckCard association ID to delete",
+    example: 10,
+  })
   @IsInt()
   id: number;
 }

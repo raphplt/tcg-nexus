@@ -563,7 +563,10 @@ describe("DeckService", () => {
         .mockResolvedValueOnce(deck)
         .mockResolvedValueOnce({ ...deck, id: 3 });
 
-      const result = await service.cloneDeck(1, { id: 1, role: UserRole.USER } as any);
+      const result = await service.cloneDeck(1, {
+        id: 1,
+        role: UserRole.USER,
+      } as any);
       expect(result.id).toBe(3);
     });
   });

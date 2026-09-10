@@ -61,6 +61,18 @@ export function OnlineDuel({
     if (!session) revealedCountRef.current = 0;
   }, [session]);
 
+  // Reset the revealed card tray when transitioning between rounds or when game ends
+  const roundRef = useRef(session?.round);
+  useEffect(() => {
+    if (
+      session &&
+      (roundRef.current !== session.round || session.state === "finished")
+    ) {
+      roundRef.current = session.round;
+      reveal.clear();
+    }
+  }, [session, session?.round, session?.state, reveal]);
+
   const pool = useMemo(
     () => session?.players.flatMap((p) => p.openedPacks.flat()) ?? [],
     [session],
