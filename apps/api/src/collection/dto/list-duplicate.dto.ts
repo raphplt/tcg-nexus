@@ -8,7 +8,7 @@ import {
   IsString,
   Min,
 } from "class-validator";
-import { Currency } from "src/common/enums/currency";
+import { Currency } from "../../common/enums/currency";
 
 /**
  * DTO for listing a duplicate collection item for sale.

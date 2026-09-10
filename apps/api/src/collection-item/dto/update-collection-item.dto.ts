@@ -10,7 +10,7 @@ import {
   IsString,
   Min,
 } from "class-validator";
-import { SealedCondition } from "src/common/enums/sealed-condition";
+import { SealedCondition } from "../../common/enums/sealed-condition";
 
 /**
  * DTO for updating physical attributes of a collection item.

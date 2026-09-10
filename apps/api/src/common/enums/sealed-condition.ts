@@ -1,12 +1,12 @@
 /**
- * État physique d'un produit scellé.
- * Distinct de CardState car ne s'applique pas aux cartes unitaires.
+ * Physical condition of a sealed product packaging.
+ * Distinct from CardState as it applies exclusively to sealed boxes and packs.
  */
 export enum SealedCondition {
-  /** Encore scellé d'usine */
+  /** Factory sealed and undamaged */
   SEALED = "sealed",
-  /** Boîte abîmée mais contenu intact */
+  /** Packaging is damaged but internal contents remain intact */
   BOX_DAMAGED = "box_damaged",
-  /** Ouvert puis re-scellé (rare, suspect) */
+  /** Opened and resealed (suspicious or altered) */
   OPENED_RESEALED = "opened_resealed",
 }
