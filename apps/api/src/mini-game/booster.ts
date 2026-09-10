@@ -88,7 +88,9 @@ const TIER_BY_LABEL = new Map<string, RarityTier>(
 /**
  * Tier of a localized rarity label, or `null` for an unknown label.
  */
-export function rarityTier(label: string | null | undefined): RarityTier | null {
+export function rarityTier(
+  label: string | null | undefined,
+): RarityTier | null {
   if (!label) return null;
   return TIER_BY_LABEL.get(label.trim().toLowerCase()) ?? null;
 }

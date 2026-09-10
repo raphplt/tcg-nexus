@@ -92,7 +92,9 @@ export class CardController {
    */
   @Public()
   @Get("set/:setId/rarities")
-  @ApiOperation({ summary: "Retrieve unique card rarities for an expansion set" })
+  @ApiOperation({
+    summary: "Retrieve unique card rarities for an expansion set",
+  })
   @ApiParam({ name: "setId", description: "Expansion set identifier" })
   getSetRarities(
     @Param("setId") setId: string,

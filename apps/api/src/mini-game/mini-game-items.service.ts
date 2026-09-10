@@ -115,19 +115,20 @@ export class MiniGameItemsService {
   ): Promise<{ product: SealedProduct; price: number }[]> {
     if (count <= 0) return [];
 
-    const rows: { id: string; avgPrice: string }[] = await this.listingRepository
-      .createQueryBuilder("listing")
-      .select("sealed.id", "id")
-      .addSelect("AVG(listing.price)", "avgPrice")
-      .innerJoin("listing.sealedProduct", "sealed")
-      .where("listing.quantityAvailable > 0")
-      .andWhere("(listing.expiresAt IS NULL OR listing.expiresAt > :now)", {
-        now: new Date(),
-      })
-      .groupBy("sealed.id")
-      .orderBy("RANDOM()")
-      .limit(count)
-      .getRawMany();
+    const rows: { id: string; avgPrice: string }[] =
+      await this.listingRepository
+        .createQueryBuilder("listing")
+        .select("sealed.id", "id")
+        .addSelect("AVG(listing.price)", "avgPrice")
+        .innerJoin("listing.sealedProduct", "sealed")
+        .where("listing.quantityAvailable > 0")
+        .andWhere("(listing.expiresAt IS NULL OR listing.expiresAt > :now)", {
+          now: new Date(),
+        })
+        .groupBy("sealed.id")
+        .orderBy("RANDOM()")
+        .limit(count)
+        .getRawMany();
 
     const priced = rows
       .map((row) => ({ id: row.id, price: roundPrice(Number(row.avgPrice)) }))
@@ -163,17 +164,23 @@ export class MiniGameItemsService {
     const wantedSealed = roundCount - wantedCards;
 
     const sealed = await this.drawPricedSealedProducts(wantedSealed);
-    const cards = await this.drawPricedCards(roundCount - sealed.length, setId, {
-      minPrice: JUSTE_PRIX_MIN_CARD_PRICE,
-    });
+    const cards = await this.drawPricedCards(
+      roundCount - sealed.length,
+      setId,
+      {
+        minPrice: JUSTE_PRIX_MIN_CARD_PRICE,
+      },
+    );
 
     const items: JustePrixItem[] = [
-      ...cards.map((card): JustePrixItem => ({
-        type: "card",
-        id: card.id,
-        price: cardMarketValue(card) as number,
-        data: card,
-      })),
+      ...cards.map(
+        (card): JustePrixItem => ({
+          type: "card",
+          id: card.id,
+          price: cardMarketValue(card) as number,
+          data: card,
+        }),
+      ),
       ...sealed.map(
         ({ product, price }): JustePrixItem => ({
           type: "sealed",
@@ -324,7 +331,9 @@ export class MiniGameItemsService {
     locale: SupportedLocale,
     options: { keepPricing?: boolean } = {},
   ): Promise<Card[]> {
-    const copies = cards.map((card) => cloneCard(card, options.keepPricing ?? false));
+    const copies = cards.map((card) =>
+      cloneCard(card, options.keepPricing ?? false),
+    );
     await this.catalogLocalization.localize(copies, locale);
     return copies;
   }
@@ -338,7 +347,11 @@ export class MiniGameItemsService {
   async localizeJustePrixItem(
     item: JustePrixItem,
     locale: SupportedLocale,
-  ): Promise<{ type: JustePrixItem["type"]; id: string; data: Card | SealedProduct }> {
+  ): Promise<{
+    type: JustePrixItem["type"];
+    id: string;
+    data: Card | SealedProduct;
+  }> {
     if (item.type === "card") {
       const [data] = await this.localizeCards([item.data], locale);
       return { type: "card", id: item.id, data: data! };
@@ -366,7 +379,8 @@ function cloneEntity<T extends object>(entity: T): T {
 function cloneCard(card: Card, keepPricing: boolean): Card {
   const copy = cloneEntity(card);
   if (card.set) copy.set = cloneEntity(card.set);
-  if (card.pokemonDetails) copy.pokemonDetails = cloneEntity(card.pokemonDetails);
+  if (card.pokemonDetails)
+    copy.pokemonDetails = cloneEntity(card.pokemonDetails);
   if (!keepPricing) delete copy.pricing;
   return copy;
 }

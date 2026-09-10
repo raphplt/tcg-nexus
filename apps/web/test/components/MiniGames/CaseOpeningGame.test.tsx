@@ -1,5 +1,11 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { useEffect } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CaseOpeningGame } from "@/components/MiniGames/CaseOpening/CaseOpeningGame";
@@ -43,7 +49,13 @@ vi.mock("@/hooks/useMiniGameSocket", () => ({
 vi.mock("framer-motion", () => ({
   motion: {
     div: ({ children, onAnimationComplete, ...props }: any) => {
-      const { initial: _i, animate: _a, exit: _e, transition: _t, ...rest } = props;
+      const {
+        initial: _i,
+        animate: _a,
+        exit: _e,
+        transition: _t,
+        ...rest
+      } = props;
       useEffect(() => {
         onAnimationComplete?.();
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -54,7 +66,12 @@ vi.mock("framer-motion", () => ({
   AnimatePresence: ({ children }: any) => <>{children}</>,
 }));
 
-const card = (id: string, name: string, trend: number, tier: RarityTier): BoosterCard =>
+const card = (
+  id: string,
+  name: string,
+  trend: number,
+  tier: RarityTier,
+): BoosterCard =>
   ({
     id,
     name,
@@ -66,8 +83,14 @@ const card = (id: string, name: string, trend: number, tier: RarityTier): Booste
 
 const packs: BoosterCard[][][] = [
   [
-    [card("1", "Pikachu", 0.5, RarityTier.Common), card("2", "Dracaufeu ex", 80, RarityTier.Secret)],
-    [card("3", "Carapuce", 0.3, RarityTier.Common), card("4", "Miraidon", 4, RarityTier.Holo)],
+    [
+      card("1", "Pikachu", 0.5, RarityTier.Common),
+      card("2", "Dracaufeu ex", 80, RarityTier.Secret),
+    ],
+    [
+      card("3", "Carapuce", 0.3, RarityTier.Common),
+      card("4", "Miraidon", 4, RarityTier.Holo),
+    ],
   ],
 ];
 
@@ -100,8 +123,16 @@ describe("CaseOpeningGame", () => {
       { id: "sv", name: "Écarlate et Violet" },
     ]);
     vi.mocked(pokemonCardService.getAllSets).mockResolvedValue([
-      { id: "sv01", name: "Écarlate et Violet", serie: { id: "sv", name: "EV" } } as never,
-      { id: "swsh1", name: "Épée et Bouclier", serie: { id: "swsh", name: "EB" } } as never,
+      {
+        id: "sv01",
+        name: "Écarlate et Violet",
+        serie: { id: "sv", name: "EV" },
+      } as never,
+      {
+        id: "swsh1",
+        name: "Épée et Bouclier",
+        serie: { id: "swsh", name: "EB" },
+      } as never,
     ]);
   });
 
@@ -113,7 +144,9 @@ describe("CaseOpeningGame", () => {
     expect(screen.getByText("Jouer en solo").closest("button")).toBeDisabled();
 
     fireEvent.click(screen.getByText("Tout le catalogue"));
-    expect(screen.getByText("Jouer en solo").closest("button")).not.toBeDisabled();
+    expect(
+      screen.getByText("Jouer en solo").closest("button"),
+    ).not.toBeDisabled();
   });
 
   it("plays a local duel with the boosters drawn by the API", async () => {
@@ -137,13 +170,17 @@ describe("CaseOpeningGame", () => {
     });
 
     await waitFor(() =>
-      expect(screen.getByText("Joueur 1 : ouvrir le booster 1")).toBeInTheDocument(),
+      expect(
+        screen.getByText("Joueur 1 : ouvrir le booster 1"),
+      ).toBeInTheDocument(),
     );
     fireEvent.click(screen.getByText("Joueur 1 : ouvrir le booster 1"));
 
     // Two cards spin then land; the board then shows the booster value.
     await advance(3_000);
-    expect(screen.getByText("Joueur 2 : ouvrir le booster 1")).toBeInTheDocument();
+    expect(
+      screen.getByText("Joueur 2 : ouvrir le booster 1"),
+    ).toBeInTheDocument();
     expect(screen.getAllByText("Dracaufeu ex").length).toBeGreaterThan(0);
     expect(screen.getByText("Secrète")).toBeInTheDocument();
 
@@ -152,7 +189,9 @@ describe("CaseOpeningGame", () => {
 
     expect(screen.getByText("Duel terminé !")).toBeInTheDocument();
     expect(screen.getByText("Victoire de Joueur 1 !")).toBeInTheDocument();
-    expect(screen.getByText(/Meilleure pioche : Dracaufeu ex/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Meilleure pioche : Dracaufeu ex/),
+    ).toBeInTheDocument();
   });
 
   it("shows an explicit error when the scope holds no priced card", async () => {
@@ -160,7 +199,9 @@ describe("CaseOpeningGame", () => {
     renderGame();
     fireEvent.click(screen.getByText("Jouer en solo"));
     await waitFor(() =>
-      expect(screen.getByText("Impossible de lancer la partie")).toBeInTheDocument(),
+      expect(
+        screen.getByText("Impossible de lancer la partie"),
+      ).toBeInTheDocument(),
     );
   });
 });

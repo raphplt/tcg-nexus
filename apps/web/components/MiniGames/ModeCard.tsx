@@ -60,7 +60,9 @@ export function ModeCard({
               {hint}
             </p>
           ) : null}
-          <p className="text-xs leading-relaxed text-muted-foreground">{help}</p>
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            {help}
+          </p>
         </div>
         <Button
           onClick={onSelect}

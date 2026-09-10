@@ -28,8 +28,13 @@ export class SearchController {
    */
   @Public()
   @Get()
-  @ApiOperation({ summary: "Perform global search across multiple entity domains" })
-  @ApiResponse({ status: 200, description: "Search results matching query criteria." })
+  @ApiOperation({
+    summary: "Perform global search across multiple entity domains",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Search results matching query criteria.",
+  })
   async globalSearch(
     @Query(new ValidationPipe({ transform: true })) searchDto: GlobalSearchDto,
   ): Promise<GlobalSearchResult> {
@@ -46,8 +51,17 @@ export class SearchController {
   @Public()
   @Get("suggestions")
   @ApiOperation({ summary: "Retrieve search autocompletion suggestions" })
-  @ApiQuery({ name: "q", description: "Search query text", example: "Charizard" })
-  @ApiQuery({ name: "limit", required: false, description: "Maximum suggestions to return", example: 10 })
+  @ApiQuery({
+    name: "q",
+    description: "Search query text",
+    example: "Charizard",
+  })
+  @ApiQuery({
+    name: "limit",
+    required: false,
+    description: "Maximum suggestions to return",
+    example: 10,
+  })
   @ApiResponse({ status: 200, description: "List of suggestion strings." })
   async getSearchSuggestions(
     @Query("q") query: string,
@@ -65,9 +79,20 @@ export class SearchController {
    */
   @Public()
   @Get("suggestions/preview")
-  @ApiOperation({ summary: "Retrieve lightweight categorized suggestions preview" })
-  @ApiQuery({ name: "q", description: "Search query text", example: "Charizard" })
-  @ApiQuery({ name: "limit", required: false, description: "Maximum suggestions to return", example: 5 })
+  @ApiOperation({
+    summary: "Retrieve lightweight categorized suggestions preview",
+  })
+  @ApiQuery({
+    name: "q",
+    description: "Search query text",
+    example: "Charizard",
+  })
+  @ApiQuery({
+    name: "limit",
+    required: false,
+    description: "Maximum suggestions to return",
+    example: 5,
+  })
   @ApiResponse({ status: 200, description: "Categorized preview suggestions." })
   async getSuggestionsPreview(
     @Query("q") query: string,
@@ -86,9 +111,21 @@ export class SearchController {
   @Public()
   @Get("suggestions/detail")
   @ApiOperation({ summary: "Retrieve rich suggestions with full metadata" })
-  @ApiQuery({ name: "q", description: "Search query text", example: "Charizard" })
-  @ApiQuery({ name: "limit", required: false, description: "Maximum suggestions to return", example: 5 })
-  @ApiResponse({ status: 200, description: "Detailed suggestions with metadata." })
+  @ApiQuery({
+    name: "q",
+    description: "Search query text",
+    example: "Charizard",
+  })
+  @ApiQuery({
+    name: "limit",
+    required: false,
+    description: "Maximum suggestions to return",
+    example: 5,
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Detailed suggestions with metadata.",
+  })
   async getSuggestionsDetail(
     @Query("q") query: string,
     @Query("limit") limit?: number,
@@ -96,4 +133,3 @@ export class SearchController {
     return this.searchService.getSuggestionsDetail(query, limit);
   }
 }
-

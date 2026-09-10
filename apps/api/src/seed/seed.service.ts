@@ -347,6 +347,9 @@ export class SeedService {
         | "refreshToken"
         | "previousRefreshToken"
         | "previousRefreshTokenExpiresAt"
+        | "onboardingVersion"
+        | "onboardingStatus"
+        | "onboardingUpdatedAt"
       >
     > = [
       {

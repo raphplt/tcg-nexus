@@ -581,7 +581,9 @@ const CollectionDetailPage = () => {
                   </div>
                   <p className="text-xs text-muted-foreground">
                     {t("coverage", {
-                      percent: Math.round(valuationData.coveragePercentage ?? 0),
+                      percent: Math.round(
+                        valuationData.coveragePercentage ?? 0,
+                      ),
                       valued:
                         valuationData.valuedCopiesCount ??
                         valuationData.totalValuedCopies ??

@@ -37,7 +37,7 @@ const DashboardPage = () => {
           <DashboardSkeleton />
         ) : isError || !data ? (
           <div className="space-y-6">
-            <div>
+            <div data-onboarding="dashboard-header">
               <h1 className="text-3xl font-bold">{t("title")}</h1>
               <p className="text-muted-foreground">
                 {t("welcome", { name: user.firstName })}
@@ -50,7 +50,7 @@ const DashboardPage = () => {
         ) : (
           <div className="space-y-6">
             <div className="flex items-center justify-between flex-wrap gap-2">
-              <div>
+              <div data-onboarding="dashboard-header">
                 <h1 className="text-3xl font-bold">{t("title")}</h1>
                 <p className="text-muted-foreground">
                   {t("welcome", { name: user.firstName })}

@@ -1,6 +1,8 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
+import { UpdateOnboardingDto } from "./dto/update-onboarding.dto";
 import { User } from "./entities/user.entity";
+import { OnboardingStatus } from "./user-onboarding.constants";
 import { UserController } from "./user.controller";
 import { UserJourneyService } from "./user-journey.service";
 import { UserService } from "./user.service";
@@ -14,6 +16,8 @@ describe("UserController", () => {
     create: jest.fn(),
     update: jest.fn(),
     updateOwnProfile: jest.fn(),
+    getOnboardingState: jest.fn(),
+    updateOnboardingState: jest.fn(),
     remove: jest.fn(),
   };
 
@@ -143,5 +147,32 @@ describe("UserController", () => {
     expect(mockUserJourneyService.getNextActions).toHaveBeenCalledWith({
       id: 5,
     });
+  });
+
+  it("gets the current user's onboarding state", async () => {
+    const state = { version: 0, status: "pending", updatedAt: null };
+    mockUserService.getOnboardingState.mockResolvedValue(state);
+
+    await expect(
+      controller.getMyOnboarding({ id: 5 } as User),
+    ).resolves.toEqual(state);
+    expect(mockUserService.getOnboardingState).toHaveBeenCalledWith(5);
+  });
+
+  it("updates the current user's onboarding state", async () => {
+    const update: UpdateOnboardingDto = {
+      version: 1,
+      status: OnboardingStatus.COMPLETED,
+    };
+    const state = { ...update, updatedAt: new Date() };
+    mockUserService.updateOnboardingState.mockResolvedValue(state);
+
+    await expect(
+      controller.updateMyOnboarding({ id: 6 } as User, update),
+    ).resolves.toEqual(state);
+    expect(mockUserService.updateOnboardingState).toHaveBeenCalledWith(
+      6,
+      update,
+    );
   });
 });

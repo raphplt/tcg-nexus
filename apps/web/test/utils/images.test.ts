@@ -158,7 +158,9 @@ describe("images utils", () => {
     });
 
     it("preserves standalone image files with direct extensions", () => {
-      const card = { image: "https://cdn.tcg-nexus.org/uploads/card-custom.webp" };
+      const card = {
+        image: "https://cdn.tcg-nexus.org/uploads/card-custom.webp",
+      };
       expect(getCardImage(card, "high")).toBe(
         "https://cdn.tcg-nexus.org/uploads/card-custom.webp",
       );

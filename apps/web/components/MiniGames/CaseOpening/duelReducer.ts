@@ -59,7 +59,14 @@ export function duelReducer(state: DuelState, action: DuelAction): DuelState {
       };
 
       if (side === "p1") {
-        return { ...state, stage: "idle", opening: null, active: "p2", packs, scores };
+        return {
+          ...state,
+          stage: "idle",
+          opening: null,
+          active: "p2",
+          packs,
+          scores,
+        };
       }
       if (state.round >= state.totalRounds) {
         return { ...state, stage: "finished", opening: null, packs, scores };

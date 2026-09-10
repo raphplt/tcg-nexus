@@ -86,6 +86,7 @@ const SearchBar = () => {
       <div className="flex w-full items-center justify-start sm:justify-center">
         <button
           type="button"
+          data-onboarding="global-search"
           onClick={() => setIsOpen(true)}
           aria-label={t("open")}
           className="flex h-9 w-9 cursor-pointer items-center gap-2 rounded-md border border-border bg-card p-2 transition-all duration-300 hover:border-primary sm:w-full sm:max-w-md"

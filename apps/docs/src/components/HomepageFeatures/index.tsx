@@ -27,8 +27,8 @@ const FeatureList: FeatureItem[] = [
     description: (
       <>
         Tournois suisses officiels, moteur de règles temps réel, similarité
-        vectorielle pgvector et diagnostics de decks déterministes sans dépendance
-        externe.
+        vectorielle pgvector et diagnostics de decks déterministes sans
+        dépendance externe.
       </>
     ),
   },

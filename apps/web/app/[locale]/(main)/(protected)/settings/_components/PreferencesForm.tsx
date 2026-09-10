@@ -10,20 +10,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Settings2, Sun, Moon, Monitor, Loader2 } from "lucide-react";
+import { Settings2, Sun, Moon, Monitor, Loader2, Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useTheme } from "@/hooks/use-theme";
 import { Currency, useCurrencyStore } from "@/store/currency.store";
 import { userService } from "@/services/user.service";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "react-hot-toast";
+import { useOnboarding } from "@/components/Onboarding/OnboardingProvider";
 
 export const PreferencesForm = () => {
   const t = useTranslations("Settings");
+  const onboardingT = useTranslations("Onboarding.settings");
   const { theme, setTheme, mounted } = useTheme();
   const { currency, setCurrency } = useCurrencyStore();
   const { refreshUser } = useAuth();
   const [saving, setSaving] = React.useState(false);
+  const { replayTour } = useOnboarding();
 
   const handleCurrencyChange = async (value: string) => {
     const newCurrency = value as Currency;
@@ -104,6 +107,23 @@ export const PreferencesForm = () => {
             </Select>
             {saving && <Loader2 className="w-4 h-4 animate-spin shrink-0" />}
           </div>
+        </div>
+
+        <div className="space-y-3 border-t border-border pt-5">
+          <div>
+            <p className="text-sm font-medium">{onboardingT("title")}</p>
+            <p className="text-sm text-muted-foreground">
+              {onboardingT("description")}
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            className="w-full gap-2"
+            onClick={replayTour}
+          >
+            <Sparkles className="size-4" aria-hidden="true" />
+            {onboardingT("action")}
+          </Button>
         </div>
       </div>
     </Card>

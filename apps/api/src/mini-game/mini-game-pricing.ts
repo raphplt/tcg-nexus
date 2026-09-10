@@ -42,7 +42,8 @@ interface TcgPlayerVariantLike {
 
 function asPositiveNumber(value: unknown): number | null {
   if (value === null || value === undefined || value === "") return null;
-  const parsed = typeof value === "number" ? value : Number.parseFloat(String(value));
+  const parsed =
+    typeof value === "number" ? value : Number.parseFloat(String(value));
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 }
 
@@ -156,7 +157,9 @@ export function scoreJustePrixGuess(
       roundSeconds,
       Math.max(0, roundSeconds - elapsedSeconds),
     );
-    points += Math.round((remaining / roundSeconds) * JUSTE_PRIX_MAX_SPEED_BONUS);
+    points += Math.round(
+      (remaining / roundSeconds) * JUSTE_PRIX_MAX_SPEED_BONUS,
+    );
   }
 
   return points;

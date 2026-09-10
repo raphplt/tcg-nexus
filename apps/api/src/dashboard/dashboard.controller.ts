@@ -1,5 +1,10 @@
 import { Controller, Get, UseGuards } from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { User } from "../user/entities/user.entity";
@@ -23,7 +28,9 @@ export class DashboardController {
    * @returns Aggregated statistics covering collection, tournaments, decks, marketplace, and activity.
    */
   @Get()
-  @ApiOperation({ summary: "Get aggregated dashboard statistics for the authenticated user" })
+  @ApiOperation({
+    summary: "Get aggregated dashboard statistics for the authenticated user",
+  })
   @ApiResponse({
     status: 200,
     description: "Aggregated user dashboard statistics.",
@@ -32,4 +39,3 @@ export class DashboardController {
     return this.dashboardService.getDashboard(user);
   }
 }
-

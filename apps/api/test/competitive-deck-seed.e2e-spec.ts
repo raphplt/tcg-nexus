@@ -39,14 +39,12 @@ describe("Competitive deck seed (isolated PostgreSQL)", () => {
     await db.initialize();
     await db.query("CREATE EXTENSION IF NOT EXISTS vector");
     await db.synchronize();
-    owner = await db
-      .getRepository(User)
-      .save({
-        email: "competitive-seed@example.test",
-        firstName: "Seed",
-        lastName: "Owner",
-        role: UserRole.ADMIN,
-      });
+    owner = await db.getRepository(User).save({
+      email: "competitive-seed@example.test",
+      firstName: "Seed",
+      lastName: "Owner",
+      role: UserRole.ADMIN,
+    });
   });
 
   beforeEach(async () => {
@@ -75,12 +73,10 @@ describe("Competitive deck seed (isolated PostgreSQL)", () => {
       existing: 0,
       uniqueCards: 133,
     });
-    const decks = await db
-      .getRepository(Deck)
-      .find({
-        where: { user: { id: owner.id } },
-        relations: ["cards", "cards.card", "coverCard", "format"],
-      });
+    const decks = await db.getRepository(Deck).find({
+      where: { user: { id: owner.id } },
+      relations: ["cards", "cards.card", "coverCard", "format"],
+    });
     expect(decks).toHaveLength(10);
     for (const preset of COMPETITIVE_DECK_PRESETS) {
       const deck = decks.find((item) => item.name === preset.name)!;

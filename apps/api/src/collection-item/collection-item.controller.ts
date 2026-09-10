@@ -83,7 +83,11 @@ export class CollectionItemController {
    */
   @Post("collection/:collectionId")
   @ApiOperation({ summary: "Add card item to specific collection" })
-  @ApiParam({ name: "collectionId", type: String, description: "Collection ID" })
+  @ApiParam({
+    name: "collectionId",
+    type: String,
+    description: "Collection ID",
+  })
   async addToCollection(
     @Param("collectionId") collectionId: string,
     @CurrentUser() user: User,
@@ -106,7 +110,11 @@ export class CollectionItemController {
    */
   @Post("collection/:collectionId/sealed")
   @ApiOperation({ summary: "Add sealed product item to collection" })
-  @ApiParam({ name: "collectionId", type: String, description: "Collection ID" })
+  @ApiParam({
+    name: "collectionId",
+    type: String,
+    description: "Collection ID",
+  })
   async addSealedToCollection(
     @Param("collectionId") collectionId: string,
     @CurrentUser() user: User,
@@ -171,7 +179,9 @@ export class CollectionItemController {
    * @returns Newly created separate collection item copy.
    */
   @Post(":id/split")
-  @ApiOperation({ summary: "Split collection item quantity into separate copy" })
+  @ApiOperation({
+    summary: "Split collection item quantity into separate copy",
+  })
   @ApiParam({ name: "id", type: Number, description: "Collection item ID" })
   async splitItem(
     @Param("id", ParseIntPipe) id: number,

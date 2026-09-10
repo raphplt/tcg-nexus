@@ -13,37 +13,62 @@ export class CreateRankingDto {
   @IsNumber()
   playerId: number;
 
-  @ApiPropertyOptional({ description: "Final or current rank position", example: 1, minimum: 1 })
+  @ApiPropertyOptional({
+    description: "Final or current rank position",
+    example: 1,
+    minimum: 1,
+  })
   @IsOptional()
   @IsNumber()
   @Min(1)
   rank?: number;
 
-  @ApiPropertyOptional({ description: "Total tournament match points", example: 15, minimum: 0 })
+  @ApiPropertyOptional({
+    description: "Total tournament match points",
+    example: 15,
+    minimum: 0,
+  })
   @IsOptional()
   @IsNumber()
   @Min(0)
   points?: number;
 
-  @ApiPropertyOptional({ description: "Number of tournament match wins", example: 5, minimum: 0 })
+  @ApiPropertyOptional({
+    description: "Number of tournament match wins",
+    example: 5,
+    minimum: 0,
+  })
   @IsOptional()
   @IsNumber()
   @Min(0)
   wins?: number;
 
-  @ApiPropertyOptional({ description: "Number of tournament match losses", example: 1, minimum: 0 })
+  @ApiPropertyOptional({
+    description: "Number of tournament match losses",
+    example: 1,
+    minimum: 0,
+  })
   @IsOptional()
   @IsNumber()
   @Min(0)
   losses?: number;
 
-  @ApiPropertyOptional({ description: "Number of tournament match draws", example: 0, minimum: 0 })
+  @ApiPropertyOptional({
+    description: "Number of tournament match draws",
+    example: 0,
+    minimum: 0,
+  })
   @IsOptional()
   @IsNumber()
   @Min(0)
   draws?: number;
 
-  @ApiPropertyOptional({ description: "Calculated win rate percentage", example: 83.33, minimum: 0, maximum: 100 })
+  @ApiPropertyOptional({
+    description: "Calculated win rate percentage",
+    example: 83.33,
+    minimum: 0,
+    maximum: 100,
+  })
   @IsOptional()
   @IsNumber()
   @Min(0)

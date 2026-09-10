@@ -62,16 +62,20 @@ describe("solo Juste Prix reducer", () => {
     state = soloReducer(state, { type: "next", totalRounds: 2 });
     expect(state).toMatchObject({ round: 2, status: "playing", attempts: [] });
 
-    state = soloReducer(state, { type: "guess", value: 5, item: item(5, "c2") });
+    state = soloReducer(state, {
+      type: "guess",
+      value: 5,
+      item: item(5, "c2"),
+    });
     state = soloReducer(state, { type: "next", totalRounds: 2 });
     expect(state.status).toBe("finished");
     expect(state.score).toBe(200);
   });
 
   it("ignores 'next' while the round is still open", () => {
-    expect(soloReducer(initialSoloState, { type: "next", totalRounds: 3 })).toBe(
-      initialSoloState,
-    );
+    expect(
+      soloReducer(initialSoloState, { type: "next", totalRounds: 3 }),
+    ).toBe(initialSoloState);
   });
 });
 
@@ -93,13 +97,21 @@ describe("local Juste Prix reducer", () => {
   });
 
   it("leaves the scores untouched on a tie", () => {
-    let state = localReducer(initialLocalState, { type: "guess", value: 55, price: 50 });
+    let state = localReducer(initialLocalState, {
+      type: "guess",
+      value: 55,
+      price: 50,
+    });
     state = localReducer(state, { type: "guess", value: 45, price: 50 });
     expect(state.scores).toEqual({ p1: 0, p2: 0 });
   });
 
   it("advances rounds and finishes after the last one", () => {
-    let state = localReducer(initialLocalState, { type: "guess", value: 1, price: 50 });
+    let state = localReducer(initialLocalState, {
+      type: "guess",
+      value: 1,
+      price: 50,
+    });
     state = localReducer(state, { type: "guess", value: 2, price: 50 });
     state = localReducer(state, { type: "next", totalRounds: 2 });
     expect(state).toMatchObject({

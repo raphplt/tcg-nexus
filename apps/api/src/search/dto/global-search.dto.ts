@@ -19,14 +19,23 @@ export class GlobalSearchDto {
   @IsString()
   type?: "all" | "cards" | "tournaments" | "players" | "marketplace";
 
-  @ApiPropertyOptional({ description: "Page number (1-based)", example: 1, default: 1 })
+  @ApiPropertyOptional({
+    description: "Page number (1-based)",
+    example: 1,
+    default: 1,
+  })
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
   @Min(1)
   page?: number = 1;
 
-  @ApiPropertyOptional({ description: "Items per page", example: 10, default: 10, maximum: 100 })
+  @ApiPropertyOptional({
+    description: "Items per page",
+    example: 10,
+    default: 10,
+    maximum: 100,
+  })
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
@@ -34,17 +43,24 @@ export class GlobalSearchDto {
   @Max(100)
   limit?: number = 10;
 
-  @ApiPropertyOptional({ description: "Sort field", example: "relevance", default: "relevance" })
+  @ApiPropertyOptional({
+    description: "Sort field",
+    example: "relevance",
+    default: "relevance",
+  })
   @IsOptional()
   @IsString()
   sortBy?: string = "relevance";
 
-  @ApiPropertyOptional({ description: "Sort direction", enum: ["ASC", "DESC"], default: "DESC" })
+  @ApiPropertyOptional({
+    description: "Sort direction",
+    enum: ["ASC", "DESC"],
+    default: "DESC",
+  })
   @IsOptional()
   @IsString()
   sortOrder?: "ASC" | "DESC" = "DESC";
 }
-
 
 export interface SearchResultItem {
   id: string | number;

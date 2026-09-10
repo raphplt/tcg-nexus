@@ -119,10 +119,7 @@ export class DeckController {
   /**
    * Clean alias for findAllFromUSer.
    */
-  findAllFromUser(
-    user: User,
-    query: FindAllDecksQueryDto,
-  ) {
+  findAllFromUser(user: User, query: FindAllDecksQueryDto) {
     return this.findAllFromUSer(user, query);
   }
 

@@ -309,8 +309,7 @@ describe("MiniGameGateway", () => {
       expect(session.round).toBe(1);
       expect(session.roundDurationMs).toBe(20_000);
 
-      const state = eventsTo("sock-2", "minigame_state_update").at(-1)!
-        .payload;
+      const state = eventsTo("sock-2", "minigame_state_update").at(-1)!.payload;
       expect(state.roundDurationMs).toBe(20_000);
       expect(state.currentItem.data.name).toBe("Card item-0 [en]");
       expect(state.currentItem).not.toHaveProperty("price");
@@ -355,8 +354,7 @@ describe("MiniGameGateway", () => {
       expect(session.players[0].score).toBe(1300);
       expect(session.players[1].score).toBe(0);
 
-      const state = eventsTo("sock-1", "minigame_state_update").at(-1)!
-        .payload;
+      const state = eventsTo("sock-1", "minigame_state_update").at(-1)!.payload;
       expect(state.players[1].guesses).toHaveLength(1);
     });
 

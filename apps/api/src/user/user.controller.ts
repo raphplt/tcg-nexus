@@ -10,7 +10,12 @@ import {
   SerializeOptions,
   UseGuards,
 } from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from "@nestjs/swagger";
 import { UserRole } from "../common/enums/user";
 import { SELF_SERIALIZATION_GROUP } from "../common/serialization-groups";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
@@ -21,6 +26,7 @@ import { RolesGuard } from "../auth/guards/roles.guard";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { AdminUpdateUserDto } from "./dto/admin-update-user.dto";
 import { UpdateMyProfileDto } from "./dto/update-my-profile.dto";
+import { UpdateOnboardingDto } from "./dto/update-onboarding.dto";
 import { User } from "./entities/user.entity";
 import { UserService } from "./user.service";
 import { UserJourneyService } from "./user-journey.service";
@@ -91,6 +97,34 @@ export class UserController {
   }
 
   /**
+   * Retrieves the authenticated user's product-onboarding state.
+   *
+   * @param user Current authenticated user.
+   * @returns Persisted onboarding state.
+   */
+  @Get("me/onboarding")
+  @ApiOperation({ summary: "Retrieve current user onboarding state" })
+  getMyOnboarding(@CurrentUser() user: User) {
+    return this.userService.getOnboardingState(user.id);
+  }
+
+  /**
+   * Records completion or dismissal of the current product onboarding.
+   *
+   * @param user Current authenticated user.
+   * @param updateOnboardingDto Terminal onboarding outcome.
+   * @returns Updated onboarding state.
+   */
+  @Patch("me/onboarding")
+  @ApiOperation({ summary: "Update current user onboarding state" })
+  updateMyOnboarding(
+    @CurrentUser() user: User,
+    @Body() updateOnboardingDto: UpdateOnboardingDto,
+  ) {
+    return this.userService.updateOnboardingState(user.id, updateOnboardingDto);
+  }
+
+  /**
    * Retrieves public profile and gameplay stats for a specified user ID.
    *
    * @param id Target user unique identifier.
@@ -117,7 +151,9 @@ export class UserController {
   @Get(":id")
   @Roles(UserRole.ADMIN, UserRole.MODERATOR)
   @SerializeOptions({ groups: [SELF_SERIALIZATION_GROUP] })
-  @ApiOperation({ summary: "Retrieve user details by ID (Admin and Moderator)" })
+  @ApiOperation({
+    summary: "Retrieve user details by ID (Admin and Moderator)",
+  })
   @ApiParam({ name: "id", type: Number, description: "Target user ID" })
   findOne(@Param("id", ParseIntPipe) id: number) {
     return this.userService.findOne(id);

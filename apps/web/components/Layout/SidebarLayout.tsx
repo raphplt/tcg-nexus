@@ -5,6 +5,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import Footer from "./Footer";
 import { TopBar } from "./TopBar";
+import { OnboardingProvider } from "@/components/Onboarding/OnboardingProvider";
 
 export default function SidebarLayout({
   children,
@@ -13,15 +14,17 @@ export default function SidebarLayout({
 }) {
   return (
     <SidebarProvider defaultOpen={true}>
-      <AppSidebar />
-      <SidebarInset className="min-w-0">
-        <TopBar />
-        <div className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto">
-          {children}
-        </div>
-        <Footer />
-      </SidebarInset>
-      <Toaster />
+      <OnboardingProvider>
+        <AppSidebar />
+        <SidebarInset className="min-w-0">
+          <TopBar />
+          <div className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto">
+            {children}
+          </div>
+          <Footer />
+        </SidebarInset>
+        <Toaster />
+      </OnboardingProvider>
     </SidebarProvider>
   );
 }

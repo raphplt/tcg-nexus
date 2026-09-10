@@ -99,7 +99,12 @@ export class SupportTicketController {
   @Get(":id")
   @ApiOperation({ summary: "Retrieve a support ticket by ID" })
   @ApiParam({ name: "id", description: "Support ticket identifier" })
-  @ApiQuery({ name: "messagesLimit", required: false, type: Number, example: 20 })
+  @ApiQuery({
+    name: "messagesLimit",
+    required: false,
+    type: Number,
+    example: 20,
+  })
   findOne(
     @Param("id", ParseIntPipe) id: number,
     @CurrentUser() user: User,

@@ -73,8 +73,6 @@ describe("mini-game pricing (mirror of the API rules)", () => {
 
   it("formats euros per locale", () => {
     expect(formatEuro(12.5, "en")).toBe("€12.50");
-    expect(formatEuro(12.5, "fr").replace(/ | /g, " ")).toBe(
-      "12,50 €",
-    );
+    expect(formatEuro(12.5, "fr").replace(/ | /g, " ")).toBe("12,50 €");
   });
 });

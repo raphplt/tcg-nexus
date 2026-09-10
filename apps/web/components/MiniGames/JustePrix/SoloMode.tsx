@@ -66,7 +66,12 @@ export function soloReducer(state: SoloState, action: SoloAction): SoloState {
           score: state.score + points,
           recap: [
             ...state.recap,
-            { item: action.item, attempts: attempts.length, found: true, points },
+            {
+              item: action.item,
+              attempts: attempts.length,
+              found: true,
+              points,
+            },
           ],
         };
       }
@@ -77,7 +82,12 @@ export function soloReducer(state: SoloState, action: SoloAction): SoloState {
           status: "fail",
           recap: [
             ...state.recap,
-            { item: action.item, attempts: attempts.length, found: false, points: 0 },
+            {
+              item: action.item,
+              attempts: attempts.length,
+              found: false,
+              points: 0,
+            },
           ],
         };
       }
@@ -88,7 +98,12 @@ export function soloReducer(state: SoloState, action: SoloAction): SoloState {
       if (state.round >= action.totalRounds) {
         return { ...state, status: "finished" };
       }
-      return { ...state, round: state.round + 1, attempts: [], status: "playing" };
+      return {
+        ...state,
+        round: state.round + 1,
+        attempts: [],
+        status: "playing",
+      };
     }
     default:
       return state;
@@ -104,7 +119,12 @@ interface SoloModeProps {
 }
 
 /** Solo Juste Prix: several attempts per round with higher / lower hints. */
-export function SoloMode({ items, onReplay, onBack, onScoreChange }: SoloModeProps) {
+export function SoloMode({
+  items,
+  onReplay,
+  onBack,
+  onScoreChange,
+}: SoloModeProps) {
   const t = useTranslations("JustePrix");
   const tc = useTranslations("MiniGames.common");
   const locale = useLocale();
@@ -176,7 +196,11 @@ export function SoloMode({ items, onReplay, onBack, onScoreChange }: SoloModePro
   return (
     <div className="grid grid-cols-1 gap-8 pt-4 lg:grid-cols-12">
       <div className="lg:col-span-5">
-        <ItemShowcase item={item} round={state.round} totalRounds={items.length} />
+        <ItemShowcase
+          item={item}
+          round={state.round}
+          totalRounds={items.length}
+        />
       </div>
 
       <div className="space-y-4 lg:col-span-7">
@@ -250,7 +274,9 @@ export function SoloMode({ items, onReplay, onBack, onScoreChange }: SoloModePro
                 : t("outOfAttempts", { max: JUSTE_PRIX_SOLO_ATTEMPTS })}
             </p>
             <Button
-              onClick={() => dispatch({ type: "next", totalRounds: items.length })}
+              onClick={() =>
+                dispatch({ type: "next", totalRounds: items.length })
+              }
               variant="outline"
               className="h-11 w-full font-semibold"
             >

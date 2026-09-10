@@ -8,7 +8,11 @@ import {
 import { type BoosterCard, RarityTier } from "@/types/mini-game";
 import { bestPull, isHit, packValue } from "@/utils/miniGames/booster";
 
-const card = (id: string, trend: number, tier = RarityTier.Common): BoosterCard =>
+const card = (
+  id: string,
+  trend: number,
+  tier = RarityTier.Common,
+): BoosterCard =>
   ({
     id,
     name: id,
@@ -19,7 +23,11 @@ const card = (id: string, trend: number, tier = RarityTier.Common): BoosterCard 
 
 describe("booster helpers", () => {
   it("values a pack from market prices and spots hits", () => {
-    const pack = [card("a", 1.5), card("b", 0.2), card("c", 12, RarityTier.Ultra)];
+    const pack = [
+      card("a", 1.5),
+      card("b", 0.2),
+      card("c", 12, RarityTier.Ultra),
+    ];
     expect(packValue(pack)).toBe(13.7);
     expect(isHit(pack[2]!)).toBe(true);
     expect(isHit(pack[0]!)).toBe(false);
@@ -79,7 +87,11 @@ describe("queueParamsFrom", () => {
 
   it("sends the series, or the set which then wins over the series", () => {
     expect(
-      queueParamsFrom({ ...DEFAULT_DUEL_OPTIONS, scope: "serie", serieId: "sv" }),
+      queueParamsFrom({
+        ...DEFAULT_DUEL_OPTIONS,
+        scope: "serie",
+        serieId: "sv",
+      }),
     ).toMatchObject({ serieId: "sv", setId: undefined });
     expect(
       queueParamsFrom({
@@ -90,12 +102,22 @@ describe("queueParamsFrom", () => {
         style: "chase",
         roundCount: 5,
       }),
-    ).toEqual({ roundCount: 5, packStyle: "chase", setId: "sv01", serieId: undefined });
+    ).toEqual({
+      roundCount: 5,
+      packStyle: "chase",
+      setId: "sv01",
+      serieId: undefined,
+    });
   });
 
   it("falls back to the series while no set is picked yet", () => {
     expect(
-      queueParamsFrom({ ...DEFAULT_DUEL_OPTIONS, scope: "set", serieId: "sv", setId: "" }),
+      queueParamsFrom({
+        ...DEFAULT_DUEL_OPTIONS,
+        scope: "set",
+        serieId: "sv",
+        setId: "",
+      }),
     ).toMatchObject({ serieId: "sv", setId: undefined });
   });
 });

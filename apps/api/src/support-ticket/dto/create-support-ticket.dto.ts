@@ -18,7 +18,8 @@ export class CreateSupportTicketDto {
 
   @ApiProperty({
     description: "Detailed description of the issue or inquiry",
-    example: "Hello, I placed an order yesterday and would like to confirm the tracking details.",
+    example:
+      "Hello, I placed an order yesterday and would like to confirm the tracking details.",
     minLength: 5,
     maxLength: 2000,
   })

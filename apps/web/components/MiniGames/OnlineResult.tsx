@@ -28,15 +28,24 @@ export function OnlineResult({
   let verdict: { text: string; tone: string } | null = null;
   if (me && opp) {
     if (session.forfeitedBy === opp.userId) {
-      verdict = { text: t("forfeitWin", { name: opp.userName }), tone: "text-green-500" };
+      verdict = {
+        text: t("forfeitWin", { name: opp.userName }),
+        tone: "text-green-500",
+      };
     } else if (session.forfeitedBy === me.userId) {
       verdict = { text: t("forfeitLoss"), tone: "text-red-500" };
     } else if (me.score === opp.score) {
       verdict = { text: t("tie"), tone: "text-amber-500" };
     } else if (me.score > opp.score) {
-      verdict = { text: t("victory", { name: opp.userName }), tone: "text-green-500" };
+      verdict = {
+        text: t("victory", { name: opp.userName }),
+        tone: "text-green-500",
+      };
     } else {
-      verdict = { text: t("defeat", { name: opp.userName }), tone: "text-red-500" };
+      verdict = {
+        text: t("defeat", { name: opp.userName }),
+        tone: "text-red-500",
+      };
     }
   }
 
@@ -47,7 +56,9 @@ export function OnlineResult({
       className="tcg-surface mx-auto max-w-xl bg-card p-8 text-center shadow-md"
     >
       <Award className="mx-auto mb-4 h-16 w-16 text-primary" />
-      <h2 className="mb-2 text-2xl font-bold tracking-tight">{t("matchOver")}</h2>
+      <h2 className="mb-2 text-2xl font-bold tracking-tight">
+        {t("matchOver")}
+      </h2>
       <div className="mx-auto mb-6 grid max-w-sm grid-cols-2 gap-4">
         {session.players.map((p) => {
           const isMe = p.userId === selfId;
@@ -67,7 +78,9 @@ export function OnlineResult({
         })}
       </div>
       {verdict ? (
-        <h3 className={`mb-6 text-lg font-bold ${verdict.tone}`}>{verdict.text}</h3>
+        <h3 className={`mb-6 text-lg font-bold ${verdict.tone}`}>
+          {verdict.text}
+        </h3>
       ) : null}
       <Button onClick={onBack} className="w-full font-semibold">
         {t("backToLobby")}

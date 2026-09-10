@@ -30,14 +30,18 @@ export function RevealTray({ revealed, packSize, active }: RevealTrayProps) {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 240, damping: 18 }}
             >
-              <CardTile card={card} size="sm" />
+              <CardTile
+                card={card}
+                size="sm"
+                className="w-16 sm:w-[72px]"
+              />
             </motion.div>
           ))}
         </AnimatePresence>
       </div>
       <p className="text-xs font-semibold text-muted-foreground">
-        {active ? t("opening") : t("boosterOpened")} · {revealed.length}/{packSize} ·{" "}
-        {formatEuro(packValue(revealed), locale)}
+        {active ? t("opening") : t("boosterOpened")} · {revealed.length}/
+        {packSize} · {formatEuro(packValue(revealed), locale)}
       </p>
     </div>
   );

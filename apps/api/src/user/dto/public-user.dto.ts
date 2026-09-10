@@ -7,7 +7,10 @@ export class PublicPlayerDto {
   @ApiProperty({ description: "Player unique identifier", example: 42 })
   id!: number;
 
-  @ApiProperty({ description: "Competitive matchmaking Elo rating", example: 1200 })
+  @ApiProperty({
+    description: "Competitive matchmaking Elo rating",
+    example: 1200,
+  })
   elo!: number;
 
   @ApiProperty({ description: "Player level", example: 5 })
