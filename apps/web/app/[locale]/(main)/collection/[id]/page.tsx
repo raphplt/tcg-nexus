@@ -581,42 +581,61 @@ const CollectionDetailPage = () => {
                   </div>
                   <p className="text-xs text-muted-foreground">
                     {t("coverage", {
-                      percent: Math.round(valuationData.coveragePercentage),
-                      valued: valuationData.totalValuedCopies,
-                      unvalued: valuationData.totalUnvaluedCopies,
+                      percent: Math.round(valuationData.coveragePercentage ?? 0),
+                      valued:
+                        valuationData.valuedCopiesCount ??
+                        valuationData.totalValuedCopies ??
+                        0,
+                      unvalued:
+                        valuationData.unvaluedCopiesCount ??
+                        valuationData.totalUnvaluedCopies ??
+                        0,
                     })}
                   </p>
                 </div>
                 <div className="flex items-center gap-6">
-                  {valuationData.knownAcquisitionCostEur > 0 && (
-                    <div className="text-right">
-                      <div className="text-xs text-muted-foreground">
-                        {t("acquisitionCost", {
-                          cost: `€${valuationData.knownAcquisitionCostEur.toFixed(2)}`,
-                        })}
-                      </div>
-                      {valuationData.roiEur !== undefined && (
-                        <div
-                          className={`text-xs font-semibold ${
-                            valuationData.roiEur >= 0
-                              ? "text-emerald-500"
-                              : "text-rose-500"
-                          }`}
-                        >
-                          {t("roi", {
-                            roi: `${valuationData.roiEur >= 0 ? "+" : ""}€${valuationData.roiEur.toFixed(2)}`,
+                  {(() => {
+                    const acqCost =
+                      valuationData.totalAcquisitionCost ??
+                      valuationData.knownAcquisitionCostEur;
+                    if (acqCost == null || acqCost <= 0) return null;
+                    const roi =
+                      valuationData.unrealizedGainLoss ?? valuationData.roiEur;
+                    return (
+                      <div className="text-right">
+                        <div className="text-xs text-muted-foreground">
+                          {t("acquisitionCost", {
+                            cost: `€${acqCost.toFixed(2)}`,
                           })}
                         </div>
-                      )}
-                    </div>
-                  )}
+                        {roi != null && (
+                          <div
+                            className={`text-xs font-semibold ${
+                              roi >= 0 ? "text-emerald-500" : "text-rose-500"
+                            }`}
+                          >
+                            {t("roi", {
+                              roi: `${roi >= 0 ? "+" : ""}€${roi.toFixed(2)}`,
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                   <div className="text-right">
                     <div className="text-2xl font-bold text-emerald-500 tabular-nums">
-                      €{valuationData.estimatedValueEur.toFixed(2)}
+                      €
+                      {(
+                        valuationData.totalEstimatedValue ??
+                        valuationData.estimatedValueEur ??
+                        0
+                      ).toFixed(2)}
                     </div>
-                    <div className="text-[10px] uppercase font-semibold text-muted-foreground">
-                      ~${valuationData.estimatedValueUsd.toFixed(2)} USD
-                    </div>
+                    {valuationData.estimatedValueUsd != null && (
+                      <div className="text-[10px] uppercase font-semibold text-muted-foreground">
+                        ~${valuationData.estimatedValueUsd.toFixed(2)} USD
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

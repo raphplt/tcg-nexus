@@ -22,6 +22,7 @@ vi.mock("@/services/collection.service", () => ({
     getSetRarities: vi.fn(),
     addCardToCollection: vi.fn(),
     removeCardFromCollection: vi.fn(),
+    getValuation: vi.fn(),
   },
 }));
 
@@ -103,6 +104,7 @@ beforeEach(() => {
   vi.mocked(collectionService.getItemsPaginated).mockResolvedValue(
     page([card, sealed]),
   );
+  vi.mocked(collectionService.getValuation).mockResolvedValue(null as any);
 });
 
 describe("CollectionDetailPage", () => {
@@ -179,5 +181,54 @@ describe("CollectionDetailPage", () => {
     );
     mount();
     expect(await screen.findByText(name)).toBeInTheDocument();
+  });
+
+  it("renders collection valuation data safely when API returns authoritative DTO structure", async () => {
+    vi.mocked(collectionService.getValuation).mockResolvedValueOnce({
+      currency: "EUR",
+      totalEstimatedValue: 125.5,
+      totalCopiesCount: 10,
+      valuedCopiesCount: 8,
+      unvaluedCopiesCount: 2,
+      coveragePercentage: 80,
+      totalAcquisitionCost: 95.0,
+      unrealizedGainLoss: 30.5,
+      roiPercentage: 32.1,
+      sources: ["Cardmarket (trend/avg)"],
+      computedAt: "2026-09-10T12:00:00Z",
+    });
+
+    mount();
+    expect(
+      await screen.findByText(messages.CollectionDetail.valuationTitle),
+    ).toBeInTheDocument();
+    expect(screen.getByText("€125.50")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Acquisition Cost:\s*€95\.00/),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/\+€30\.50/)).toBeInTheDocument();
+  });
+
+  it("handles valuation without acquisition cost and without USD estimate without crashing", async () => {
+    vi.mocked(collectionService.getValuation).mockResolvedValueOnce({
+      currency: "EUR",
+      totalEstimatedValue: 0,
+      totalCopiesCount: 0,
+      valuedCopiesCount: 0,
+      unvaluedCopiesCount: 0,
+      coveragePercentage: 0,
+      totalAcquisitionCost: null,
+      unrealizedGainLoss: null,
+      roiPercentage: null,
+      sources: ["Catalog reference"],
+      computedAt: "2026-09-10T12:00:00Z",
+    });
+
+    mount();
+    expect(
+      await screen.findByText(messages.CollectionDetail.valuationTitle),
+    ).toBeInTheDocument();
+    expect(screen.getByText("€0.00")).toBeInTheDocument();
+    expect(screen.queryByText("USD")).not.toBeInTheDocument();
   });
 });

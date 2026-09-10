@@ -99,18 +99,29 @@ export interface CardValuationDetail {
 }
 
 export interface CollectionValuation {
-  collectionId: string;
-  totalItems: number;
-  totalCopies: number;
-  totalValuedCopies: number;
-  totalUnvaluedCopies: number;
-  coveragePercentage: number;
-  estimatedValueEur: number;
-  estimatedValueUsd: number;
-  knownAcquisitionCostEur: number;
-  roiEur?: number;
   currency: string;
-  items: CardValuationDetail[];
+  totalEstimatedValue: number;
+  totalCopiesCount: number;
+  valuedCopiesCount: number;
+  unvaluedCopiesCount: number;
+  coveragePercentage: number;
+  totalAcquisitionCost?: number | null;
+  unrealizedGainLoss?: number | null;
+  roiPercentage?: number | null;
+  sources?: string[];
+  computedAt?: string;
+
+  // Compatibility aliases
+  collectionId?: string;
+  totalItems?: number;
+  totalCopies?: number;
+  totalValuedCopies?: number;
+  totalUnvaluedCopies?: number;
+  estimatedValueEur?: number;
+  estimatedValueUsd?: number;
+  knownAcquisitionCostEur?: number;
+  roiEur?: number;
+  items?: CardValuationDetail[];
 }
 
 export interface ImportResult {
