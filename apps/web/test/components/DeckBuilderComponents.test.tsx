@@ -22,8 +22,9 @@ describe("deck builder controls", () => {
       <CardListSection
         cardsLoading={false}
         allCards={[pikachu]}
-        page={1}
-        setPage={vi.fn()}
+        hasNextPage={false}
+        isFetchingNextPage={false}
+        onLoadMore={vi.fn()}
         qtyByCard={{ "card-1": 1 }}
         setQtyByCard={setQtyByCard}
         roleByCard={{}}

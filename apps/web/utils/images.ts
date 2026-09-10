@@ -159,10 +159,30 @@ export function getCardImage(
     return PLACEHOLDER_CARD;
   }
 
-  const base = rewriteLegacyHost(card.image);
+  let base = rewriteLegacyHost(card.image);
   if (!base) return PLACEHOLDER_CARD;
 
   const suffix = quality === "low" ? "/low" : "/high";
+
+  // If URL already ends with /high.png, /low.png, etc., replace the quality suffix
+  if (/\/(high|low)\.(png|webp|jpg|jpeg)$/i.test(base)) {
+    return base.replace(
+      /\/(high|low)\.(png|webp|jpg|jpeg)$/i,
+      `${suffix}.png`,
+    );
+  }
+
+  // If URL already ends with /high or /low without extension, append .png
+  if (/\/(high|low)$/i.test(base)) {
+    return base.replace(/\/(high|low)$/i, `${suffix}.png`);
+  }
+
+  // If URL already has a direct file extension (not a TCGdex base path), keep it intact
+  if (/\.(png|webp|jpg|jpeg)$/i.test(base)) {
+    return base;
+  }
+
+  base = base.replace(/\/+$/, "");
   return `${base}${suffix}.png`;
 }
 

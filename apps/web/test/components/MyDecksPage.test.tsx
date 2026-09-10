@@ -203,38 +203,27 @@ describe("personal deck library", () => {
     expect(invalidate).toHaveBeenCalledWith({ queryKey: ["my-decks"] });
   });
 
-  it("recovers an empty last page after deletion", async () => {
+  it("appends the next page at the end of the list", async () => {
     const user = userEvent.setup();
-    let removed = false;
+    const charizard: Deck = { ...deck, id: 43, name: "Dracaufeu" };
     vi.mocked(decksService.getUserDecksPaginated).mockImplementation(
       async (params) =>
-        result(removed ? [] : [deck], params?.page, removed ? 1 : 2),
+        params?.page === 2 ? result([charizard], 2, 2) : result([deck], 1, 2),
     );
-    vi.mocked(decksService.removeDeck).mockImplementation(async () => {
-      removed = true;
-    });
     mount();
     await screen.findByText("Gardevoir");
-    await user.click(screen.getByRole("link", { name: "2" }));
-    await waitFor(() =>
-      expect(decksService.getUserDecksPaginated).toHaveBeenLastCalledWith(
-        expect.objectContaining({ page: 2 }),
-      ),
+    expect(screen.queryByRole("link", { name: "2" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Afficher plus" }));
+
+    await screen.findByText("Dracaufeu");
+    expect(screen.getByText("Gardevoir")).toBeInTheDocument();
+    expect(decksService.getUserDecksPaginated).toHaveBeenLastCalledWith(
+      expect.objectContaining({ page: 2 }),
     );
-    await user.click(
-      screen.getByRole("button", { name: "Actions pour Gardevoir" }),
-    );
-    await user.click(screen.getByRole("menuitem", { name: "Supprimer" }));
-    await user.click(
-      within(screen.getByRole("alertdialog")).getByRole("button", {
-        name: "Supprimer",
-      }),
-    );
-    await waitFor(() =>
-      expect(decksService.getUserDecksPaginated).toHaveBeenLastCalledWith(
-        expect.objectContaining({ page: 1 }),
-      ),
-    );
+    expect(
+      screen.queryByRole("button", { name: "Afficher plus" }),
+    ).not.toBeInTheDocument();
   });
 
   it("distinguishes an empty library from no search results", async () => {
@@ -300,7 +289,7 @@ describe("personal deck library", () => {
     );
     expect(window.location.search).toBe("?tab=favorites");
     expect(
-      await screen.findByRole("button", { name: "Retirer de ma bibliothèque" }),
+      await screen.findByRole("button", { name: "Retirer des favoris" }),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Vue liste" }),

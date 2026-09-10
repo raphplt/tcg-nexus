@@ -54,16 +54,8 @@ export default function DeckCard({ deck, onClick }: DeckCardProps) {
             type="button"
             onClick={handleToggleSave}
             disabled={isPending}
-            aria-label={
-              isSaved
-                ? "Retirer de ma bibliothèque"
-                : "Ajouter à ma bibliothèque"
-            }
-            title={
-              isSaved
-                ? "Retirer de ma bibliothèque"
-                : "Ajouter à ma bibliothèque"
-            }
+            aria-label={isSaved ? "Retirer des favoris" : "Ajouter aux favoris"}
+            title={isSaved ? "Retirer des favoris" : "Ajouter aux favoris"}
             className={cn(
               "absolute top-3 left-3 z-20 inline-flex items-center justify-center w-9 h-9 rounded-full border backdrop-blur-md shadow-lg transition-colors",
               isSaved

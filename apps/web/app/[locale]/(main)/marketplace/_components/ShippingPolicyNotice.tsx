@@ -19,20 +19,16 @@ export function ShippingPolicyNotice({
   const { data } = useShippingPolicy();
   const rate = data?.rates.find((r) => r.productKind === productKind);
 
+  const details = [
+    t("handledByNexus"),
+    rate && t("buyerPays", { cost: formatPrice(rate.cost, "EUR") }),
+    data && t("handlingTime", { days: data.handlingTimeDays }),
+  ].filter(Boolean);
+
   return (
-    <div className="flex items-start gap-3 rounded-lg border border-dashed bg-muted/40 p-3 text-sm">
-      <Truck className="w-4 h-4 mt-0.5 shrink-0 text-primary" />
-      <div className="space-y-0.5">
-        <p className="font-medium">{t("handledByNexus")}</p>
-        <p className="text-muted-foreground">
-          {rate
-            ? `${rate.label} : ${formatPrice(rate.cost, "EUR")} facturés à l'acheteur`
-            : t("autoRate")}
-          {data
-            ? ` - vous disposez de ${data.handlingTimeDays} jours ouvrés pour expédier.`
-            : ""}
-        </p>
-      </div>
-    </div>
+    <p className="flex items-start gap-2 text-xs text-muted-foreground">
+      <Truck className="mt-px h-3.5 w-3.5 shrink-0 text-primary" />
+      <span>{details.join(" · ")}</span>
+    </p>
   );
 }

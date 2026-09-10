@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useInfinitePaginatedQuery } from "@/hooks/useInfinitePaginatedQuery";
 import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
 import {
   BestSeller,
@@ -10,7 +11,11 @@ import {
 } from "@/services/marketplace.service";
 import { pokemonCardService } from "@/services/pokemonCard.service";
 import { sealedProductService } from "@/services/sealed-product.service";
-import { PokemonSerieType, PokemonSetType } from "@/types/cardPokemon";
+import {
+  PokemonCardType,
+  PokemonSerieType,
+  PokemonSetType,
+} from "@/types/cardPokemon";
 import { Listing } from "@/types/listing";
 import { PaginatedResult } from "@/types/pagination";
 import type { SealedProduct } from "@/types/sealed-product";
@@ -105,15 +110,16 @@ export function useMarketplaceHome() {
   };
 }
 
-/**
- * Provides marketplace card catalog data.
- */
-export function useMarketplaceCards(
-  filters: FilterState,
-  page: number,
-  limit: number = 24,
-  enabled: boolean = true,
-) {
+/** A catalogue card with its marketplace listing summary. */
+export interface MarketplaceCardItem {
+  card: PokemonCardType;
+  minPrice?: number;
+  avgPrice?: number;
+  listingCount: number;
+}
+
+/** Sets and series used by the catalogue filters and browser. */
+function useCatalogSetsAndSeries() {
   const { data: sets } = useQuery<PokemonSetType[]>({
     queryKey: ["pokemon-sets"],
     queryFn: () => pokemonCardService.getAllSets(),
@@ -123,6 +129,44 @@ export function useMarketplaceCards(
     queryKey: ["pokemon-series"],
     queryFn: () => pokemonCardService.getAllSeries(),
   });
+
+  return { sets, series };
+}
+
+/**
+ * Provides marketplace card catalog data page by page, for infinite scrolling.
+ */
+export function useInfiniteMarketplaceCards(
+  filters: FilterState,
+  limit: number = 24,
+  enabled: boolean = true,
+) {
+  const { sets, series } = useCatalogSetsAndSeries();
+  const cards = useInfinitePaginatedQuery({
+    queryKey: ["marketplace-cards-infinite", filters, limit],
+    queryFn: (page) =>
+      marketplaceService.getCardsWithMarketplaceData({
+        ...filters,
+        page,
+        limit,
+      }),
+    enabled,
+    getItemKey: (item: MarketplaceCardItem) => item.card.id,
+  });
+
+  return { sets, series, ...cards };
+}
+
+/**
+ * Provides marketplace card catalog data.
+ */
+export function useMarketplaceCards(
+  filters: FilterState,
+  page: number,
+  limit: number = 24,
+  enabled: boolean = true,
+) {
+  const { sets, series } = useCatalogSetsAndSeries();
 
   const { data, isLoading, error, refetch } = usePaginatedQuery<
     PaginatedResult<any>

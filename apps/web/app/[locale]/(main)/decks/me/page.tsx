@@ -20,7 +20,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { PageWrapper } from "@/components/Layout/PageWrapper";
-import { PaginatedNav } from "@/components/Shared/PaginatedNav";
+import { InfiniteScrollTrigger } from "@/components/Shared/InfiniteScrollTrigger";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -35,6 +35,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
+import { useInfinitePaginatedQuery } from "@/hooks/useInfinitePaginatedQuery";
 import { Link } from "@/i18n/navigation";
 import { decksService, type DecksQueryParams } from "@/services/decks.service";
 import type { Deck } from "@/types/Decks";
@@ -83,7 +84,6 @@ export default function MyDecksPage() {
   const [tab, setTab] = useState<Tab>(
     searchParams.get("tab") === "favorites" ? "favorites" : "mine",
   );
-  const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [query, setQuery] = useState("");
   const [format, setFormat] = useState("");
@@ -97,31 +97,30 @@ export default function MyDecksPage() {
     if (search.trim() === query) return;
     const timer = setTimeout(() => {
       setQuery(search.trim());
-      setPage(1);
     }, 300);
     return () => clearTimeout(timer);
   }, [search, query]);
 
   const params: DecksQueryParams = {
-    page,
     limit: 12,
     search: query || undefined,
     formatId: format ? Number(format) : undefined,
     ...(sorts[sort] ?? sorts[DEFAULT_SORT[tab]]),
   };
   // "saved-decks" est invalidé par useToggleSavedDeck : retirer un favori met la liste à jour
-  const decks = useQuery({
+  const decks = useInfinitePaginatedQuery({
     queryKey: [
       favorites ? "saved-decks" : "my-decks",
       user?.id,
       locale,
       params,
     ],
-    queryFn: () =>
+    queryFn: (page) =>
       favorites
-        ? decksService.getSavedDecksPaginated(params)
-        : decksService.getUserDecksPaginated(params),
+        ? decksService.getSavedDecksPaginated({ ...params, page })
+        : decksService.getUserDecksPaginated({ ...params, page }),
     enabled: isAuthenticated && !authLoading,
+    getItemKey: (deck) => deck.id,
   });
   const formats = useQuery({
     queryKey: ["deck-formats", locale],
@@ -129,11 +128,6 @@ export default function MyDecksPage() {
     enabled: isAuthenticated && !authLoading,
     staleTime: 300_000,
   });
-  const data = decks.data;
-  useEffect(() => {
-    if (data && page > Math.max(1, data.meta.totalPages))
-      setPage(Math.max(1, data.meta.totalPages));
-  }, [data, page]);
 
   const deletion = useMutation({
     mutationFn: (deck: Deck) => decksService.removeDeck(deck.id),
@@ -175,7 +169,6 @@ export default function MyDecksPage() {
     const next: Tab = value === "favorites" ? "favorites" : "mine";
     setTab(next);
     setSort(DEFAULT_SORT[next]);
-    setPage(1);
     // Garde l'onglet dans l'URL pour pouvoir partager ou recharger la vue
     const url = new URL(window.location.href);
     if (next === "favorites") url.searchParams.set("tab", next);
@@ -187,7 +180,6 @@ export default function MyDecksPage() {
     setQuery("");
     setFormat("");
     setSort(DEFAULT_SORT[tab]);
-    setPage(1);
   };
   const filtered = Boolean(query || format);
   const loading = authLoading || decks.isLoading;
@@ -305,7 +297,6 @@ export default function MyDecksPage() {
                   disabled={formats.isLoading || formats.isError}
                   onChange={(event) => {
                     setFormat(event.target.value);
-                    setPage(1);
                   }}
                 >
                   <option value="">{t("allFormats")}</option>
@@ -323,7 +314,6 @@ export default function MyDecksPage() {
                     const value = event.target.value;
                     if (value in sorts) {
                       setSort(value);
-                      setPage(1);
                     }
                   }}
                 >
@@ -342,7 +332,7 @@ export default function MyDecksPage() {
                     ? t("loading")
                     : decks.isError
                       ? t("loadError")
-                      : t("results", { count: data?.meta.totalItems ?? 0 })}
+                      : t("results", { count: decks.totalItems ?? 0 })}
                 </p>
                 {(search || format || sort !== DEFAULT_SORT[tab]) && (
                   <Button variant="ghost" size="sm" onClick={reset}>
@@ -422,7 +412,7 @@ export default function MyDecksPage() {
                 {t("retry")}
               </Button>
             </section>
-          ) : data?.data.length ? (
+          ) : decks.items.length ? (
             <>
               <div
                 className={
@@ -431,7 +421,7 @@ export default function MyDecksPage() {
                     : "grid gap-3"
                 }
               >
-                {data.data.map((deck) =>
+                {decks.items.map((deck) =>
                   favorites ? (
                     <DeckCard
                       key={deck.id}
@@ -453,10 +443,10 @@ export default function MyDecksPage() {
                   ),
                 )}
               </div>
-              <PaginatedNav
-                meta={data.meta}
-                page={page}
-                onPageChange={setPage}
+              <InfiniteScrollTrigger
+                hasNextPage={decks.hasNextPage}
+                isFetchingNextPage={decks.isFetchingNextPage}
+                onLoadMore={() => void decks.fetchNextPage()}
               />
             </>
           ) : (

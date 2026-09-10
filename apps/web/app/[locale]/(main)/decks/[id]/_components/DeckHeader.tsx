@@ -167,16 +167,18 @@ export function DeckHeader({
                 variant={isSaved ? "secondary" : "outline"}
                 onClick={handleToggleSave}
                 disabled={isSavePending}
-                title={isSaved ? t("removeFromLibrary") : t("saveToLibrary")}
+                title={
+                  isSaved
+                    ? t("removeFromFavoritesHint")
+                    : t("addToFavoritesHint")
+                }
               >
                 {isSaved ? (
                   <BookmarkCheck className="w-4 h-4 mr-2 text-primary" />
                 ) : (
                   <Bookmark className="w-4 h-4 mr-2" />
                 )}
-                <span>
-                  {isSaved ? t("savedInLibrary") : t("saveToLibrary")}
-                </span>
+                <span>{isSaved ? t("inFavorites") : t("addToFavorites")}</span>
               </Button>
             )}
 
@@ -185,7 +187,7 @@ export function DeckHeader({
                 variant="outline"
                 onClick={handleClone}
                 disabled={isClonePending}
-                title={isOwner ? t("duplicate") : t("copyToMyDecks")}
+                title={isOwner ? t("duplicateHint") : t("copyToMyDecksHint")}
               >
                 {isClonePending ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />

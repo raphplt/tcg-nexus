@@ -23,8 +23,14 @@ import { decksService } from "@/services/decks.service";
 import { collectionService } from "@/services/collection.service";
 import { DeckFormProps } from "@/types/formDeck";
 import { PokemonCardType } from "@/types/cardPokemon";
+import { useCatalogNavigation } from "@/hooks/useCatalogNavigation";
 import { useDebounce } from "@/hooks/useDebounce";
-import { FilterState, useMarketplaceCards } from "@/hooks/useMarketplace";
+import { useInfinitePaginatedQuery } from "@/hooks/useInfinitePaginatedQuery";
+import {
+  FilterState,
+  useInfiniteMarketplaceCards,
+} from "@/hooks/useMarketplace";
+import { CatalogExplorer } from "@/components/Catalog/CatalogExplorer";
 import { DeckCard } from "@/types/deck-cards";
 import type { Collection } from "@/types/collection";
 import { DeckFormValues, FormSchema, AddedCard } from "./deckForm.schema";
@@ -44,7 +50,6 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats, deck }) => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [cardsMap, setCardsMap] = useState<AddedCard[]>([]);
-  const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState("");
   const [cardSource, setCardSource] = useState<CardSource>("catalog");
   const [selectedCollectionId, setSelectedCollectionId] = useState("");
@@ -52,7 +57,7 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats, deck }) => {
   const [filters, setFilters] = useState<FilterState>({
     search: "",
     sortBy: "localId",
-    sortOrder: "DESC",
+    sortOrder: "ASC",
   });
 
   const [qtyByCard, setQtyByCard] = useState<Record<string, number>>({});
@@ -62,17 +67,18 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats, deck }) => {
     () => ({ ...filters, search: debouncedSearch }),
     [filters, debouncedSearch],
   );
-  const {
-    data: catalogData,
-    sets,
-    series,
-    isLoading: catalogLoading,
-  } = useMarketplaceCards(
+  const catalogNav = useCatalogNavigation({
+    filters,
+    setFilters,
+    search: debouncedSearch,
+    enabled: cardSource === "catalog",
+  });
+  const catalog = useInfiniteMarketplaceCards(
     filtersWithSearch,
-    page,
-    12,
-    cardSource === "catalog",
+    24,
+    cardSource === "catalog" && !catalogNav.isBrowsing,
   );
+  const { sets, series } = catalog;
 
   const { data: collections = [], isLoading: collectionsLoading } = useQuery<
     Collection[]
@@ -89,17 +95,16 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats, deck }) => {
     }
   }, [collections, selectedCollectionId]);
 
-  const { data: collectionData, isLoading: collectionCardsLoading } = useQuery({
+  const collectionItems = useInfinitePaginatedQuery({
     queryKey: [
       "deck-builder-collection-cards",
       selectedCollectionId,
-      page,
       debouncedSearch,
     ],
-    queryFn: () =>
+    queryFn: (page) =>
       collectionService.getItemsPaginated(selectedCollectionId, {
         page,
-        limit: 12,
+        limit: 24,
         search: debouncedSearch || undefined,
         ownedOnly: true,
         cardsOnly: true,
@@ -158,14 +163,14 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats, deck }) => {
 
   const collectionCards = useMemo(
     () =>
-      (collectionData?.data ?? [])
+      collectionItems.items
         .map((item) => item.pokemonCard)
         .filter((card): card is PokemonCardType => Boolean(card)),
-    [collectionData?.data],
+    [collectionItems.items],
   );
   const ownedQuantityByCard = useMemo(
     () =>
-      (collectionData?.data ?? []).reduce<Record<string, number>>(
+      collectionItems.items.reduce<Record<string, number>>(
         (quantities, item) => {
           if (item.pokemonCard?.id) {
             quantities[item.pokemonCard.id] = item.quantity;
@@ -174,22 +179,19 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats, deck }) => {
         },
         {},
       ),
-    [collectionData?.data],
+    [collectionItems.items],
   );
 
-  const allCards =
-    cardSource === "catalog" ? catalogData?.data || [] : collectionCards;
-  const meta =
-    cardSource === "catalog" ? catalogData?.meta : collectionData?.meta;
+  const cardPages = cardSource === "catalog" ? catalog : collectionItems;
+  const allCards = cardSource === "catalog" ? catalog.items : collectionCards;
   const cardsLoading =
     cardSource === "catalog"
-      ? catalogLoading
-      : collectionsLoading || collectionCardsLoading;
+      ? catalog.isLoading
+      : collectionsLoading || collectionItems.isLoading;
 
+  // Series and set are already shown by the catalogue breadcrumb.
   const activeFiltersCount =
     (debouncedSearch ? 1 : 0) +
-    (filters.setId ? 1 : 0) +
-    (filters.serieId ? 1 : 0) +
     (filters.energyType ? 1 : 0) +
     (filters.rarity ? 1 : 0) +
     (filters.priceMin !== undefined ? 1 : 0) +
@@ -211,10 +213,6 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats, deck }) => {
       }, {}),
     [cardsMap],
   );
-
-  useEffect(() => {
-    setPage(1);
-  }, [filtersWithSearch, cardSource, selectedCollectionId]);
 
   const addCard = (card: PokemonCardType, qty: number, role: string) => {
     if (!card.id) return;
@@ -372,6 +370,32 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats, deck }) => {
     }
   };
 
+  const cardList = (
+    <CardListSection
+      cardsLoading={cardsLoading}
+      allCards={allCards}
+      hasNextPage={cardPages.hasNextPage}
+      isFetchingNextPage={cardPages.isFetchingNextPage}
+      onLoadMore={() => void cardPages.fetchNextPage()}
+      qtyByCard={qtyByCard}
+      setQtyByCard={setQtyByCard}
+      roleByCard={roleByCard}
+      setRoleByCard={setRoleByCard}
+      addCard={addCard}
+      ownedQuantityByCard={
+        cardSource === "collection" ? ownedQuantityByCard : undefined
+      }
+      deckQuantityByCard={deckQuantityByCard}
+      emptyMessage={
+        cardSource === "collection"
+          ? selectedCollectionId
+            ? t("collectionEmpty")
+            : t("noCollection")
+          : undefined
+      }
+    />
+  );
+
   return (
     <Form {...form}>
       <form
@@ -397,37 +421,21 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats, deck }) => {
             activeFiltersCount={activeFiltersCount}
             series={series}
             sets={sets}
-            setPage={setPage}
             source={cardSource}
             setSource={setCardSource}
             collections={collections}
             collectionsLoading={collectionsLoading}
             selectedCollectionId={selectedCollectionId}
             setSelectedCollectionId={setSelectedCollectionId}
+            onReset={catalogNav.reset}
           >
-            <CardListSection
-              cardsLoading={cardsLoading}
-              allCards={allCards}
-              meta={meta}
-              page={page}
-              setPage={setPage}
-              qtyByCard={qtyByCard}
-              setQtyByCard={setQtyByCard}
-              roleByCard={roleByCard}
-              setRoleByCard={setRoleByCard}
-              addCard={addCard}
-              ownedQuantityByCard={
-                cardSource === "collection" ? ownedQuantityByCard : undefined
-              }
-              deckQuantityByCard={deckQuantityByCard}
-              emptyMessage={
-                cardSource === "collection"
-                  ? selectedCollectionId
-                    ? t("collectionEmpty")
-                    : t("noCollection")
-                  : undefined
-              }
-            />
+            {cardSource === "catalog" ? (
+              <CatalogExplorer nav={catalogNav} series={series} sets={sets}>
+                {cardList}
+              </CatalogExplorer>
+            ) : (
+              cardList
+            )}
           </CardFilterSection>
 
           <div className="hidden xl:block">

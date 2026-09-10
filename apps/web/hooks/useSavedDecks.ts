@@ -39,10 +39,10 @@ export function useToggleSavedDeck() {
       if (context?.previous) {
         queryClient.setQueryData(SAVED_DECK_IDS_KEY, context.previous);
       }
-      toast.error("Impossible d'ajouter ce deck à votre bibliothèque");
+      toast.error("Impossible d'ajouter ce deck à vos favoris");
     },
     onSuccess: () => {
-      toast.success("Deck ajouté à votre bibliothèque");
+      toast.success("Deck ajouté à vos favoris (Mes decks › Favoris)");
     },
     onSettled: invalidate,
   });
@@ -63,10 +63,10 @@ export function useToggleSavedDeck() {
       if (context?.previous) {
         queryClient.setQueryData(SAVED_DECK_IDS_KEY, context.previous);
       }
-      toast.error("Impossible de retirer ce deck de votre bibliothèque");
+      toast.error("Impossible de retirer ce deck de vos favoris");
     },
     onSuccess: () => {
-      toast.success("Deck retiré de votre bibliothèque");
+      toast.success("Deck retiré de vos favoris");
     },
     onSettled: invalidate,
   });

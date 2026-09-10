@@ -75,7 +75,7 @@ describe("Marketplace Components & Utilities", () => {
         />,
       );
 
-      expect(screen.getByText(/Prix conseillé :/)).toBeInTheDocument();
+      expect(screen.getByText(/Conseillé :/)).toBeInTheDocument();
       expect(screen.getByText(/19/)).toBeInTheDocument();
 
       const useBtn = screen.getByRole("button");
@@ -83,7 +83,7 @@ describe("Marketplace Components & Utilities", () => {
       expect(onApply).toHaveBeenCalledWith(19.99);
     });
 
-    it("renders computing and empty state", () => {
+    it("renders the computing state and nothing without a reference", () => {
       vi.mocked(usePriceSuggestion).mockReturnValue({
         data: null,
         isLoading: true,
@@ -109,7 +109,8 @@ describe("Marketplace Components & Utilities", () => {
           onApply={vi.fn()}
         />,
       );
-      expect(screen.getByText(/Aucune référence de prix/)).toBeInTheDocument();
+      expect(screen.queryByText(/Calcul du prix conseillé/)).toBeNull();
+      expect(screen.queryByRole("button")).toBeNull();
     });
   });
 
@@ -124,10 +125,9 @@ describe("Marketplace Components & Utilities", () => {
 
       render(<ShippingPolicyNotice productKind="card" />);
 
-      expect(
-        screen.getByText(/Expédition prise en charge/),
-      ).toBeInTheDocument();
-      expect(screen.getByText(/Lettre suivie/)).toBeInTheDocument();
+      const notice = screen.getByText(/Envoi géré par TCG Nexus/);
+      expect(notice).toHaveTextContent(/2,50/);
+      expect(notice).toHaveTextContent(/sous 2 j ouvrés/);
     });
   });
 

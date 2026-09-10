@@ -1,6 +1,3 @@
-import { useTranslations } from "next-intl";
-import React from "react";
-import { UseFormReturn } from "react-hook-form";
 import {
   Card,
   CardContent,
@@ -24,7 +21,15 @@ import {
   SelectValue,
 } from "@components/ui/select";
 import { Switch } from "@components/ui/switch";
-import { Sparkles } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@components/ui/tooltip";
+import { Info, Sparkles } from "lucide-react";
+import { useTranslations } from "next-intl";
+import React from "react";
+import { UseFormReturn } from "react-hook-form";
 import { DeckFormValues } from "../deckForm.schema";
 
 interface DeckInfoSectionProps {
@@ -33,7 +38,6 @@ interface DeckInfoSectionProps {
   isEditMode: boolean;
 }
 
-/** Renders the compact identity and visibility controls for a deck. */
 export const DeckInfoSection: React.FC<DeckInfoSectionProps> = ({
   form,
   formats,
@@ -47,9 +51,6 @@ export const DeckInfoSection: React.FC<DeckInfoSectionProps> = ({
           <Sparkles className="h-4 w-4 text-primary" />
           {isEditMode ? t("editTitle") : t("infoTitle")}
         </CardTitle>
-        <CardDescription className="text-xs">
-          {isEditMode ? t("editSubtitle") : t("createSubtitle")}
-        </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-3 p-4 pt-2 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_14rem_minmax(15rem,0.8fr)] xl:items-end">
         <FormField
@@ -99,11 +100,20 @@ export const DeckInfoSection: React.FC<DeckInfoSectionProps> = ({
           name="isPublic"
           render={({ field }) => (
             <FormItem className="flex min-h-9 items-center justify-between gap-3 rounded-md border bg-muted/35 px-3 py-2 sm:col-span-2 xl:col-span-1">
-              <div className="space-y-0.5">
+              <div className="flex items-center gap-1.5">
                 <FormLabel className="text-sm">{t("isPublic")}</FormLabel>
-                <p className="hidden text-xs text-muted-foreground sm:block xl:hidden 2xl:block">
-                  {t("publicHelp")}
-                </p>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label={t("publicHelp")}
+                      className="inline-flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <Info className="h-3.5 w-3.5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>{t("publicHelp")}</TooltipContent>
+                </Tooltip>
               </div>
               <FormControl>
                 <Switch

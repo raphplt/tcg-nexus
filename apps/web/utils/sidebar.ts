@@ -132,12 +132,6 @@ const userNavItems: NavItem[] = [
     requireAuth: true,
   },
   {
-    labelKey: "myDecks",
-    href: "/decks/me",
-    icon: Library,
-    requireAuth: true,
-  },
-  {
     labelKey: "cart",
     href: "/cart",
     icon: ShoppingCart,

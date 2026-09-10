@@ -13,17 +13,16 @@ import { Input } from "@components/ui/input";
 import { Badge } from "@components/ui/badge";
 import { Separator } from "@components/ui/separator";
 import { AlertCircle, Plus } from "lucide-react";
-import { PaginatedNav } from "@/components/Shared/PaginatedNav";
+import { InfiniteScrollTrigger } from "@/components/Shared/InfiniteScrollTrigger";
 import { PokemonCardType } from "@/types/cardPokemon";
-import type { PaginatedResult } from "@/types/pagination";
 import { getCardImage } from "@/utils/images";
 
 interface CardListSectionProps {
   cardsLoading: boolean;
   allCards: (PokemonCardType | { card: PokemonCardType })[];
-  meta?: PaginatedResult<PokemonCardType>["meta"];
-  page: number;
-  setPage: (page: number) => void;
+  hasNextPage: boolean;
+  isFetchingNextPage: boolean;
+  onLoadMore: () => void;
   qtyByCard: Record<string, number>;
   setQtyByCard: React.Dispatch<React.SetStateAction<Record<string, number>>>;
   roleByCard: Record<string, string>;
@@ -34,13 +33,13 @@ interface CardListSectionProps {
   emptyMessage?: string;
 }
 
-/** Renders paginated card choices with compact quantity and role controls. */
+/** Renders card choices with compact quantity and role controls, loading more as the list scrolls. */
 export const CardListSection: React.FC<CardListSectionProps> = ({
   cardsLoading,
   allCards,
-  meta,
-  page,
-  setPage,
+  hasNextPage,
+  isFetchingNextPage,
+  onLoadMore,
   qtyByCard,
   setQtyByCard,
   roleByCard,
@@ -171,15 +170,11 @@ export const CardListSection: React.FC<CardListSectionProps> = ({
               );
             })}
           </div>
-          {meta && (
-            <PaginatedNav
-              meta={meta}
-              page={page}
-              onPageChange={setPage}
-              scrollToTop={false}
-              className="mt-4"
-            />
-          )}
+          <InfiniteScrollTrigger
+            hasNextPage={hasNextPage}
+            isFetchingNextPage={isFetchingNextPage}
+            onLoadMore={onLoadMore}
+          />
         </>
       ) : (
         <div className="flex items-center gap-3 rounded-lg border border-dashed p-4 text-muted-foreground">

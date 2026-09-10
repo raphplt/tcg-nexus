@@ -2,7 +2,6 @@
 
 import { useTranslations } from "next-intl";
 import { Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { usePriceSuggestion } from "@/hooks/useMarketplace";
 import { formatPrice } from "@/utils/price";
 import { cardStates } from "@/utils/variables";
@@ -15,10 +14,10 @@ interface PriceSuggestionHintProps {
 }
 
 const stateLabel = (value?: string) =>
-  cardStates.find((s) => s.value === value)?.label ?? value;
+  cardStates.find((s) => s.value === value)?.label ?? value ?? "";
 
 /**
- * Displays the suggested price beneath the input, based on active listings or the market reference price.
+ * Suggested price chip beneath the price input, based on active listings or the market reference price; tapping it applies the price.
  */
 export function PriceSuggestionHint({
   cardId,
@@ -35,37 +34,28 @@ export function PriceSuggestionHint({
     return <p className="text-xs text-muted-foreground">{t("computing")}</p>;
   }
 
-  if (!data?.suggestedPrice) {
-    return <p className="text-xs text-muted-foreground">{t("noReference")}</p>;
-  }
+  if (!data?.suggestedPrice) return null;
 
+  const suggestedPrice = data.suggestedPrice;
   const { count } = data.listings;
-  const detail =
+  const basis =
     data.basis === "same-state"
-      ? `moyenne de ${count} annonce${count > 1 ? "s" : ""} en ${stateLabel(cardState)}`
+      ? t("sameState", { count, state: stateLabel(cardState) })
       : data.basis === "all-states"
-        ? `moyenne de ${count} annonce${count > 1 ? "s" : ""}, tous états confondus`
+        ? t("allStates", { count })
         : t("marketReference");
+  const price = formatPrice(suggestedPrice, data.currency);
 
   return (
-    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-      <Sparkles className="w-3.5 h-3.5 text-primary" />
-      <span>
-        Prix conseillé :{" "}
-        <span className="font-semibold text-foreground">
-          {formatPrice(data.suggestedPrice, data.currency)}
-        </span>{" "}
-        ({detail})
-      </span>
-      <Button
-        type="button"
-        variant="link"
-        size="sm"
-        className="h-auto p-0 text-xs"
-        onClick={() => onApply(data.suggestedPrice as number)}
-      >
-        {t("usePrice")}
-      </Button>
-    </div>
+    <button
+      type="button"
+      title={basis}
+      aria-label={t("apply", { price })}
+      onClick={() => onApply(suggestedPrice)}
+      className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <Sparkles className="h-3.5 w-3.5 shrink-0" />
+      <span className="truncate">{t("suggested", { price })}</span>
+    </button>
   );
 }

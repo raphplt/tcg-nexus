@@ -1,12 +1,6 @@
 import { useTranslations } from "next-intl";
 import React, { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
 import { Badge } from "@components/ui/badge";
 import { Button } from "@components/ui/button";
 import { Input } from "@components/ui/input";
@@ -79,13 +73,14 @@ interface CardFilterSectionProps {
   activeFiltersCount: number;
   series: PokemonSerieType[] | undefined;
   sets: PokemonSetType[] | undefined;
-  setPage: (page: number) => void;
   source: CardSource;
   setSource: (source: CardSource) => void;
   collections: Collection[];
   collectionsLoading: boolean;
   selectedCollectionId: string;
   setSelectedCollectionId: (collectionId: string) => void;
+  /** Called after "reset all filters", e.g. to go back to the series list. */
+  onReset?: () => void;
   children?: React.ReactNode;
 }
 
@@ -98,13 +93,13 @@ export const CardFilterSection: React.FC<CardFilterSectionProps> = ({
   activeFiltersCount,
   series,
   sets,
-  setPage,
   source,
   setSource,
   collections,
   collectionsLoading,
   selectedCollectionId,
   setSelectedCollectionId,
+  onReset,
   children,
 }) => {
   const t = useTranslations("DeckCardFilters");
@@ -113,22 +108,16 @@ export const CardFilterSection: React.FC<CardFilterSectionProps> = ({
 
   const updateFilters = (newFilters: Partial<FilterState>) => {
     setFilters((prev) => ({ ...prev, ...newFilters }));
-    setPage(1);
   };
 
   return (
     <Card className="border-border/60 shadow-sm">
       <CardHeader className="space-y-1 p-4 pb-2">
         <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Filter className="h-4 w-4 text-primary" />
-              {t("title")}
-            </CardTitle>
-            <CardDescription className="line-clamp-1 text-xs sm:text-sm">
-              {t(source === "catalog" ? "subtitle" : "collectionSubtitle")}
-            </CardDescription>
-          </div>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Filter className="h-4 w-4 text-primary" />
+            {t("title")}
+          </CardTitle>
           {source === "catalog" && activeFiltersCount > 0 && (
             <Badge variant="secondary" className="shrink-0">
               {t("activeFilters", { count: activeFiltersCount })}
@@ -193,9 +182,7 @@ export const CardFilterSection: React.FC<CardFilterSectionProps> = ({
                 </SelectContent>
               </Select>
             ) : (
-              <p className="hidden text-xs text-muted-foreground lg:block">
-                {t("catalogHelp")}
-              </p>
+              <p className="hidden text-xs text-muted-foreground lg:block"></p>
             )}
           </div>
 
@@ -271,6 +258,7 @@ export const CardFilterSection: React.FC<CardFilterSectionProps> = ({
                 onChange={(value) =>
                   updateFilters({
                     serieId: value === "all" ? undefined : value,
+                    setId: undefined,
                   })
                 }
                 options={series?.map((s) => ({
@@ -288,10 +276,14 @@ export const CardFilterSection: React.FC<CardFilterSectionProps> = ({
                     setId: value === "all" ? undefined : value,
                   })
                 }
-                options={sets?.map((s) => ({
-                  value: s.id.toString(),
-                  label: s.name,
-                }))}
+                options={sets
+                  ?.filter(
+                    (s) => !filters.serieId || s.serie?.id === filters.serieId,
+                  )
+                  .map((s) => ({
+                    value: s.id.toString(),
+                    label: s.name,
+                  }))}
               />
 
               <FilterSelect
@@ -377,10 +369,10 @@ export const CardFilterSection: React.FC<CardFilterSectionProps> = ({
                     setFilters({
                       search: "",
                       sortBy: "localId",
-                      sortOrder: "DESC",
+                      sortOrder: "ASC",
                     });
                     setSearchInput("");
-                    setPage(1);
+                    onReset?.();
                   }}
                 >
                   <RefreshCcw className="w-3 h-3 mr-2" />
