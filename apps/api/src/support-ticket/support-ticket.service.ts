@@ -1,6 +1,5 @@
 import {
   ForbiddenException,
-  HttpStatus,
   Injectable,
   NotFoundException,
   Optional,
@@ -67,7 +66,6 @@ export class SupportTicketService {
     });
     await this.messageRepo.save(initialMessage);
 
-    // Send confirmation email to ticket owner
     this.mailService.sendTicketCreated(
       user.email,
       savedTicket.id,

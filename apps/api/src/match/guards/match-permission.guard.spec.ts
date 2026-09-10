@@ -1,9 +1,6 @@
 import { ForbiddenException, NotFoundException } from "@nestjs/common";
 import { ExecutionContext } from "@nestjs/common/interfaces";
-import { getRepositoryToken } from "@nestjs/typeorm";
 import { UserRole } from "src/common/enums/user";
-import { TournamentOrganizer } from "../../tournament/entities/tournament-organizer.entity";
-import { Match } from "../entities/match.entity";
 import { MatchPermissionGuard } from "./match-permission.guard";
 
 const createContext = (req: any): ExecutionContext =>

@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import React, {
+import {
   createContext,
   useContext,
   useEffect,

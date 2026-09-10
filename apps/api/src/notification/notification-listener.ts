@@ -117,8 +117,8 @@ export class NotificationListener {
   }
 
   /**
-   * `type` sert aussi de clé de traduction : title/body sont rendus dans la
-   * langue du destinataire, et la clé est conservée pour un rendu ultérieur.
+   * `type` also serves as the translation key: title/body are rendered in the
+   * recipient's language, and the key is kept for later rendering.
    */
   private async safeCreate(
     userId: number,

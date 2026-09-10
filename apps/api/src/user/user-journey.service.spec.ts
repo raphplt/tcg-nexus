@@ -3,7 +3,6 @@ import { getRepositoryToken } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { CollectionItem } from "../collection-item/entities/collection-item.entity";
 import { FulfillmentStatus } from "../common/enums/fulfillment-status";
-import { MatchStatus } from "../match/entities/match.entity";
 import { Deck } from "../deck/entities/deck.entity";
 import { Match } from "../match/entities/match.entity";
 import { MatchResultProposal } from "../match/entities/match-result-proposal.entity";

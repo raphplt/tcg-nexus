@@ -1,6 +1,5 @@
 import { INestApplication } from "@nestjs/common";
 import type { Server } from "http";
-import request from "supertest";
 import { DataSource } from "typeorm";
 import { Card } from "../src/card/entities/card.entity";
 import { MatchStatus } from "../src/match/entities/match.entity";
@@ -38,7 +37,6 @@ describe("Tournament legality and corrections (PostgreSQL)", () => {
   let legality: DeckLegalityService;
   let ranking: RankingService;
   let matchResults: MatchResultService;
-  let matches: MatchService;
   let organizer: TestUser;
   let card: Card;
 
@@ -49,7 +47,7 @@ describe("Tournament legality and corrections (PostgreSQL)", () => {
     legality = app.get(DeckLegalityService);
     ranking = app.get(RankingService);
     matchResults = app.get(MatchResultService);
-    matches = app.get(MatchService);
+    app.get(MatchService);
     organizer = await createAdminUser(server, app);
     card = await ensureCard(app);
   });
@@ -160,7 +158,6 @@ describe("Tournament legality and corrections (PostgreSQL)", () => {
   });
 
   describe("score confirmation", () => {
-    let tournamentId: number;
     let playerOne: TestUser;
     let playerTwo: TestUser;
     let match: Match;
@@ -181,7 +178,6 @@ describe("Tournament legality and corrections (PostgreSQL)", () => {
         isPublic: true,
         organizer: { id: organizer.id },
       } as unknown as Tournament);
-      tournamentId = tournament.id;
 
       match = await database.getRepository(Match).save({
         tournament,

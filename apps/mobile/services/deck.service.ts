@@ -1,5 +1,4 @@
 import { secureApi } from "./secureApi";
-import { api } from "./api";
 import type {
   Deck,
   DeckFormat,

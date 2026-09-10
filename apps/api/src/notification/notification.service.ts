@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Notification } from "./entities/notification.entity";
@@ -8,6 +8,8 @@ import { NotificationGateway } from "./notification.gateway";
 
 @Injectable()
 export class NotificationService {
+  private readonly logger = new Logger(NotificationService.name);
+
   constructor(
     @InjectRepository(Notification)
     private readonly notificationRepository: Repository<Notification>,
@@ -19,7 +21,7 @@ export class NotificationService {
   ) {}
 
   /**
-   * Crée une notification pour un utilisateur, l'enregistre, la diffuse via WebSockets et envoie un push.
+   * Creates a notification for a user, saves it, broadcasts it over WebSockets and sends a push.
    */
   async createNotification(
     userId: number,
@@ -60,7 +62,6 @@ export class NotificationService {
     };
     this.notificationGateway.sendNotificationToUser(userId, socketPayload);
 
-    // Trigger push notification
     this.triggerPushNotification(userId, title, body, data);
 
     return savedNotification;
@@ -118,7 +119,7 @@ export class NotificationService {
   }
 
   /**
-   * Marque une notification comme lue.
+   * Marks a notification as read.
    */
   async markAsRead(
     userId: number,
@@ -141,7 +142,7 @@ export class NotificationService {
   }
 
   /**
-   * Marque toutes les notifications d'un utilisateur comme lues.
+   * Marks all of a user's notifications as read.
    */
   async markAllAsRead(
     userId: number,
@@ -164,7 +165,7 @@ export class NotificationService {
   }
 
   /**
-   * Supprime une notification.
+   * Deletes a notification.
    */
   async deleteNotification(
     userId: number,
@@ -185,7 +186,7 @@ export class NotificationService {
   }
 
   /**
-   * Enregistre un token push pour un utilisateur.
+   * Registers a push token for a user.
    */
   async registerToken(
     userId: number,
@@ -277,19 +278,21 @@ export class NotificationService {
         await this.sendExpoPushNotifications(expoTokens, title, body, data);
       }
 
-      // Diagnostic logging
-      console.log(
+      this.logger.log(
         `Push Notifications triggered for User ID ${userId}: Title="${title}". Platforms: ${deviceTokens
           .map((t) => t.platform)
           .join(", ")}`,
       );
     } catch (e) {
-      console.error("Error in triggerPushNotification:", e);
+      this.logger.error(
+        "Error in triggerPushNotification:",
+        e instanceof Error ? e.stack : String(e),
+      );
     }
   }
 
   /**
-   * Envoie les notifications push via l'API HTTP d'Expo.
+   * Sends push notifications via Expo's HTTP API.
    */
   private async sendExpoPushNotifications(
     tokens: string[],
@@ -317,9 +320,12 @@ export class NotificationService {
       });
 
       const result = await response.json();
-      console.log("Expo push API response:", JSON.stringify(result));
+      this.logger.log(`Expo push API response: ${JSON.stringify(result)}`);
     } catch (error) {
-      console.error("Failed to post Expo Push Notifications:", error);
+      this.logger.error(
+        "Failed to post Expo Push Notifications:",
+        error instanceof Error ? error.stack : String(error),
+      );
     }
   }
 }

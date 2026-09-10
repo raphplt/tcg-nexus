@@ -99,9 +99,9 @@ export class PokecardexService {
   /**
    * Scrapes sealed products from a series by selecting its Products tab.
    *
-   * Les images de produits suivent le pattern :
+   * Product images follow the pattern:
    * https://www.pokecardex.com/assets/images/sets/{CODE}/{category}/{file}.png
-   * Le sous-dossier ({category}) indique le type : boosters, portfolio, divers, etc.
+   * The subfolder ({category}) indicates the type: boosters, portfolio, divers, etc.
    */
   async scrapeSeriesItems(seriesId: string): Promise<PokecardexItem[]> {
     const page = await this.newPage();

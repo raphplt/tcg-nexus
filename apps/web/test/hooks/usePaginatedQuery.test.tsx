@@ -60,7 +60,6 @@ describe("usePaginatedQuery", () => {
     });
     expect(result.current.data).toEqual({ items: ["item-1"], page: 1 });
 
-    // Change page to 2
     rerender({ page: 2 });
 
     await waitFor(() => {

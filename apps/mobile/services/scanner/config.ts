@@ -6,7 +6,7 @@ export const SCANNER_CONFIG = {
   NORMALIZED_WIDTH: 420,
   NORMALIZED_HEIGHT: 588,
 
-  NAME_ZONE: { top: 0, bottom: 0.15 }, // Nom : 0–15%
+  NAME_ZONE: { top: 0, bottom: 0.15 }, // Name: 0–15%
   NUMBER_ZONE: { top: 0.82, bottom: 1.0 },
 
   CONFIDENCE_HIGH_THRESHOLD: 80,

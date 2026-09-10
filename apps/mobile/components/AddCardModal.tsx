@@ -64,12 +64,9 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({
     let cancelled = false;
 
     const runSearch = async () => {
-      console.log("runSearch");
       setIsManualSearching(true);
-      console.log("debouncedManualSearch : ", debouncedManualSearch);
       try {
         const cards = await cardService.searchCards(debouncedManualSearch);
-        console.log("cards : ", cards);
         if (!cancelled) {
           setManualResults(cards.slice(0, 30));
         }

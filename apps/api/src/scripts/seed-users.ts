@@ -8,11 +8,9 @@ async function bootstrap() {
   const userService = app.get(UserService);
 
   try {
-    // Check if admin user already exists
     const existingAdmin = await userService.findByEmail("admin@tcg-nexus.com");
 
     if (!existingAdmin) {
-      // Create default admin user
       const adminUser = await userService.create({
         email: "admin@tcg-nexus.com",
         firstName: "Admin",

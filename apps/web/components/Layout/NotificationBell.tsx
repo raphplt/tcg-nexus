@@ -40,8 +40,8 @@ export function NotificationBell() {
   } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
 
-  // Les clés viennent de l'API ("tournament.started") et sont résolues en messages imbriqués.
-  // On retombe sur le texte déjà traduit côté serveur si la clé est inconnue du front.
+  // Keys come from the API ("tournament.started") and are resolved against nested messages.
+  // Falls back to the server-translated text when the key is unknown to the front end.
   const renderTitle = (n: UserNotification) => {
     const key = `items.${n.translationKey}.title`;
     return n.translationKey && t.has(key)

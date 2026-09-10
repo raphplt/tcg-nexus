@@ -106,7 +106,6 @@ describe("GameEngine Basics", () => {
     expect(newState.turnNumber).toBe(2);
     expect(newState.turnStep).toBe(TurnStep.Main); // Assuming it passed draw step
 
-    // Verify Events
     expect(
       events.some(
         (e) => e.type === "TURN_ENDED" && e.newActivePlayer === "Player2",
@@ -160,7 +159,6 @@ describe("GameEngine Basics", () => {
     const engine = new GameEngine(initialState);
     const p1 = initialState.players["Player1"];
 
-    // Set up active
     p1.active = {
       instanceId: "active-1",
       ownerId: "Player1",
@@ -176,7 +174,7 @@ describe("GameEngine Basics", () => {
       },
     ];
 
-    const events = engine.dispatch({
+    engine.dispatch({
       playerId: "Player1",
       type: "ATTACH_ENERGY" as any,
       payload: {

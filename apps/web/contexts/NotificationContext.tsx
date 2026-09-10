@@ -138,14 +138,11 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
     socket.on("connect", () => {
       setIsConnected(true);
-      console.log("Connected to notification gateway");
-
       fetchNotifications();
     });
 
     socket.on("disconnect", () => {
       setIsConnected(false);
-      console.log("Disconnected from notification gateway");
     });
 
     socket.on("new_notification", (newNotification: UserNotification) => {

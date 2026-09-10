@@ -138,7 +138,6 @@ export const computeConfidence = (
     confidenceLevel = "medium";
   }
 
-  // Cap output confidence value to 1.0
   return {
     confidence: Number(Math.min(1, best).toFixed(3)),
     confidenceLevel,

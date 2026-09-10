@@ -20,8 +20,8 @@ export interface DetectedCard {
 export interface RectifiedCard {
   uri: string;
   base64: string;
-  width: number; // toujours NORMALIZED_WIDTH
-  height: number; // toujours NORMALIZED_HEIGHT
+  width: number; // always NORMALIZED_WIDTH
+  height: number; // always NORMALIZED_HEIGHT
 }
 
 /** OCR result for the card-name zone. */
@@ -34,9 +34,9 @@ export interface NameZoneResult {
 /** OCR result for the card-number zone. */
 export interface NumberZoneResult {
   rawText: string;
-  localId?: string; // ex: "063"
-  setTotal?: string; // ex: "198"
-  setCode?: string; // ex: "063/198"
+  localId?: string; // e.g. "063"
+  setTotal?: string; // e.g. "198"
+  setCode?: string; // e.g. "063/198"
   confidence: number;
 }
 
@@ -111,12 +111,12 @@ export interface ScanResolution {
   bestCardImage: string | null;
   bestLocalId: string | null;
   bestSetName: string | null;
-  /** Score du meilleur candidat (0–125) */
+  /** Best candidate score (0–125) */
   topScore: number;
   confidence: ScanConfidence;
   /** All candidates ranked by descending score. */
   rankedCandidates: RankedCandidate[];
-  /** Signal OCR brut (pour debug UI) */
+  /** Raw OCR signal (for debug UI) */
   signal: ScanSignal;
   /** Logs for every step, including duration and success. */
   logs: ScanStepLog[];

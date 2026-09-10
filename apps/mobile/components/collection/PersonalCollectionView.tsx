@@ -172,22 +172,6 @@ export function PersonalCollectionView() {
     [collections],
   );
 
-  const rarityStats = useMemo(() => {
-    const map = new Map<string, number>();
-
-    for (const collection of collections) {
-      for (const item of collection.items || []) {
-        const rarity = item.pokemonCard?.rarity || "Inconnue";
-        const quantity = Number(item.quantity || 0);
-        map.set(rarity, (map.get(rarity) || 0) + quantity);
-      }
-    }
-
-    return Array.from(map.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 3);
-  }, [collections]);
-
   const handleCreateCollection = async () => {
     const name = newCollectionName.trim();
     if (!name) {
@@ -220,8 +204,6 @@ export function PersonalCollectionView() {
   };
 
   const handleDeleteCollection = (collection: UserCollection) => {
-    console.log("delete collection", collection);
-
     if (Platform.OS === "web") {
       const confirmed = window.confirm(
         `Confirmer la suppression de "${collection.name}" ?`,

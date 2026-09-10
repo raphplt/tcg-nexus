@@ -2,7 +2,6 @@ import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
-  HttpStatus,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
@@ -26,11 +25,7 @@ import { TournamentQueryDto } from "./dto/tournament-query.dto";
 import { TournamentRegistrationDto } from "./dto/tournament-registration.dto";
 import { UpdateTournamentDto } from "./dto/update-tournament.dto";
 import { UpdateTournamentStatusDto } from "./dto/update-tournament-status.dto";
-import {
-  Tournament,
-  TournamentStatus,
-  TournamentType,
-} from "./entities/tournament.entity";
+import { Tournament, TournamentStatus } from "./entities/tournament.entity";
 import {
   OrganizerRole,
   TournamentOrganizer,
@@ -172,7 +167,6 @@ export class TournamentService {
       });
     }
 
-    // Paginate results using helper
     return PaginationHelper.paginateQueryBuilder(
       queryBuilder,
       { page, limit },
@@ -622,33 +616,6 @@ export class TournamentService {
     return stats;
   }
 
-  private getValidStatusTransitions(
-    currentStatus: TournamentStatus,
-  ): TournamentStatus[] {
-    const transitions = {
-      [TournamentStatus.DRAFT]: [
-        TournamentStatus.REGISTRATION_OPEN,
-        TournamentStatus.CANCELLED,
-      ],
-      [TournamentStatus.REGISTRATION_OPEN]: [
-        TournamentStatus.REGISTRATION_CLOSED,
-        TournamentStatus.CANCELLED,
-      ],
-      [TournamentStatus.REGISTRATION_CLOSED]: [
-        TournamentStatus.IN_PROGRESS,
-        TournamentStatus.CANCELLED,
-      ],
-      [TournamentStatus.IN_PROGRESS]: [
-        TournamentStatus.FINISHED,
-        TournamentStatus.CANCELLED,
-      ],
-      [TournamentStatus.FINISHED]: [],
-      [TournamentStatus.CANCELLED]: [],
-    };
-
-    return transitions[currentStatus] || [];
-  }
-
   /**
    * Starts a tournament and creates its opening round matches.
    *
@@ -1078,7 +1045,7 @@ export class TournamentService {
   }
 
   /**
-   * Confirme une inscription
+   * Confirms a registration.
    */
   async confirmRegistration(tournamentId: number, registrationId: number) {
     const result = await this.updateRegistrationsInBulk(tournamentId, {
@@ -1089,7 +1056,7 @@ export class TournamentService {
   }
 
   /**
-   * Annule une inscription
+   * Cancels a registration.
    */
   async cancelRegistration(
     tournamentId: number,
@@ -1105,7 +1072,7 @@ export class TournamentService {
   }
 
   /**
-   * Check-in d'un joueur
+   * Checks in a player.
    */
   async checkInPlayer(
     tournamentId: number,

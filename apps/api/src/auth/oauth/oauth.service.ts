@@ -311,7 +311,6 @@ export class OAuthService {
         });
         user = await manager.save(User, newUser);
 
-        // Create associated Player entity
         const player = manager.create(Player, {
           user,
           elo: 1500,
@@ -320,7 +319,6 @@ export class OAuthService {
         });
         await manager.save(Player, player);
 
-        // Create default Collection entity
         const defaultCollection = manager.create(Collection, {
           name: "Ma Collection",
           user,
@@ -328,7 +326,6 @@ export class OAuthService {
         await manager.save(Collection, defaultCollection);
       }
 
-      // Create AuthIdentity record
       const authIdentity = manager.create(AuthIdentity, {
         userId: user.id,
         user,

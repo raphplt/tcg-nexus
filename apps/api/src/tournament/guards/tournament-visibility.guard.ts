@@ -1,7 +1,6 @@
 import {
   CanActivate,
   ExecutionContext,
-  HttpStatus,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";

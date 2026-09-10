@@ -83,15 +83,12 @@ describe("Pagination components", () => {
       expect(screen.getByText("2")).toBeInTheDocument();
       expect(screen.getByText("5")).toBeInTheDocument();
 
-      // Click page 3
       fireEvent.click(screen.getByText("3"));
       expect(onPageChange).toHaveBeenCalledWith(3);
 
-      // Click next page
       fireEvent.click(screen.getByLabelText("Go to next page"));
       expect(onPageChange).toHaveBeenCalledWith(3);
 
-      // Click previous page
       fireEvent.click(screen.getByLabelText("Go to previous page"));
       expect(onPageChange).toHaveBeenCalledWith(1);
     });

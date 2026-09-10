@@ -128,7 +128,7 @@ const ALWAYS_PREFIX = [
 ];
 
 /**
- * Nettoie un nom de fichier en nom de produit lisible.
+ * Cleans a filename into a readable product name.
  */
 function cleanProductName(
   filename: string,

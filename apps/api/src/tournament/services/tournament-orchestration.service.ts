@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  HttpStatus,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
@@ -136,7 +135,7 @@ export class TournamentOrchestrationService {
   }
 
   /**
-   * Passe au round suivant (pour Swiss et Round Robin)
+   * Advances to the next round (for Swiss and Round Robin).
    */
   async advanceToNextRound(tournamentId: number): Promise<AdvanceRoundResult> {
     return this.dataSource.transaction(async (manager) => {
@@ -253,7 +252,7 @@ export class TournamentOrchestrationService {
   }
 
   /**
-   * Termine un tournoi manuellement
+   * Manually finishes a tournament.
    */
   async finishTournament(tournamentId: number): Promise<Tournament> {
     const result = await this.dataSource.transaction(async (manager) => {
@@ -350,7 +349,7 @@ export class TournamentOrchestrationService {
   }
 
   /**
-   * Annule un tournoi
+   * Cancels a tournament.
    */
   async cancelTournament(
     tournamentId: number,

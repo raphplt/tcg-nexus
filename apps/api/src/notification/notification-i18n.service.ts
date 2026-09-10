@@ -18,7 +18,7 @@ export class NotificationI18nService {
     return isSupportedLocale(locale) ? locale : DEFAULT_LOCALE;
   }
 
-  /** Rend une notification dans la langue du destinataire. */
+  /** Renders a notification in the recipient's language. */
   render(
     key: string,
     locale?: string | null,

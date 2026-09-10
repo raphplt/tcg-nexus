@@ -3,7 +3,6 @@ import { useLocalSearchParams, router } from "expo-router";
 import { useCallback, useEffect, useState, useMemo } from "react";
 import {
   ActivityIndicator,
-  FlatList,
   Image,
   Modal,
   Pressable,
@@ -18,7 +17,7 @@ import { colors, radius } from "@/constants/theme";
 import { deckService } from "@/services/deck.service";
 import { cardService } from "@/services/card.service";
 import { toast } from "@/store/useToastStore";
-import type { Deck, DeckFormat, DeckCard, CardSearchResult } from "@/types";
+import type { Deck, DeckFormat, CardSearchResult } from "@/types";
 import { getApiErrorMessage } from "@/utils/apiError";
 import { getCardImage } from "@/utils/images";
 

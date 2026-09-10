@@ -222,7 +222,6 @@ export function RegistrationManager({
     return true;
   });
 
-  // Statistiques
   const stats = {
     total: registrations.length,
     confirmed: registrations.filter((r) => r.status === "confirmed").length,

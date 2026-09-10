@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  NotFoundException,
-} from "@nestjs/common";
+import { BadRequestException, ForbiddenException } from "@nestjs/common";
 import { MatchResultProposal } from "./entities/match-result-proposal.entity";
 import { MatchResultService } from "./match-result.service";
 import {
@@ -199,7 +195,7 @@ describe("MatchResultService", () => {
         email: "admin@test.com",
       } as any;
 
-      const res = await service.resolveDispute(100, adminUser, {
+      await service.resolveDispute(100, adminUser, {
         playerAScore: 2,
         playerBScore: 1,
         reason: "Judge verification of slip",

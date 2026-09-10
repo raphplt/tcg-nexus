@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { In, IsNull, Repository } from "typeorm";
 import { Match, MatchStatus } from "../match/entities/match.entity";
@@ -289,7 +289,7 @@ export class RankingService {
   }
 
   /**
-   * Crée un nouveau ranking
+   * Creates a new ranking.
    */
   async create(createRankingDto: CreateRankingDto): Promise<Ranking> {
     const { tournamentId, playerId, ...rankingData } = createRankingDto;
@@ -324,7 +324,7 @@ export class RankingService {
   }
 
   /**
-   * Récupère tous les rankings avec filtres
+   * Retrieves all rankings with filters.
    */
   async findAll(tournamentId?: number): Promise<Ranking[]> {
     const queryBuilder = this.rankingRepository
@@ -341,7 +341,7 @@ export class RankingService {
   }
 
   /**
-   * Récupère un ranking par ID
+   * Retrieves a ranking by ID.
    */
   async findOne(id: number): Promise<Ranking> {
     const ranking = await this.rankingRepository.findOne({
@@ -357,7 +357,7 @@ export class RankingService {
   }
 
   /**
-   * Met à jour un ranking
+   * Updates a ranking.
    */
   async update(
     id: number,
@@ -369,7 +369,7 @@ export class RankingService {
   }
 
   /**
-   * Supprime un ranking
+   * Deletes a ranking.
    */
   async remove(id: number): Promise<void> {
     const ranking = await this.findOne(id);
@@ -377,7 +377,7 @@ export class RankingService {
   }
 
   /**
-   * Récupère le classement d'un tournoi
+   * Retrieves the standings of a tournament.
    */
   async getTournamentRankings(tournamentId: number): Promise<Ranking[]> {
     return this.rankingRepository.find({
@@ -450,7 +450,7 @@ export class RankingService {
   }
 
   /**
-   * Met à jour tous les classements d'un tournoi
+   * Updates all standings of a tournament.
    */
   async updateTournamentRankings(tournamentId: number): Promise<Ranking[]> {
     const tournament = await this.tournamentRepository.findOne({
@@ -596,7 +596,7 @@ export class RankingService {
   }
 
   /**
-   * Calcule et met à jour le score ELO après chaque tournoi terminé
+   * Computes and updates ELO scores after each finished tournament.
    */
   async processTournamentMatchesForElo(tournamentId: number): Promise<void> {
     const tournament = await this.tournamentRepository.findOne({
@@ -830,7 +830,7 @@ export class RankingService {
   }
 
   /**
-   * Récupère le classement d'un joueur dans un tournoi
+   * Retrieves a player's ranking in a tournament.
    */
   async getPlayerRanking(
     tournamentId: number,
@@ -843,7 +843,7 @@ export class RankingService {
   }
 
   /**
-   * Récupère les classements finaux d'un tournoi terminé
+   * Retrieves the final standings of a finished tournament.
    */
   async getFinalRankings(tournamentId: number): Promise<Ranking[]> {
     const tournament = await this.tournamentRepository.findOne({
@@ -861,7 +861,7 @@ export class RankingService {
   }
 
   /**
-   * Calcule les tie-breakers pour départager les égalités
+   * Computes tie-breakers to separate tied players.
    */
   async calculateTieBreakers(
     tournamentId: number,

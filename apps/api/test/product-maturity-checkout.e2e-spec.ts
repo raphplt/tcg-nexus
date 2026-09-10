@@ -4,7 +4,6 @@ import Stripe from "stripe";
 import request from "supertest";
 import { DataSource } from "typeorm";
 import { AdminOpsService } from "../src/admin-ops/admin-ops.service";
-import { Currency } from "../src/common/enums/currency";
 import { Listing } from "../src/marketplace/entities/listing.entity";
 import { Order, OrderStatus } from "../src/marketplace/entities/order.entity";
 import {

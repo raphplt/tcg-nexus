@@ -226,7 +226,7 @@ describe("Order flow (e2e)", () => {
 
       stripeServiceMock.retrievePaymentIntent.mockResolvedValue({
         status: "succeeded",
-        amount: 100, // 1 € au lieu de 15 €
+        amount: 100, // 1 € instead of 15 €
         currency: "eur",
         metadata: { orderId: String(orderId), userId: String(buyer.id) },
       });

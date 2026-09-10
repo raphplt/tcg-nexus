@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  HttpStatus,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
@@ -1076,7 +1075,7 @@ export class MatchService {
     const loserId =
       match.playerA.id === winnerId ? match.playerB.id : match.playerA.id;
 
-    // Gagnant
+    // Winner
     let winnerRanking =
       (await manager.findOne(Ranking, {
         where: { tournament: { id: tournamentId }, player: { id: winnerId } },
@@ -1098,7 +1097,7 @@ export class MatchService {
       });
     }
 
-    // Perdant
+    // Loser
     let loserRanking =
       (await manager.findOne(Ranking, {
         where: { tournament: { id: tournamentId }, player: { id: loserId } },

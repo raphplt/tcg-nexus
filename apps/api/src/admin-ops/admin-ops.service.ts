@@ -2,7 +2,6 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
-  Logger,
   NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
@@ -43,8 +42,6 @@ import {
  */
 @Injectable()
 export class AdminOpsService {
-  private readonly logger = new Logger(AdminOpsService.name);
-
   constructor(
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,

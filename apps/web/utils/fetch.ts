@@ -120,7 +120,7 @@ secureApi.interceptors.response.use(
 /**
  * Generic authenticated TanStack Query fetcher.
  * @param url Relative API URL (for example, /tournaments).
- * @param config Config axios optionnelle (params, headers...)
+ * @param config Optional axios config (params, headers...).
  * @returns Response data (`response.data`).
  * @throws Axios error when the request fails.
  *

@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException } from "@nestjs/common";
+import { BadRequestException } from "@nestjs/common";
 import { DeckVisibilityPolicy } from "../../common/enums/deck-visibility-policy";
 import { UserRole } from "../../common/enums/user";
 import { TournamentStatus } from "../entities/tournament.entity";

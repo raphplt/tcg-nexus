@@ -47,7 +47,7 @@ import { MyDeckCard } from "./_components/MyDeckCard";
 type Tab = "mine" | "favorites";
 type SortOption = Pick<DecksQueryParams, "sortBy" | "sortOrder">;
 
-// Côté favoris, "createdAt" trie sur la date d'ajout aux favoris
+// On the favorites tab, "createdAt" sorts by the date the deck was favorited
 const SORTS = {
   mine: {
     updated: { sortBy: "updatedAt", sortOrder: "DESC" },
@@ -107,7 +107,7 @@ export default function MyDecksPage() {
     formatId: format ? Number(format) : undefined,
     ...(sorts[sort] ?? sorts[DEFAULT_SORT[tab]]),
   };
-  // "saved-decks" est invalidé par useToggleSavedDeck : retirer un favori met la liste à jour
+  // "saved-decks" is invalidated by useToggleSavedDeck: removing a favorite refreshes the list
   const decks = useInfinitePaginatedQuery({
     queryKey: [
       favorites ? "saved-decks" : "my-decks",
@@ -169,7 +169,7 @@ export default function MyDecksPage() {
     const next: Tab = value === "favorites" ? "favorites" : "mine";
     setTab(next);
     setSort(DEFAULT_SORT[next]);
-    // Garde l'onglet dans l'URL pour pouvoir partager ou recharger la vue
+    // Keep the tab in the URL so the view can be shared or reloaded
     const url = new URL(window.location.href);
     if (next === "favorites") url.searchParams.set("tab", next);
     else url.searchParams.delete("tab");

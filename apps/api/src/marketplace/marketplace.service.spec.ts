@@ -36,7 +36,6 @@ describe("MarketplaceService", () => {
   let listingRepo: any;
   let priceHistoryRepo: any;
 
-  // Mock definitions needed in scope
   let mockListingRepo: any;
   let mockPriceHistoryRepo: any;
   let mockPokemonCardRepo: any;
@@ -53,7 +52,6 @@ describe("MarketplaceService", () => {
   let mockManager: any;
   let mockInventoryLedger: any;
 
-  // Helper to create a fresh QB mock
   const createMockQb = () => ({
     leftJoinAndSelect: jest.fn().mockReturnThis(),
     leftJoin: jest.fn().mockReturnThis(),

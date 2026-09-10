@@ -13,7 +13,6 @@ import {
   ProposalStatus,
 } from "../common/enums/match-result-status";
 import { UserRole } from "../common/enums/user";
-import { Player } from "../player/entities/player.entity";
 import { TournamentOrganizer } from "../tournament/entities/tournament-organizer.entity";
 import { User } from "../user/entities/user.entity";
 import {

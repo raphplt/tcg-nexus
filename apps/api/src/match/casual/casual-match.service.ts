@@ -15,7 +15,7 @@ import { RankingService } from "../../ranking/ranking.service";
 import { User } from "../../user/entities/user.entity";
 import { ActionType, PlayerAction } from "../engine/actions/Action";
 import { GameEngine } from "../engine/GameEngine";
-import { GameFinishedReason, GamePhase } from "../engine/models/enums";
+import { GamePhase } from "../engine/models/enums";
 import { GameState } from "../engine/models/GameState";
 import { PromptResponse } from "../engine/models/Prompt";
 import {

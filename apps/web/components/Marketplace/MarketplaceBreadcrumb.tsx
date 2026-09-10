@@ -138,7 +138,6 @@ export function MarketplaceBreadcrumb() {
       }
     }
 
-    // Add Create if on create page
     if (pathname === "/marketplace/create") {
       breadcrumbs.push(
         <BreadcrumbSeparator key="sep-2" />,

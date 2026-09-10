@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  HttpStatus,
-  Injectable,
-  NotFoundException,
-} from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { EntityManager, Repository } from "typeorm";
 import {
@@ -578,7 +573,6 @@ export class BracketService {
       rounds.push({ index: roundNumber, matches: nodes });
     }
 
-    // Sort rounds sequentially
     rounds.sort((a, b) => a.index - b.index);
 
     return {

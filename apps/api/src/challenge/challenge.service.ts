@@ -47,7 +47,6 @@ export class ChallengeService {
       relations: ["challenge"],
     });
 
-    // Get user progress
     const userChallenges = await this.userChallengeRepo.find({
       where: { user: { id: userId } },
     });
@@ -164,7 +163,6 @@ export class ChallengeService {
    */
   @OnEvent("challenge.action")
   async handleAction(payload: { userId: number; action: string }) {
-    // Check if it's a valid action
     if (
       !Object.values(ChallengeActionType).includes(
         payload.action as ChallengeActionType,
@@ -185,7 +183,6 @@ export class ChallengeService {
     actionType: ChallengeActionType,
     amount: number = 1,
   ) {
-    // Find active challenges of this action type
     const activeChallenges = await this.activeChallengeRepo.find({
       where: { challenge: { actionType } },
       relations: ["challenge"],
@@ -244,7 +241,6 @@ export class ChallengeService {
         throw new BadRequestException("Reward already claimed.");
       }
 
-      // Mark as claimed
       userChallenge.isClaimed = true;
       await manager.save(userChallenge);
 

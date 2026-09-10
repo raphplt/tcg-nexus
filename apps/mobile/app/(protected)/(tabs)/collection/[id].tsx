@@ -6,12 +6,9 @@ import {
   Alert,
   FlatList,
   Image,
-  Modal,
   Platform,
   Pressable,
   RefreshControl,
-  SafeAreaView,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -45,33 +42,6 @@ const cardStates = [
 ];
 
 const PAGE_SIZE = 24;
-
-const resolveImage = (image?: string): string | undefined => {
-  if (!image) {
-    return undefined;
-  }
-
-  if (/^https?:\/\//i.test(image)) {
-    return image;
-  }
-
-  const r2Base = process.env.EXPO_PUBLIC_R2_PUBLIC_URL?.trim();
-  if (!r2Base) {
-    return image;
-  }
-
-  return `${r2Base.replace(/\/$/, "")}/${image.replace(/^\//, "")}`;
-};
-
-const sortOptions: Array<{
-  label: string;
-  value: "added_at" | "pokemonCard.name" | "pokemonCard.rarity" | "quantity";
-}> = [
-  { label: "Date d'ajout", value: "added_at" },
-  { label: "Nom", value: "pokemonCard.name" },
-  { label: "Rareté", value: "pokemonCard.rarity" },
-  { label: "Quantité", value: "quantity" },
-];
 
 const dedupeItems = (items: CollectionItem[]): CollectionItem[] => {
   const seen = new Set<string>();

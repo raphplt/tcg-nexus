@@ -36,16 +36,15 @@ export const cardService = {
     return response.data;
   },
 
-  /**
-   * Performs free-text searches in the Pokémon database for manual review.
-   */
   async getSetRarities(setId: string): Promise<string[]> {
     const response = await api.get<string[]>(`/cards/set/${setId}/rarities`);
     return response.data || [];
   },
 
+  /**
+   * Performs free-text searches in the Pokémon database for manual review.
+   */
   async searchCards(search: string): Promise<CardSearchResult[]> {
-    console.log("card service searchCards : ", search);
     const query = search.trim();
     if (!query) {
       return [];
@@ -59,7 +58,6 @@ export const cardService = {
     );
 
     const cards = dedupeCards(response.data || []);
-    console.log("card service dedupeCards : ", cards);
     searchCache.set(cacheKey, cards);
     return cards;
   },

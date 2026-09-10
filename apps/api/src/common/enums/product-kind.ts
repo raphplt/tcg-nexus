@@ -1,6 +1,6 @@
 /**
- * Discriminator pour distinguer les éléments de collection ou de marketplace
- * portant sur une carte unitaire vs un produit scellé.
+ * Discriminator distinguishing collection or marketplace items that concern
+ * a single card vs a sealed product.
  */
 export enum ProductKind {
   CARD = "card",

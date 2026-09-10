@@ -138,7 +138,6 @@ export class SellerReviewService {
 
     const completedSalesCount = deliveredItems.length;
 
-    // Reviews
     const reviews = await this.reviewRepository.find({
       where: { seller: { id: sellerId } },
       relations: ["buyer", "orderItem"],

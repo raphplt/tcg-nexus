@@ -12,10 +12,7 @@ import { Match, MatchStatus } from "../match/entities/match.entity";
 import { MatchResultProposal } from "../match/entities/match-result-proposal.entity";
 import { Order, OrderStatus } from "../marketplace/entities/order.entity";
 import { TournamentDeckSnapshot } from "../tournament/entities/tournament-deck-snapshot.entity";
-import {
-  Tournament,
-  TournamentStatus,
-} from "../tournament/entities/tournament.entity";
+import { TournamentStatus } from "../tournament/entities/tournament.entity";
 import { TournamentRegistration } from "../tournament/entities/tournament-registration.entity";
 import { User } from "./entities/user.entity";
 import {

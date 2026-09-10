@@ -202,7 +202,6 @@ export class CardPopularityService {
       ? parseFloat(listingStats.avgPrice)
       : null;
 
-    // Calculate popularity and trend scores
     const popularityScore = await this.calculatePopularityScore(cardId);
     const trendScore = await this.calculateTrendScore(cardId);
 

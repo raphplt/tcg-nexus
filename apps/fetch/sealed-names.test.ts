@@ -116,8 +116,8 @@ describe("composeSealedName", () => {
   });
 
   test("résout un code de série que le nom du set ne permettait pas de retrouver", () => {
-    // Pokécardex écrit "Diamant & Perle : Tempête" là où TCGdex dit
-    // "Stormfront" : seul le code de série permet la jointure.
+    // Pokécardex writes "Diamant & Perle : Tempête" where TCGdex says
+    // "Stormfront": only the series code allows the join.
     const composed = composeSealedName(
       product({
         pokecardexSeriesId: "SF",

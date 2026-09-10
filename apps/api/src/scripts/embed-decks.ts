@@ -1,22 +1,22 @@
 /**
- * Pré-calcul des vecteurs d'archétype de decks (similarité locale, AI-03).
+ * Precomputes deck archetype vectors (local similarity, AI-03).
  *
- * Le vecteur d'un deck est la moyenne pondérée par les quantités des
- * embeddings visuels de ses cartes, déjà stockés dans `card_embedding` par
- * `npm run embed:cards`. Tout est calculé dans PostgreSQL : aucun appel au
- * service vision, aucun appel réseau.
+ * A deck's vector is the quantity-weighted average of the visual embeddings
+ * of its cards, already stored in `card_embedding` by
+ * `npm run embed:cards`. Everything is computed in PostgreSQL: no call to the
+ * vision service, no network call.
  *
- *   npm run embed:decks                    # decks non vectorisés ou périmés
- *   npm run embed:decks -- --all           # tous les decks
- *   npm run embed:decks -- --public-only   # seulement les decks publics
+ *   npm run embed:decks                    # decks not yet embedded or stale
+ *   npm run embed:decks -- --all           # all decks
+ *   npm run embed:decks -- --public-only   # public decks only
  *   npm run embed:decks -- --limit=500
  *
- * ⚠️ Ne jamais restaurer ces vecteurs depuis un export : ils se régénèrent.
+ * ⚠️ Never restore these vectors from an export: they are regenerated.
  */
 import "dotenv/config";
 import { Client } from "pg";
 
-/** Dimension des vecteurs CLIP servis par le service vision. */
+/** Dimension of the CLIP vectors served by the vision service. */
 const EMBED_DIM = 512;
 
 const arg = (key: string): string | undefined =>
@@ -63,8 +63,8 @@ const main = async (): Promise<void> => {
        ON deck_embedding USING hnsw (embedding vector_cosine_ops)`,
   );
 
-  // Un deck est à revectoriser s'il n'a pas de vecteur, ou si son contenu a
-  // changé depuis : `deck.updatedAt` fait foi.
+  // A deck needs re-embedding if it has no vector, or if its content has
+  // changed since: `deck.updatedAt` is authoritative.
   const staleness = all
     ? "TRUE"
     : `(de.deck_id IS NULL OR de.deck_updated_at IS DISTINCT FROM d."updatedAt")`;

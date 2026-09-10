@@ -1,13 +1,13 @@
 /**
- * Pré-calcul des embeddings d'images de cartes (recherche visuelle, P6).
- * Télécharge low.png de chaque carte, l'envoie au service vision /embed, et
- * stocke le vecteur dans card_embedding (pgvector). Reprenable (saute les
- * cartes déjà vectorisées).
+ * Precomputes card image embeddings (visual search, P6).
+ * Downloads each card's low.png, sends it to the vision service /embed, and
+ * stores the vector in card_embedding (pgvector). Resumable (skips cards
+ * that are already embedded).
  *
- *   npm run embed:cards -- --sets=base1,jungle      # sous-ensemble
- *   npm run embed:cards -- --limit=2000             # n premières non faites
+ *   npm run embed:cards -- --sets=base1,jungle      # subset
+ *   npm run embed:cards -- --limit=2000             # first n not yet done
  *   npm run embed:cards -- --all
- *   npm run embed:cards -- --refresh                # recalcule même les déjà faites
+ *   npm run embed:cards -- --refresh                # recompute even those already done
  */
 import "dotenv/config";
 import { Client } from "pg";
@@ -18,7 +18,7 @@ const LEGACY_R2 = "pub-27752f7846b4433d8e74edcc8bdc1dc8.r2.dev";
 const arg = (k: string): string | undefined =>
   process.argv.find((a) => a.startsWith(`--${k}=`))?.split("=")[1];
 
-// URL de l'image catalogue (base sans extension -> .../low.png)
+// Catalog image URL (base without extension -> .../low.png)
 const lowUrl = (base: string): string => {
   const host = base.includes(LEGACY_R2)
     ? base.replace(LEGACY_R2, "cdn.tcg-nexus.org")

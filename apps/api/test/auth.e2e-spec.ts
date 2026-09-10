@@ -5,7 +5,7 @@ import cookieParser from "cookie-parser";
 import type { Server } from "http";
 import request from "supertest";
 import { AppModule } from "./../src/app.module";
-import { createUser, login, uniqueEmail } from "./helpers/auth";
+import { createUser, uniqueEmail } from "./helpers/auth";
 
 const passThroughGuard = { canActivate: () => true };
 

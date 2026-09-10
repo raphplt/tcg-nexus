@@ -2,7 +2,6 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
-  Logger,
   NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
@@ -33,8 +32,6 @@ import { moneyCents } from "./finance/finance.utils";
  */
 @Injectable()
 export class RefundService {
-  private readonly logger = new Logger(RefundService.name);
-
   constructor(
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,

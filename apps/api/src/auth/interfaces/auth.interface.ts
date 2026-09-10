@@ -9,7 +9,7 @@ export interface JwtPayload {
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
-  /** Expiration absolue du access token, en millisecondes Unix. */
+  /** Absolute expiry of the access token, in Unix milliseconds. */
   accessTokenExpiresAt: number;
 }
 

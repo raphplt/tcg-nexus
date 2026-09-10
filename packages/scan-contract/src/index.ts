@@ -33,7 +33,7 @@ export interface ScanRecognizeResponse {
   bestCard: ScanCardCandidate | null;
   confidence: number; // 0 to 1
   confidenceLevel: ScanConfidenceLevel;
-  engine: string; // tesseract ou mock
+  engine: string; // tesseract or mock
 }
 
 export interface ScanRecognizeRequest {

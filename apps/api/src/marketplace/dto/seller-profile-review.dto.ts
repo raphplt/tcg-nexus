@@ -1,13 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import {
-  IsInt,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  Max,
-  Min,
-} from "class-validator";
+import { IsInt, IsOptional, IsString, Max, Min } from "class-validator";
 
 /**
  * Payload for a buyer to review a seller on a delivered order item (MKT-03).

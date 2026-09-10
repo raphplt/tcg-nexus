@@ -216,8 +216,9 @@ def _read_name_roi(card: np.ndarray):
 
 
 def _extract_rois(card: np.ndarray, name=None) -> list:
-    """ROI extraites du warp HAUTE-DÉF puis OCRisées (nom + numéro) avec
-    sélection par confiance. Le crop renvoyé sert au debug/log côté API."""
+    """ROIs extracted from the high-resolution warp, then OCR'd (name + number)
+    with confidence-based selection. The returned crop is used for debug/logging
+    on the API side."""
     rois = []
 
 

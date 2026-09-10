@@ -4,7 +4,6 @@ import { VisionService } from "./vision.service";
 
 describe("VisionService", () => {
   let service: VisionService;
-  let configService: ConfigService;
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -27,7 +26,7 @@ describe("VisionService", () => {
     }).compile();
 
     service = module.get<VisionService>(VisionService);
-    configService = module.get<ConfigService>(ConfigService);
+    module.get<ConfigService>(ConfigService);
   });
 
   afterEach(() => {

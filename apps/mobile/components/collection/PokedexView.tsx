@@ -760,7 +760,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   gridItem: {
-    width: "31%", // ~ 3 par ligne
+    width: "31%", // ~3 per row
     backgroundColor: "#ffffff",
     borderWidth: 1,
     borderColor: "#e4e4e4",

@@ -56,7 +56,6 @@ export default function SellerSettlementPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Modals state
   const [isPayoutModalOpen, setIsPayoutModalOpen] = useState(false);
   const [payoutAmount, setPayoutAmount] = useState<string>("");
   const [payoutSubmitting, setPayoutSubmitting] = useState(false);

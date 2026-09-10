@@ -535,7 +535,6 @@ export class MarketplaceService {
     currency?: string,
     cardState?: string,
   ) {
-    // Fetch card market pricing
     const card = await this.pokemonCardRepository.findOne({
       where: { id: cardId },
       select: ["id", "pricing"],

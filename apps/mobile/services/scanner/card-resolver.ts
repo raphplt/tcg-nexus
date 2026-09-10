@@ -4,7 +4,6 @@ import { perspectiveCorrector } from "./card-detector";
 import { zoneOcr } from "./zone-ocr";
 import { visualMatcher } from "./visual-matcher";
 import { candidateRanker } from "./candidate-ranker";
-import { SCANNER_CONFIG } from "./config";
 
 import type { CardSearchResult } from "@/types";
 import type {
@@ -50,7 +49,7 @@ const fetchCandidates = async (
 
 export const cardResolver = {
   /**
-   * Pipeline complet de scan :
+   * Full scan pipeline:
    * detect → rectify → ocr → visual → rank → resolve
    */
   async resolve(

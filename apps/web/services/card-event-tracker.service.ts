@@ -119,5 +119,4 @@ class CardEventTracker {
   }
 }
 
-// Singleton instance
 export const cardEventTracker = new CardEventTracker();

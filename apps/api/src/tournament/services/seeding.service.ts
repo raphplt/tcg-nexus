@@ -146,7 +146,6 @@ export class SeedingService {
       } as SeededPlayer;
     });
 
-    // Sort by descending score
     playersWithScores.sort((a, b) => (b.score || 0) - (a.score || 0));
 
     return playersWithScores.map((player, index) => ({
@@ -172,7 +171,6 @@ export class SeedingService {
       seed: 0,
     }));
 
-    // Sort by ELO descending
     playersWithElo.sort((a, b) => (b.elo ?? 1000) - (a.elo ?? 1000));
 
     return playersWithElo.map((player, index) => ({
@@ -253,7 +251,6 @@ export class SeedingService {
    * Validates that seed numbers are unique and sequential.
    */
   validateSeeding(seededPlayers: SeededPlayer[]): boolean {
-    // Verify that all seeds are unique and sequential
     const seeds = seededPlayers.map((p) => p.seed).sort((a, b) => a - b);
 
     for (let i = 0; i < seeds.length; i++) {

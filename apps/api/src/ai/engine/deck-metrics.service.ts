@@ -25,11 +25,7 @@ import {
   DiagnosticSeverity,
   renderDiagnostic,
 } from "./deck-diagnostics";
-import {
-  type DeckScoreBoard,
-  type LegalityOutcome,
-  scoreDeck,
-} from "./deck-scoring";
+import { type LegalityOutcome, scoreDeck } from "./deck-scoring";
 import { buildEvolutionLines, type EvolutionLine } from "./evolution-lines";
 
 /**

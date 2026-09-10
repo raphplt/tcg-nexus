@@ -110,7 +110,6 @@ export default function PlayerDashboardPage() {
     return () => clearInterval(timer);
   }, [countdown, dashboard?.isRoundPaused]);
 
-  // Mutations
   const proposeMutation = useMutation({
     mutationFn: (data: { playerAScore: number; playerBScore: number }) => {
       if (!dashboard?.activeMatch) throw new Error("No active match");

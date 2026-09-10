@@ -154,9 +154,6 @@ export function CardSelector({ onSelect, resetSignal }: CardComboboxProps) {
               }, 500);
 
               setInput(val);
-              // setPage(1)
-              // setCards([])
-              // setHasMore(true)
             }}
           />
           <CommandList

@@ -31,8 +31,6 @@ const scoreBreakdown = (
   signal: ScanSignal,
 ): ScoreBreakdown => {
   const cardName = normalize(card.name);
-  const cardLocalId = normalize(card.localId);
-  const cardSetTotal = normalize(card.set?.name); // on n'a pas setTotal directement
 
   const targetName = normalize(signal.ocrName);
   const targetIdVariants = localIdVariants(signal.ocrLocalId);

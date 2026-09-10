@@ -17,7 +17,6 @@ import {
 import { GameState } from "../engine/models/GameState";
 import {
   getOnlineSupportedCardDefinition,
-  isOnlineSupportedCard,
   normalizeOnlineCardName,
   ONLINE_SUPPORTED_BASIC_ENERGY_NAMES,
 } from "./online-card-registry";

@@ -2,7 +2,6 @@ import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
-  NotFoundException,
 } from "@nestjs/common";
 import { OAuthProvider } from "../entities/auth-identity.entity";
 import { OAuthService } from "./oauth.service";

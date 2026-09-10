@@ -18,8 +18,6 @@ jest.mock("bcrypt");
 describe("AuthService", () => {
   let service: AuthService;
   let userService: any;
-  let jwtService: any;
-  let collectionService: any;
 
   const mockUser: any = {
     id: 1,
@@ -97,8 +95,8 @@ describe("AuthService", () => {
 
     service = module.get<AuthService>(AuthService);
     userService = module.get<UserService>(UserService);
-    jwtService = module.get<JwtService>(JwtService);
-    collectionService = module.get<CollectionService>(CollectionService);
+    module.get<JwtService>(JwtService);
+    module.get<CollectionService>(CollectionService);
   });
 
   afterEach(() => {

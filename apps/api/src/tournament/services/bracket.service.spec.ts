@@ -15,7 +15,7 @@ import {
   RegistrationStatus,
   TournamentRegistration,
 } from "../entities/tournament-registration.entity";
-import { BracketService, BracketStructure } from "./bracket.service";
+import { BracketService } from "./bracket.service";
 import { SwissPairingService } from "./swiss-pairing.service";
 
 const mockTournamentRepository = {

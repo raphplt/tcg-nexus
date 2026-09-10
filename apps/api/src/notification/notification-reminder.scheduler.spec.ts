@@ -1,7 +1,7 @@
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
-import { Match, MatchStatus } from "../match/entities/match.entity";
+import { Match } from "../match/entities/match.entity";
 import { NotificationReminderScheduler } from "./notification-reminder.scheduler";
 
 describe("NotificationReminderScheduler", () => {

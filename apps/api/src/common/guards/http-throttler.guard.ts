@@ -2,14 +2,14 @@ import { ExecutionContext, Injectable } from "@nestjs/common";
 import { ThrottlerGuard } from "@nestjs/throttler";
 
 /**
- * ThrottlerGuard limité au contexte HTTP.
+ * ThrottlerGuard restricted to the HTTP context.
  *
- * Enregistré en APP_GUARD, le throttler s'appliquerait aussi aux gateways
- * WebSocket, où `switchToHttp()` ne rend pas une vraie requête : le quota des
- * sockets est géré par les gateways eux-mêmes.
+ * Registered as APP_GUARD, the throttler would also apply to WebSocket
+ * gateways, where `switchToHttp()` does not return a real request: socket
+ * quotas are handled by the gateways themselves.
  *
- * THROTTLE_DISABLED neutralise le quota pour les suites e2e, qui enchaînent
- * plus d'inscriptions que ce que la limite anti-bruteforce autorise.
+ * THROTTLE_DISABLED turns the quota off for the e2e suites, which chain more
+ * sign-ups than the anti-bruteforce limit allows.
  */
 @Injectable()
 export class HttpThrottlerGuard extends ThrottlerGuard {

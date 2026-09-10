@@ -30,7 +30,6 @@ describe("Tournament Operations (e2e)", () => {
   let playerA: TestUser;
   let playerB: TestUser;
   let playerAId: number;
-  let playerBId: number;
   let tournamentId: number;
   let matchId: number;
 
@@ -52,7 +51,7 @@ describe("Tournament Operations (e2e)", () => {
     });
 
     playerAId = await getPlayerId(httpServer, playerA.accessToken);
-    playerBId = await getPlayerId(httpServer, playerB.accessToken);
+    await getPlayerId(httpServer, playerB.accessToken);
 
     const startDate = new Date(Date.now() + 86_400_000);
     const endDate = new Date(Date.now() + 172_800_000);

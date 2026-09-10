@@ -12,7 +12,7 @@ const getImageSize = (
 
 /**
  * Verifies that the captured UI frame matches the Pokémon card aspect ratio.
- * Phase 1 MVP : validation du ratio uniquement (pas de ML, pas de contour detection).
+ * Phase 1 MVP: ratio validation only (no ML, no contour detection).
  * Phase 2 adds real-time camera-stream detection through OpenCV WASM.
  */
 export const cardDetector = {

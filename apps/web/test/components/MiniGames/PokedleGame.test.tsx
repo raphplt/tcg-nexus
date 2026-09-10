@@ -87,7 +87,6 @@ describe("PokedleGame", () => {
       expect(screen.getByText("Salamèche")).toBeInTheDocument();
     });
 
-    // Select Salamèche
     const option = screen.getByText("Salamèche");
     fireEvent.click(option);
 

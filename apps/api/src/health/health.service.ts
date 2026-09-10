@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { DataSource } from "typeorm";
 import axios from "axios";
 
@@ -43,8 +43,6 @@ export interface DetailsReport extends ReadinessReport {
  */
 @Injectable()
 export class HealthService {
-  private readonly logger = new Logger(HealthService.name);
-
   constructor(private readonly dataSource: DataSource) {}
 
   /**

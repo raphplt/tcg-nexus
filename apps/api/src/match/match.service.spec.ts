@@ -121,19 +121,18 @@ describe("MatchService", () => {
     location: "",
     description: "",
     rules: "",
-    // Corrected property name
     maxPlayers: 16,
     additionalInfo: "",
     allowedFormats: [],
     ageRestrictionMin: 0,
     ageRestrictionMax: 0,
     requiresApproval: false,
-    allowLateRegistration: true, // properties from entity
+    allowLateRegistration: true,
     isPublic: true,
     isExternal: false,
     grandFinalReset: true,
     isFinished: false,
-    players: [], // Add missing property
+    players: [],
     roundDurationMinutes: 50,
     isRoundPaused: false,
     deckVisibilityPolicy: DeckVisibilityPolicy.PUBLIC_ON_START,
@@ -401,7 +400,6 @@ describe("MatchService", () => {
       // Basic transaction mock that executes the callback
       mockDataSource.transaction.mockImplementation(
         async (cb: (manager: any) => Promise<unknown>) => {
-          // Mock manager for transaction
           const manager = {
             save: jest
               .fn()

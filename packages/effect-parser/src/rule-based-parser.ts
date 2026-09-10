@@ -2,7 +2,7 @@
  * Rule-Based Effect Parser
  *
  * Deterministic parser for French Pokémon TCG card effects using regular expressions and text patterns.
- * Pour les cas complexes ou ambigus, retourne effects: [] (safe fallback).
+ * For complex or ambiguous cases, returns effects: [] (safe fallback).
  */
 
 import type { CardInput } from "./prompt-builder.js";
@@ -33,7 +33,7 @@ type Duration =
   | "UNTIL_YOUR_NEXT_TURN"
   | "WHILE_ACTIVE";
 
-/** Normalise les apostrophes typographiques et espaces */
+/** Normalizes typographic apostrophes and spaces */
 function norm(text: string): string {
   return text
     .replace(/['']/g, "'")
@@ -116,7 +116,7 @@ function detectTarget(text: string): TargetType {
   return "OPPONENT_ACTIVE";
 }
 
-/** Cible pour HEAL — default trainer = SELECTED_OWN_POKEMON */
+/** Target for HEAL — trainer default = SELECTED_OWN_POKEMON */
 function detectHealTarget(text: string): TargetType {
   const t = text.toLowerCase();
   if (/de ce pok[eé]mon|sur ce pok[eé]mon|lui-m[eê]me/.test(t)) return "SELF";
@@ -164,8 +164,6 @@ function detectEnergyType(text: string): string | undefined {
     if (symbolMap[normalized]) return symbolMap[normalized];
   }
 
-  const textLower = text.toLowerCase();
-
   const enTypes: Array<[RegExp, string]> = [
     [/\bfire\b/i, "Feu"],
     [/\bwater\b/i, "Eau"],
@@ -203,7 +201,7 @@ function detectEnergyType(text: string): string | undefined {
   return undefined;
 }
 
-/** Extrait le filtre de recherche depuis le texte */
+/** Extracts the search filter from the text */
 function extractSearchFilter(text: string): Record<string, string> | undefined {
   const t = text.toLowerCase();
   const filter: Record<string, string> = {};
@@ -330,7 +328,7 @@ function tryHeal(text: string): AnyEffect[] {
   return [];
 }
 
-/** DAMAGE (effets secondaires — bench, self, spread) */
+/** DAMAGE (secondary effects — bench, self, spread) */
 function tryDamage(text: string): AnyEffect[] {
   const t = norm(text);
   const effects: AnyEffect[] = [];
@@ -655,13 +653,13 @@ function tryAttachEnergyFromDiscard(text: string): AnyEffect[] {
     )
   )
     return [];
-  if (/deck/i.test(t)) return []; // c'est ATTACH_FROM_DECK
+  if (/deck/i.test(t)) return []; // that is ATTACH_FROM_DECK
 
   const amountM = /attachez? (\d+|\w+) [eé]nergies?/i.exec(t);
   const amount = amountM ? parseNumber(amountM[1]!) : 1;
   const energyType = detectEnergyType(text);
   const target = detectTarget(t);
-  const targetFinal = target === "OPPONENT_ACTIVE" ? "SELF" : target; // default = SELF pour les attaches
+  const targetFinal = target === "OPPONENT_ACTIVE" ? "SELF" : target; // default = SELF for attachments
 
   const effect: AnyEffect = {
     type: "ATTACH_ENERGY_FROM_DISCARD",
@@ -681,7 +679,7 @@ function tryAttachEnergyFromDeck(text: string): AnyEffect[] {
     )
   )
     return [];
-  if (/d[eé]fausse/i.test(t)) return []; // c'est ATTACH_FROM_DISCARD
+  if (/d[eé]fausse/i.test(t)) return []; // that is ATTACH_FROM_DISCARD
 
   const amountM = /attachez? (\d+|\w+) [eé]nergies?/i.exec(t);
   const amount = amountM ? parseNumber(amountM[1]!) : 1;
@@ -1158,12 +1156,12 @@ function tryStadiumPassiveDamageReduce(text: string): AnyEffect[] {
 /** Simple effect parsers in priority order. */
 const SIMPLE_PARSERS: Array<(text: string) => AnyEffect[]> = [
   tryDynamicDamage, // before tryDamage to prevent duplicate matches
-  tryPlaceDamageCounters, // avant tryDamage
+  tryPlaceDamageCounters, // before tryDamage
   tryDamage,
   tryHeal,
   trySpecialCondition,
   tryRemoveSpecialCondition,
-  tryDrawUntilHandSize, // avant tryDrawCard
+  tryDrawUntilHandSize, // before tryDrawCard
   tryDrawCard,
   trySearchDeck,
   tryLookAtTopDeck,
@@ -1195,7 +1193,7 @@ const SIMPLE_PARSERS: Array<(text: string) => AnyEffect[]> = [
   tryShuffleDeck,
 ];
 
-/** Parse les effets COIN_FLIP / MULTI_COIN_FLIP / FLIP_UNTIL_TAILS */
+/** Parses COIN_FLIP / MULTI_COIN_FLIP / FLIP_UNTIL_TAILS effects */
 function parseCoinFlip(text: string): AnyEffect {
   const t = norm(text);
   const withoutFlip = t.replace(/lancez? une pièce\.?\s*/i, "");
@@ -1288,7 +1286,7 @@ export function parseEffectsFromText(text: string): AnyEffect[] {
   return parseSimpleEffects(t);
 }
 
-/** Applique tous les parseurs simples sur un texte sans coin flip.
+/** Applies every simple parser to a text without a coin flip.
  *  Effects are sorted by their position in the text. */
 function parseSimpleEffects(
   text: string,
@@ -1357,7 +1355,7 @@ const ABILITY_PARSERS: Array<(text: string) => AnyEffect[]> = [
   tryShuffleDeck,
 ];
 
-/** Parse les effets d'un texte de Talent */
+/** Parses the effects of an Ability ("Talent") text */
 export function parseAbilityEffectsFromText(text: string): AnyEffect[] {
   if (!text?.trim()) return [];
   const t = norm(text);

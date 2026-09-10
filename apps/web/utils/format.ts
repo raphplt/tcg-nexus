@@ -29,7 +29,7 @@ export function formatDateTime(
   return date.toLocaleString(locale, options);
 }
 
-/** Convertit une valeur potentiellement absente ou textuelle en nombre exploitable. */
+/** Converts a possibly missing or textual value into a usable number. */
 function toNumber(value: number | string | null | undefined): number | null {
   if (value === null || value === undefined || value === "") return null;
   const parsed = typeof value === "number" ? value : Number(value);

@@ -32,7 +32,6 @@ const stripeServiceMock = {
 describe("Settlement, Receipt Import & User Journey (e2e)", () => {
   let app: INestApplication;
   let httpServer: Server;
-  let listingRepo: Repository<Listing>;
   let seller: TestUser;
   let buyer: TestUser;
   let admin: TestUser;
@@ -48,7 +47,7 @@ describe("Settlement, Receipt Import & User Journey (e2e)", () => {
       ],
     }));
     httpServer = app.getHttpServer() as Server;
-    listingRepo = app.get<Repository<Listing>>(getRepositoryToken(Listing));
+    app.get<Repository<Listing>>(getRepositoryToken(Listing));
 
     seller = await createUser(httpServer, {
       firstName: "Settlement",

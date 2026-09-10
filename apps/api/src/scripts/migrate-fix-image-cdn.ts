@@ -54,8 +54,8 @@ async function columnExists(
 }
 
 /**
- * Réécrit l'hôte legacy -> CDN pour une colonne donnée et retourne le nombre de
- * lignes affectées.
+ * Rewrites the legacy host -> CDN for a given column and returns the number of
+ * affected rows.
  */
 async function rewriteColumn(
   queryRunner: any,

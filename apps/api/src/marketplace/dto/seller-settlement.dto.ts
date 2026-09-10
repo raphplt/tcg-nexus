@@ -11,9 +11,7 @@ import {
 import { Currency } from "../../common/enums/currency";
 import {
   PayoutMethod,
-  PayoutStatus,
   SellerAccountStatus,
-  SellerAllocationStatus,
 } from "../../common/enums/seller-settlement";
 
 /**

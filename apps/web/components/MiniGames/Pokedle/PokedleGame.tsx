@@ -199,7 +199,6 @@ export function PokedleGame() {
 
     setGameState(nextState);
 
-    // Save Daily State
     if (activeTab === "daily") {
       saveDailyState({
         date: todayStr,
