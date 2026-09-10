@@ -28,7 +28,7 @@ class FakeSocket {
 }
 
 const sockets: FakeSocket[] = [];
-const io = vi.fn(() => {
+const io = vi.fn((..._args: unknown[]) => {
   const socket = new FakeSocket();
   sockets.push(socket);
   return socket;
