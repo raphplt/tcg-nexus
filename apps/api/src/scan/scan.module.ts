@@ -1,7 +1,7 @@
-import { CatalogLocalizationModule } from "src/translation/catalog-localization.module";
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { CardModule } from "../card/card.module";
+import { CatalogLocalizationModule } from "../translation/catalog-localization.module";
 import { ScanLogger } from "./logging/scan-logger";
 import { OcrService } from "./ocr/ocr.service";
 import { ScanController } from "./scan.controller";

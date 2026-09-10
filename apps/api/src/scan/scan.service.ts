@@ -1,4 +1,3 @@
-import { CatalogLocalizationService } from "src/card/catalog-localization.service";
 import { Injectable } from "@nestjs/common";
 import type {
   ScanCardCandidate,
@@ -8,6 +7,7 @@ import type {
   ScanRoi,
 } from "@repo/scan-contract";
 import { CardService } from "../card/card.service";
+import { CatalogLocalizationService } from "../card/catalog-localization.service";
 import type { Card } from "../card/entities/card.entity";
 import { CardGame } from "../common/enums/cardGame";
 import { ScanLogger } from "./logging/scan-logger";
@@ -54,6 +54,10 @@ const cardImageUrl = (base?: string): string | undefined => {
   return `${host}/low.png`;
 };
 
+/**
+ * Service orchestrating the card scanning pipeline: image preprocessing, OCR, ROI parsing,
+ * visual disambiguation, and catalog card matching.
+ */
 @Injectable()
 export class ScanService {
   constructor(
@@ -64,6 +68,13 @@ export class ScanService {
     private readonly localization: CatalogLocalizationService,
   ) {}
 
+  /**
+   * Executes the end-to-end card identification pipeline on uploaded image frames.
+   *
+   * @param images - Array of frame buffers from a camera burst.
+   * @param game - Target card game ecosystem (defaults to pokemon).
+   * @returns Complete scan response with candidate cards, extracted ROIs, and confidence levels.
+   */
   async recognize(
     images: Buffer[],
     game?: CardGame,

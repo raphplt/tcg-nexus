@@ -1,6 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { CatalogLocalizationService } from "src/card/catalog-localization.service";
 import { CardService } from "../card/card.service";
+import { CatalogLocalizationService } from "../card/catalog-localization.service";
 import { ScanLogger } from "./logging/scan-logger";
 import { OcrService } from "./ocr/ocr.service";
 import { ScanService } from "./scan.service";
