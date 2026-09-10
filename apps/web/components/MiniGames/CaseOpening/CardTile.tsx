@@ -11,7 +11,6 @@ import {
   TIER_BADGE_CLASSES,
   TIER_LABEL_KEYS,
 } from "@/utils/miniGames/booster";
-import { isCardImagePreloaded } from "@/utils/miniGames/cardPreloader";
 import { formatEuro } from "@/utils/miniGames/pricing";
 
 const CARD_BACK = "/images/carte-pokemon-dos.jpg";
@@ -37,13 +36,14 @@ export function CardTile({ card, size = "md" }: CardTileProps) {
       }`}
     >
       <div
-        className={`relative ${size === "sm" ? "aspect-5/7 w-17" : "aspect-5/7 w-full"}`}
+        className={`relative ${size === "sm" ? "aspect-5/7 w-16 sm:w-[72px]" : "aspect-5/7 w-full"}`}
       >
         <SmartImage
           src={getCardImage(card, "low")}
           alt={card.name ?? ""}
           fallbackSrc={CARD_BACK}
-          noSkeleton={isCardImagePreloaded(getCardImage(card, "low"))}
+          noSkeleton
+          loading="eager"
           className="object-contain"
         />
       </div>

@@ -25,6 +25,7 @@ export function SmartImage({
   wrapperClassName,
   noSkeleton = false,
   fill: _fill,
+  loading = "lazy",
   ...rest
 }: SmartImageProps) {
   const [loaded, setLoaded] = useState(false);
@@ -44,9 +45,14 @@ export function SmartImage({
       )}
 
       <img
+        ref={(el) => {
+          if (el && el.complete && el.naturalWidth > 0 && !loaded) {
+            setLoaded(true);
+          }
+        }}
         src={effectiveSrc}
         alt={alt}
-        loading="lazy"
+        loading={loading}
         decoding="async"
         onLoad={() => setLoaded(true)}
         onError={() => {
@@ -57,8 +63,9 @@ export function SmartImage({
           }
         }}
         className={cn(
-          "h-full w-full block transition-opacity duration-300",
-          loaded ? "opacity-100" : "opacity-0",
+          "h-full w-full block",
+          !noSkeleton && "transition-opacity duration-300",
+          noSkeleton || loaded ? "opacity-100" : "opacity-0",
           className,
         )}
         {...rest}
