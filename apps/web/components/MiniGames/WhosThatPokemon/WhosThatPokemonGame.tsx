@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import {
   Award,
+  Check,
   Clock,
   Flame,
   HelpCircle,
@@ -10,6 +11,7 @@ import {
   RotateCcw,
   Sparkles,
   Trophy,
+  X,
   Zap,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -19,6 +21,7 @@ import { H3 } from "@/components/Shared/Titles";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { GameHeader } from "../GameHeader";
 import { LoadError } from "../LoadError";
 import { WhosThatPokemonCard } from "./WhosThatPokemonCard";
@@ -29,6 +32,7 @@ import {
   buildOptions,
   calculateGain,
   formatClue,
+  isNameMatch,
 } from "./whosThatPokemonLogic";
 import {
   type PokemonSpecies,
@@ -75,6 +79,7 @@ export function WhosThatPokemonGame() {
   const [gameState, setGameState] = useState<"playing" | "round_end">(
     "playing",
   );
+  const [roundResults, setRoundResults] = useState<boolean[]>([]);
 
   const poolRef = useRef<PokemonSpecies[]>([]);
   const seenCardIdsRef = useRef<string[]>([]);
@@ -148,6 +153,7 @@ export function WhosThatPokemonGame() {
       setRound(1);
       setGameOver(false);
       setHasError(false);
+      setRoundResults([]);
       seenCardIdsRef.current = [];
 
       await loadSpeciesPool();
@@ -166,7 +172,9 @@ export function WhosThatPokemonGame() {
       const isCorrect =
         Boolean(option) &&
         Boolean(card?.name) &&
-        option?.trim().toLowerCase() === card?.name?.trim().toLowerCase();
+        isNameMatch(option, card?.name);
+
+      setRoundResults((prev) => [...prev, isCorrect]);
 
       if (isCorrect && cfg) {
         const newStreak = streak + 1;
@@ -183,7 +191,7 @@ export function WhosThatPokemonGame() {
     [gameState, card, cfg, timeLeft, streak],
   );
 
-  const handleNextRound = () => {
+  const handleNextRound = useCallback(() => {
     if (!difficulty) return;
     if (round < MAX_ROUNDS) {
       setRound((prev) => prev + 1);
@@ -191,7 +199,52 @@ export function WhosThatPokemonGame() {
     } else {
       setGameOver(true);
     }
-  };
+  }, [difficulty, round, startRound]);
+
+  // Keyboard shortcut navigation (1-4 or A-D to answer, Space/Enter to advance)
+  useEffect(() => {
+    if (mode !== "play" || gameOver || hasError || loading) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      ) {
+        return;
+      }
+
+      if (gameState === "playing") {
+        const key = e.key.toLowerCase();
+        let idx = -1;
+        if (key === "1" || key === "a") idx = 0;
+        else if (key === "2" || key === "b") idx = 1;
+        else if (key === "3" || key === "c") idx = 2;
+        else if (key === "4" || key === "d") idx = 3;
+
+        if (idx >= 0 && idx < options.length) {
+          e.preventDefault();
+          handleAnswer(options[idx]!);
+        }
+      } else if (gameState === "round_end") {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handleNextRound();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [
+    mode,
+    gameOver,
+    hasError,
+    loading,
+    gameState,
+    options,
+    handleAnswer,
+    handleNextRound,
+  ]);
 
   useEffect(() => {
     if (
@@ -359,8 +412,8 @@ export function WhosThatPokemonGame() {
         )}
 
         {mode === "play" && !gameOver && !hasError && (
-          <Card className="tcg-surface overflow-hidden bg-card/85 backdrop-blur-sm">
-            <CardContent className="p-6">
+          <Card className="tcg-surface overflow-hidden bg-card/90 shadow-md backdrop-blur-sm">
+            <CardContent className="p-4 sm:p-6">
               {loading ? (
                 <div className="flex flex-col items-center justify-center gap-3 py-16">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -370,12 +423,13 @@ export function WhosThatPokemonGame() {
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center gap-8 md:flex-row">
+                  {/* Left Column: Mystery Pokémon / Card Stadium */}
                   <div className="relative flex w-full max-w-72 shrink-0 flex-col items-center justify-center">
                     <div
-                      className={`absolute -right-2 -top-2 z-30 flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-black shadow-sm ${
+                      className={`absolute -right-2 -top-2 z-30 flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-black shadow-sm transition-colors ${
                         timeLeft <= 4 && !revealed
-                          ? "border-red-500/30 bg-red-500/15 text-red-500"
-                          : "border-amber-500/20 bg-amber-500/10 text-amber-500"
+                          ? "animate-pulse border-red-500/40 bg-red-500/20 text-red-600 dark:text-red-400 ring-2 ring-red-500/30"
+                          : "border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400"
                       }`}
                     >
                       <Clock className="h-3.5 w-3.5" />
@@ -390,47 +444,127 @@ export function WhosThatPokemonGame() {
                     />
                   </div>
 
-                  <div className="flex w-full flex-1 flex-col justify-between gap-6">
-                    {gameState === "playing" ? (
-                      <div className="space-y-4">
-                        <H3 className="text-center font-heading text-lg font-black text-foreground md:text-left">
-                          {t("title")}
-                        </H3>
+                  {/* Right Column: Quiz Arena */}
+                  <div className="flex w-full flex-1 flex-col justify-between gap-5">
+                    {/* Round Header & Progress Dots */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                          {t("roundOf", { current: round, total: MAX_ROUNDS })}
+                        </span>
                         {clueText && (
-                          <p className="text-center text-xs font-semibold text-muted-foreground md:text-left">
+                          <div className="rounded-md bg-muted/80 px-2.5 py-1 text-xs font-semibold text-muted-foreground">
                             {t("hint")}{" "}
-                            <span className="text-foreground">{clueText}</span>
-                          </p>
+                            <span className="font-bold text-foreground">
+                              {clueText}
+                            </span>
+                          </div>
                         )}
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                          {options.map((option) => (
-                            <Button
-                              key={option}
-                              variant="outline"
-                              onClick={() => handleAnswer(option)}
-                              className="h-12 justify-center rounded-lg border-border bg-card/50 font-bold transition-all hover:border-primary/50 hover:bg-primary/5"
-                            >
-                              {option}
-                            </Button>
-                          ))}
-                        </div>
                       </div>
-                    ) : (
+
+                      {/* 10-Round Progress Dots */}
+                      <div className="flex items-center gap-1.5">
+                        {Array.from({ length: MAX_ROUNDS }).map((_, i) => {
+                          const isPast = i < roundResults.length;
+                          const isWin = isPast && roundResults[i];
+                          const isLoss = isPast && !roundResults[i];
+                          const isCurrent = i === round - 1;
+
+                          return (
+                            <div
+                              key={i}
+                              className={cn(
+                                "h-2 flex-1 rounded-full transition-all",
+                                isWin && "bg-emerald-500",
+                                isLoss && "bg-rose-500",
+                                isCurrent &&
+                                  "bg-primary animate-pulse ring-2 ring-primary/30",
+                                !isPast && !isCurrent && "bg-muted",
+                              )}
+                            />
+                          );
+                        })}
+                      </div>
+
+                      <H3 className="font-heading text-xl font-black text-foreground">
+                        {t("title")}
+                      </H3>
+                    </div>
+
+                    {/* 4 Choice Buttons in 2x2 Grid */}
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      {options.map((option, idx) => {
+                        const letter = ["A", "B", "C", "D"][idx] || "";
+                        const isCorrect = isNameMatch(option, card?.name);
+                        const isSelected = selectedOption === option;
+
+                        return (
+                          <button
+                            key={option}
+                            type="button"
+                            disabled={gameState !== "playing"}
+                            onClick={() => handleAnswer(option)}
+                            className={cn(
+                              "group relative flex min-h-[3.75rem] h-auto w-full items-center gap-3 rounded-xl border p-3 text-left transition-all",
+                              "leading-tight break-words whitespace-normal shadow-xs",
+                              gameState === "playing" &&
+                                "border-border/80 bg-card hover:border-primary/60 hover:bg-primary/5 hover:scale-[1.01] active:scale-[0.99] cursor-pointer",
+                              revealed &&
+                                isCorrect &&
+                                "border-emerald-500/80 bg-emerald-500/15 text-emerald-950 dark:text-emerald-100 ring-2 ring-emerald-500/30 font-bold",
+                              revealed &&
+                                isSelected &&
+                                !isCorrect &&
+                                "border-rose-500/80 bg-rose-500/15 text-rose-950 dark:text-rose-100 font-bold",
+                              revealed &&
+                                !isSelected &&
+                                !isCorrect &&
+                                "opacity-40",
+                            )}
+                          >
+                            <span
+                              aria-hidden="true"
+                              className={cn(
+                                "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-black transition-colors",
+                                revealed && isCorrect
+                                  ? "bg-emerald-500 text-white"
+                                  : revealed && isSelected && !isCorrect
+                                    ? "bg-rose-500 text-white"
+                                    : "bg-muted text-muted-foreground group-hover:bg-primary group-hover:text-white",
+                              )}
+                            >
+                              {revealed && isCorrect ? (
+                                <Check className="h-4 w-4" />
+                              ) : revealed && isSelected && !isCorrect ? (
+                                <X className="h-4 w-4" />
+                              ) : (
+                                letter
+                              )}
+                            </span>
+                            <span className="flex-1 text-center font-bold text-sm sm:text-base">
+                              {option}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Result Banner & Next Round Button (When Answered) */}
+                    {gameState === "round_end" && (
                       <motion.div
-                        initial={{ opacity: 0, y: 10 }}
+                        initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="space-y-4 text-center md:text-left"
+                        className="space-y-3 pt-1"
                       >
                         {selectedOption === null ? (
-                          <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-4 text-sm font-bold text-amber-500">
+                          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-center text-sm font-bold text-amber-600 dark:text-amber-400">
                             {t("timeOut", { name: card?.name || "" })}
                           </div>
-                        ) : selectedOption.trim().toLowerCase() ===
-                          card?.name?.trim().toLowerCase() ? (
-                          <div className="rounded-lg border border-green-500/20 bg-green-500/10 p-4 text-sm font-bold text-green-600 dark:text-green-400">
+                        ) : isNameMatch(selectedOption, card?.name) ? (
+                          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 text-center text-sm font-bold text-emerald-600 dark:text-emerald-400">
                             {t("correct", { name: card?.name || "" })}
                             {lastGain ? (
-                              <span className="mt-1 block font-black">
+                              <span className="mt-0.5 block font-black">
                                 {t("pointsGained", { points: lastGain })}
                                 {streak > 1
                                   ? ` · ${t("streakFire", { count: streak })}`
@@ -439,21 +573,14 @@ export function WhosThatPokemonGame() {
                             ) : null}
                           </div>
                         ) : (
-                          <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-sm font-bold text-red-500">
+                          <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3.5 text-center text-sm font-bold text-rose-600 dark:text-rose-400">
                             {t("wrong", { name: card?.name || "" })}
                           </div>
                         )}
 
-                        <div className="text-[11px] font-bold text-muted-foreground">
-                          {t("expansion")}{" "}
-                          <span className="text-foreground">
-                            {card?.set?.name || t("unknownExpansion")}
-                          </span>
-                        </div>
-
                         <Button
                           onClick={handleNextRound}
-                          className="h-11 w-full bg-gradient-to-r from-primary to-secondary font-semibold text-white"
+                          className="h-12 w-full rounded-xl bg-gradient-to-r from-primary to-secondary font-bold text-white shadow-md transition-all hover:scale-[1.01] active:scale-[0.99]"
                         >
                           {round < MAX_ROUNDS
                             ? t("nextRound")

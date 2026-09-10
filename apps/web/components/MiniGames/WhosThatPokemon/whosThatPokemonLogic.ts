@@ -13,7 +13,7 @@ export interface DifficultyConfig {
   mult: number;
   distractors: "far" | "mix" | "similar";
   clue: "typegen" | "type" | "none";
-  visualMode: "blur" | "silhouette";
+  visualMode: "blur" | "silhouette" | "silhouette-glow";
   accent: "green" | "amber" | "red";
 }
 
@@ -22,9 +22,9 @@ export const DIFFICULTIES: Record<Difficulty, DifficultyConfig> = {
     labelKey: "easy",
     descKey: "easyHelp",
     time: 20,
-    baseBlur: 8,
-    minBlur: 2,
-    brightness: 0.8,
+    baseBlur: 6,
+    minBlur: 1.5,
+    brightness: 0.95,
     mult: 1,
     distractors: "far",
     clue: "typegen",
@@ -35,13 +35,13 @@ export const DIFFICULTIES: Record<Difficulty, DifficultyConfig> = {
     labelKey: "medium",
     descKey: "mediumHelp",
     time: 15,
-    baseBlur: 14,
-    minBlur: 5,
-    brightness: 0.65,
+    baseBlur: 0,
+    minBlur: 0,
+    brightness: 0.05,
     mult: 2,
     distractors: "mix",
     clue: "type",
-    visualMode: "blur",
+    visualMode: "silhouette-glow",
     accent: "amber",
   },
   hard: {
@@ -50,7 +50,7 @@ export const DIFFICULTIES: Record<Difficulty, DifficultyConfig> = {
     time: 10,
     baseBlur: 0,
     minBlur: 0,
-    brightness: 0.05,
+    brightness: 0,
     mult: 3,
     distractors: "similar",
     clue: "none",
@@ -58,6 +58,73 @@ export const DIFFICULTIES: Record<Difficulty, DifficultyConfig> = {
     accent: "red",
   },
 };
+
+export const TYPE_AURA_COLORS: Record<string, string> = {
+  Grass: "#22c55e",
+  Plante: "#22c55e",
+  Fire: "#f97316",
+  Feu: "#f97316",
+  Water: "#0ea5e9",
+  Eau: "#0ea5e9",
+  Lightning: "#eab308",
+  Électrique: "#eab308",
+  Psychic: "#a855f7",
+  Psy: "#a855f7",
+  Fighting: "#ea580c",
+  Combat: "#ea580c",
+  Darkness: "#64748b",
+  Obscurité: "#64748b",
+  Metal: "#94a3b8",
+  Métal: "#94a3b8",
+  Dragon: "#6366f1",
+  Fairy: "#ec4899",
+  Fée: "#ec4899",
+  Colorless: "#9ca3af",
+  Incolore: "#9ca3af",
+};
+
+/**
+ * Returns the hex glow color matching a Pokémon energy type for silhouette aura.
+ *
+ * @param type - Primary Pokémon energy type.
+ * @returns Hex color string.
+ */
+export function getTypeAura(type?: string): string {
+  if (!type) return "#3b82f6";
+  return TYPE_AURA_COLORS[type] || "#3b82f6";
+}
+
+/**
+ * Returns the official high-resolution PNG artwork URL with transparent background
+ * for a Pokémon species from PokéAPI sprites.
+ *
+ * @param dexId - Primary National Pokédex number (1 to 1025).
+ * @returns Official artwork URL, or null if dexId is missing or invalid.
+ */
+export function getPokemonOfficialArtwork(dexId?: number): string | null {
+  if (!dexId || dexId <= 0 || dexId > 1025) return null;
+  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${dexId}.png`;
+}
+
+/**
+ * Compares two Pokémon names ignoring casing, leading/trailing whitespaces,
+ * accents, and special punctuation characters (hyphens, spaces).
+ *
+ * @param a - First Pokémon name.
+ * @param b - Second Pokémon name.
+ * @returns True if both names refer to the same Pokémon.
+ */
+export function isNameMatch(a?: string | null, b?: string | null): boolean {
+  if (!a || !b) return false;
+  const normalize = (val: string) =>
+    val
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[-_\s]+/g, " ")
+      .trim()
+      .toLowerCase();
+  return normalize(a) === normalize(b);
+}
 
 export const ACCENT_CLASSES: Record<
   DifficultyConfig["accent"],

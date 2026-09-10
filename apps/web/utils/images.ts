@@ -166,10 +166,7 @@ export function getCardImage(
 
   // If URL already ends with /high.png, /low.png, etc., replace the quality suffix
   if (/\/(high|low)\.(png|webp|jpg|jpeg)$/i.test(base)) {
-    return base.replace(
-      /\/(high|low)\.(png|webp|jpg|jpeg)$/i,
-      `${suffix}.png`,
-    );
+    return base.replace(/\/(high|low)\.(png|webp|jpg|jpeg)$/i, `${suffix}.png`);
   }
 
   // If URL already ends with /high or /low without extension, append .png
@@ -274,6 +271,12 @@ export const remotePatterns: RemotePattern[] = [
   {
     protocol: "https",
     hostname: "www.pexels.com",
+    port: "",
+    pathname: "/**",
+  },
+  {
+    protocol: "https",
+    hostname: "raw.githubusercontent.com",
     port: "",
     pathname: "/**",
   },
