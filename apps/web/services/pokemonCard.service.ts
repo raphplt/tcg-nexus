@@ -56,9 +56,11 @@ export const pokemonCardService = {
     return response.data;
   },
 
-  async search(query: string): Promise<PokemonCardType[]> {
+  async search(query: string, limit?: number): Promise<PokemonCardType[]> {
+    const config = limit ? { params: { limit } } : undefined;
     const response = await api.get<PokemonCardType[]>(
-      `/pokemon-card/search/${query}`,
+      `/pokemon-card/search/${encodeURIComponent(query)}`,
+      ...(config ? [config] : []),
     );
     return response.data;
   },
@@ -102,6 +104,22 @@ export const pokemonCardService = {
       "/pokemon-card/species/random",
       {
         params: { count },
+      },
+    );
+    return response.data;
+  },
+
+  /**
+   * Retrieves the deterministic daily Pokémon species card for Pokedle.
+   *
+   * @param date - Optional target date string (YYYY-MM-DD).
+   * @returns Daily Pokémon card or null.
+   */
+  async getDailySpecies(date?: string): Promise<PokemonCardType | null> {
+    const response = await api.get<PokemonCardType | null>(
+      "/pokemon-card/species/daily",
+      {
+        params: date ? { date } : undefined,
       },
     );
     return response.data;
