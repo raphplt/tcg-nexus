@@ -67,4 +67,40 @@ export class CollectionValuationDto {
     example: "2026-09-06T16:00:00.000Z",
   })
   computedAt: string;
+
+  @ApiPropertyOptional({
+    description: "Estimated value in EUR (compatibility alias)",
+    example: 450.75,
+  })
+  estimatedValueEur?: number;
+
+  @ApiPropertyOptional({
+    description: "Estimated value in USD (compatibility alias)",
+    example: 486.81,
+  })
+  estimatedValueUsd?: number;
+
+  @ApiPropertyOptional({
+    description: "Number of valued physical copies (compatibility alias)",
+    example: 105,
+  })
+  totalValuedCopies?: number;
+
+  @ApiPropertyOptional({
+    description: "Number of unvalued physical copies (compatibility alias)",
+    example: 15,
+  })
+  totalUnvaluedCopies?: number;
+
+  @ApiPropertyOptional({
+    description: "Total known acquisition cost in EUR (compatibility alias)",
+    example: 310.0,
+  })
+  knownAcquisitionCostEur?: number;
+
+  @ApiPropertyOptional({
+    description: "Unrealized gain or loss in EUR (compatibility alias)",
+    example: 140.75,
+  })
+  roiEur?: number;
 }

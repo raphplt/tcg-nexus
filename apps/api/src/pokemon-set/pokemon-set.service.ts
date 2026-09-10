@@ -1,12 +1,12 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { CardGame } from "src/common/enums/cardGame";
+import { CardGame } from "../common/enums/cardGame";
 import { Repository } from "typeorm";
 import { CreatePokemonSetDto } from "./dto/create-pokemon-set.dto";
 import { UpdatePokemonSetDto } from "./dto/update-pokemon-set.dto";
 import { PokemonSet } from "./entities/pokemon-set.entity";
 import { PokemonSetTranslation } from "./entities/pokemon-set-translation.entity";
-import type { SupportedLocale } from "src/translation/supported-locales";
+import type { SupportedLocale } from "../translation/supported-locales";
 
 @Injectable()
 export class PokemonSetService {

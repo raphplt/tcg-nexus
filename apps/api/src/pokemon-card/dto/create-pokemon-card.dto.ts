@@ -1,3 +1,4 @@
+import { ApiPropertyOptional } from "@nestjs/swagger";
 import { Type } from "class-transformer";
 import {
   IsArray,
@@ -8,12 +9,16 @@ import {
   IsString,
   ValidateNested,
 } from "class-validator";
-import { CardPricingData } from "src/card/entities/card.entity";
-import { EnergyType } from "src/common/enums/energyType";
-import { PokemonCardsType } from "src/common/enums/pokemonCardsType";
-import { TrainerType } from "src/common/enums/trainerType";
+import { CardPricingData } from "../../card/entities/card.entity";
+import { EnergyType } from "../../common/enums/energyType";
+import { PokemonCardsType } from "../../common/enums/pokemonCardsType";
+import { TrainerType } from "../../common/enums/trainerType";
 
-class SetRefDto {
+/**
+ * Reference to an expansion set.
+ */
+export class SetRefDto {
+  @ApiPropertyOptional({ description: "Expansion set ID", example: "sv03" })
   @IsString()
   id: string;
 }

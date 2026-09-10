@@ -1,10 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { CardGame } from "src/common/enums/cardGame";
+import { CardGame } from "../common/enums/cardGame";
 import {
   DEFAULT_LOCALE,
   type SupportedLocale,
-} from "src/translation/supported-locales";
+} from "../translation/supported-locales";
 import { Repository } from "typeorm";
 import { CreatePokemonSeryDto } from "./dto/create-pokemon-sery.dto";
 import { UpdatePokemonSeryDto } from "./dto/update-pokemon-sery.dto";

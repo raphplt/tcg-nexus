@@ -2,13 +2,13 @@ import {
   applyCardSearch,
   applyRarityFilter,
   cardNameMatchesSql,
-} from "src/card/card-search";
+} from "../card/card-search";
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Card } from "src/card/entities/card.entity";
-import { PokemonCardDetails } from "src/card/entities/pokemon-card-details.entity";
-import { CardGame } from "src/common/enums/cardGame";
-import { PokemonSet } from "src/pokemon-set/entities/pokemon-set.entity";
+import { Card } from "../card/entities/card.entity";
+import { PokemonCardDetails } from "../card/entities/pokemon-card-details.entity";
+import { CardGame } from "../common/enums/cardGame";
+import { PokemonSet } from "../pokemon-set/entities/pokemon-set.entity";
 import { Repository } from "typeorm";
 import { PaginatedResult, PaginationHelper } from "../helpers/pagination";
 import { CreatePokemonCardDto } from "./dto/create-pokemon-card.dto";
@@ -352,24 +352,24 @@ export class PokemonCardService {
   }
 
   /**
-   * Trouve les meilleures cartes correspondant aux données OCR.
+   * Matches candidate cards against OCR-extracted scanner data.
    *
-   * Stratégie de scoring (pourquoi "Abra 063" ne peut pas retourner "Machop 063") :
+   * Scoring strategy:
    *
-   * ÉTAPE 1 — Requête AND prioritaire :
-   *   Si on a NOM + NUMÉRO → on cherche d'abord les cartes qui ont les DEUX.
-   *   → Abra avec localId 063 → trouvé directement, score 230 (60+50+120 bonus combiné)
+   * STEP 1 — Prioritized AND query:
+   *   If both NAME and NUMBER are provided, query cards matching BOTH first.
+   *   → Abra with localId 063 → matched directly with high combined score (230).
    *
-   * ÉTAPE 2 — Fallback OR :
-   *   Si rien trouvé en AND, on cherche par NOM ou NUMÉRO séparément.
+   * STEP 2 — Fallback OR query:
+   *   If no match is found via AND, query by NAME or NUMBER independently.
    *
-   * Tableau des scores :
-   *   localId exact           → +60
-   *   nom exact               → +50
-   *   BONUS COMBINÉ (les 2)  → +120   ← clé du fix
+   * Score table:
+   *   exact localId           → +60
+   *   exact name              → +50
+   *   COMBINED BONUS (both)   → +120
    *   set name match          → +15
    *   → Abra 063 = 60+50+120 = 230
-   *   → Machop 063 = 60 seul  = 60
+   *   → Machop 063 = 60 only  = 60
    */
   async findByScanMatch(params: {
     cardName?: string;

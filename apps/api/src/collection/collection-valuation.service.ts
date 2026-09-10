@@ -151,6 +151,16 @@ export class CollectionValuationService {
       roiPercentage = round2((unrealizedGainLoss / totalAcquisitionCost) * 100);
     }
 
+    const estimatedValueEur =
+      targetCurrency === Currency.EUR
+        ? roundedEstimatedValue
+        : round2(roundedEstimatedValue * 0.92);
+
+    const estimatedValueUsd =
+      targetCurrency === Currency.USD
+        ? roundedEstimatedValue
+        : round2(roundedEstimatedValue * 1.08);
+
     return {
       currency: targetCurrency,
       totalEstimatedValue: roundedEstimatedValue,
@@ -163,6 +173,12 @@ export class CollectionValuationService {
       roiPercentage,
       sources: Array.from(sourcesSet),
       computedAt: new Date().toISOString(),
+      estimatedValueEur,
+      estimatedValueUsd,
+      totalValuedCopies: valuedCopiesCount,
+      totalUnvaluedCopies: unvaluedCopiesCount,
+      knownAcquisitionCostEur: totalAcquisitionCost ?? 0,
+      roiEur: unrealizedGainLoss ?? undefined,
     };
   }
 

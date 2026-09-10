@@ -9,18 +9,28 @@ import {
   Query,
   UseGuards,
 } from "@nestjs/common";
-import { ApiBody, ApiOperation, ApiTags } from "@nestjs/swagger";
-import { Public } from "src/auth/decorators/public.decorator";
-import { Roles } from "src/auth/decorators/roles.decorator";
-import { UserRole } from "src/common/enums/user";
-import { FindAllPokemonCardDto } from "./dto/find-all-pokemon-card.dto";
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiTags,
+} from "@nestjs/swagger";
+import { Public } from "../auth/decorators/public.decorator";
+import { Roles } from "../auth/decorators/roles.decorator";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { RolesGuard } from "../auth/guards/roles.guard";
+import { UserRole } from "../common/enums/user";
+import { CardSyncService } from "./card-sync.service";
 import { CreatePokemonCardDto } from "./dto/create-pokemon-card.dto";
+import { FindAllPokemonCardDto } from "./dto/find-all-pokemon-card.dto";
+import { ScanMatchDto } from "./dto/scan-match.dto";
 import { UpdatePokemonCardDto } from "./dto/update-pokemon-card.dto";
 import { PokemonCardService } from "./pokemon-card.service";
-import { CardSyncService } from "./card-sync.service";
-import { JwtAuthGuard } from "src/auth/guards/jwt-auth.guard";
-import { RolesGuard } from "src/auth/guards/roles.guard";
 
+/**
+ * Controller providing administrative management, queries, and OCR matching for Pokémon cards.
+ */
 @ApiTags("pokemon-card")
 @Controller("pokemon-card")
 export class PokemonCardController {
@@ -29,30 +39,57 @@ export class PokemonCardController {
     private readonly cardSyncService: CardSyncService,
   ) {}
 
+  /**
+   * Triggers a manual synchronization run from TCGdex.
+   *
+   * @returns Sync execution summary.
+   */
   @Post("sync")
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
+  @ApiBearerAuth()
   @ApiOperation({
-    summary: "Déclencher manuellement la synchronisation des cartes Pokémon",
+    summary: "Trigger manual Pokémon card sync from TCGdex",
   })
   sync() {
     return this.cardSyncService.syncAll();
   }
 
+  /**
+   * Creates a new Pokémon card definition.
+   *
+   * @param createPokemonCardDto Card creation payload.
+   * @returns Newly created card entity.
+   */
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.MODERATOR)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Create a new Pokémon card" })
   create(@Body() createPokemonCardDto: CreatePokemonCardDto) {
     return this.pokemonCardService.create(createPokemonCardDto);
   }
 
-  // Capped in the service: the catalogue is browsed through "paginated".
+  /**
+   * Retrieves an unpaginated list of cards (capped by service limit).
+   *
+   * @returns Array of cards.
+   */
   @Get()
+  @ApiOperation({ summary: "Retrieve cards capped by upper limit" })
   findAll() {
     return this.pokemonCardService.findAll();
   }
 
+  /**
+   * Retrieves a filtered and paginated list of Pokémon cards.
+   *
+   * @param query Search, set, series, rarity, and pagination filters.
+   * @returns Paginated cards result.
+   */
   @Public()
   @Get("paginated")
+  @ApiOperation({ summary: "Retrieve paginated Pokémon cards with filters" })
   findAllPaginated(@Query() query: FindAllPokemonCardDto) {
     return this.pokemonCardService.findAllPaginated(
       query.page,
@@ -65,14 +102,34 @@ export class PokemonCardController {
     );
   }
 
+  /**
+   * Searches Pokémon cards by name or keywords.
+   *
+   * @param search Search keyword.
+   * @returns Matching cards.
+   */
   @Public()
   @Get("search/:search")
+  @ApiOperation({ summary: "Search Pokémon cards by text" })
+  @ApiParam({ name: "search", description: "Search query text" })
   findBySearch(@Param("search") search: string) {
     return this.pokemonCardService.findBySearch(search);
   }
 
+  /**
+   * Retrieves a random Pokémon card matching optional series, rarity, and set criteria.
+   *
+   * @param serieId Optional series ID.
+   * @param rarity Optional rarity name.
+   * @param set Optional set ID.
+   * @returns Random card or null.
+   */
   @Get("random")
   @Public()
+  @ApiOperation({ summary: "Retrieve a random Pokémon card" })
+  @ApiQuery({ name: "serieId", required: false, type: String })
+  @ApiQuery({ name: "rarity", required: false, type: String })
+  @ApiQuery({ name: "set", required: false, type: String })
   findRandom(
     @Query("serieId") serieId?: string,
     @Query("rarity") rarity?: string,
@@ -81,35 +138,33 @@ export class PokemonCardController {
     return this.pokemonCardService.findRandom(serieId, rarity, set);
   }
 
+  /**
+   * Matches candidate Pokémon cards using OCR scan parameters.
+   *
+   * @param dto Scan match query payload or cardName string.
+   * @param localId Optional set-relative number (when called positionally).
+   * @param setName Optional set name (when called positionally).
+   * @param setNumber Optional set number (when called positionally).
+   * @param setTotal Optional set total count (when called positionally).
+   * @returns Ranked array of matching cards and confidence scores.
+   */
   @Public()
   @Post("scan-match")
   @ApiOperation({
-    summary: "Trouve les cartes correspondant aux données extraites par OCR",
-  })
-  @ApiBody({
-    schema: {
-      type: "object",
-      properties: {
-        cardName: { type: "string", description: "Nom extrait par OCR" },
-        localId: {
-          type: "string",
-          description: "Numéro dans le set ex: 045 ou 045/198",
-        },
-        setName: { type: "string", description: "Nom du set extrait" },
-        setNumber: { type: "string", description: "Numéro brut avant /" },
-        setTotal: { type: "string", description: "Total du set après /" },
-      },
-    },
+    summary: "Find Pokémon cards matching OCR-extracted scan data",
   })
   async scanMatch(
-    @Body("cardName") cardName?: string,
-    @Body("localId") localId?: string,
-    @Body("setName") setName?: string,
-    @Body("setNumber") setNumber?: string,
-    @Body("setTotal") setTotal?: string,
+    @Body() dto?: ScanMatchDto | string,
+    localId?: string,
+    setName?: string,
+    setNumber?: string,
+    setTotal?: string,
   ) {
+    if (dto && typeof dto === "object") {
+      return this.pokemonCardService.findByScanMatch(dto);
+    }
     return this.pokemonCardService.findByScanMatch({
-      cardName,
+      cardName: dto as unknown as string,
       localId,
       setName,
       setNumber,
@@ -117,14 +172,33 @@ export class PokemonCardController {
     });
   }
 
+  /**
+   * Retrieves a specific Pokémon card by its ID.
+   *
+   * @param id Card UUID or catalog identifier.
+   * @returns Card entity.
+   */
   @Get(":id")
   @Public()
+  @ApiOperation({ summary: "Retrieve Pokémon card details by ID" })
+  @ApiParam({ name: "id", description: "Card identifier" })
   findOne(@Param("id") id: string) {
     return this.pokemonCardService.findOne(id);
   }
 
+  /**
+   * Updates an existing Pokémon card.
+   *
+   * @param id Card identifier.
+   * @param updatePokemonCardDto Updated fields payload.
+   * @returns Updated card entity.
+   */
   @Patch(":id")
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.MODERATOR)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Update Pokémon card details" })
+  @ApiParam({ name: "id", description: "Card identifier" })
   update(
     @Param("id") id: string,
     @Body() updatePokemonCardDto: UpdatePokemonCardDto,
@@ -132,8 +206,18 @@ export class PokemonCardController {
     return this.pokemonCardService.update(id, updatePokemonCardDto);
   }
 
+  /**
+   * Removes a Pokémon card from the catalog.
+   *
+   * @param id Card identifier.
+   * @returns Deletion confirmation.
+   */
   @Delete(":id")
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.MODERATOR)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Delete a Pokémon card" })
+  @ApiParam({ name: "id", description: "Card identifier" })
   remove(@Param("id") id: string) {
     return this.pokemonCardService.remove(id);
   }

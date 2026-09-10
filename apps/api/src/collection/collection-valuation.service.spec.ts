@@ -101,6 +101,12 @@ describe("CollectionValuationService", () => {
     expect(res.unrealizedGainLoss).toBe(6.0);
     expect(res.roiPercentage).toBe(42.86);
     expect(res.sources).toContain("Cardmarket (trend/avg)");
+    expect(res.estimatedValueEur).toBe(20.0);
+    expect(res.estimatedValueUsd).toBe(21.6);
+    expect(res.totalValuedCopies).toBe(2);
+    expect(res.totalUnvaluedCopies).toBe(1);
+    expect(res.knownAcquisitionCostEur).toBe(14.0);
+    expect(res.roiEur).toBe(6.0);
   });
 
   it("applies condition multiplier correctly (NM = 1.0, EX = 0.9)", async () => {

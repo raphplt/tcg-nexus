@@ -8,15 +8,15 @@ import { Cron } from "@nestjs/schedule";
 import { InjectRepository } from "@nestjs/typeorm";
 import { DataSource, Repository } from "typeorm";
 import TCGdex from "@tcgdex/sdk";
-import { Card } from "src/card/entities/card.entity";
-import { PokemonCardDetails } from "src/card/entities/pokemon-card-details.entity";
-import { CardGame } from "src/common/enums/cardGame";
-import { EnergyType } from "src/common/enums/energyType";
-import { PokemonCardsType } from "src/common/enums/pokemonCardsType";
-import { TrainerType } from "src/common/enums/trainerType";
-import { runWithPostgresAdvisoryLock } from "src/common/postgres-advisory-lock";
-import { PokemonSerie } from "src/pokemon-series/entities/pokemon-serie.entity";
-import { PokemonSet } from "src/pokemon-set/entities/pokemon-set.entity";
+import { Card } from "../card/entities/card.entity";
+import { PokemonCardDetails } from "../card/entities/pokemon-card-details.entity";
+import { CardGame } from "../common/enums/cardGame";
+import { EnergyType } from "../common/enums/energyType";
+import { PokemonCardsType } from "../common/enums/pokemonCardsType";
+import { TrainerType } from "../common/enums/trainerType";
+import { runWithPostgresAdvisoryLock } from "../common/postgres-advisory-lock";
+import { PokemonSerie } from "../pokemon-series/entities/pokemon-serie.entity";
+import { PokemonSet } from "../pokemon-set/entities/pokemon-set.entity";
 
 @Injectable()
 export class CardSyncService {

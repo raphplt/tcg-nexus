@@ -6,9 +6,12 @@ import {
 } from "@nestjs/common";
 import { Observable } from "rxjs";
 import { mergeMap } from "rxjs/operators";
-import { resolveRequestLocale } from "src/translation/request-locale";
+import { resolveRequestLocale } from "../translation/request-locale";
 import { CatalogLocalizationService } from "./catalog-localization.service";
 
+/**
+ * Interceptor that automatically localizes catalog response payloads based on the incoming Accept-Language header.
+ */
 @Injectable()
 export class CatalogLocalizationInterceptor implements NestInterceptor {
   constructor(private readonly localization: CatalogLocalizationService) {}
