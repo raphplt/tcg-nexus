@@ -227,6 +227,12 @@ const PROBES: MigrationProbe[] = [
             WHERE table_name = 'collection_item'
               AND column_name = 'quantityAvailable'`,
   },
+  {
+    name: "UserOnboarding1789700000000",
+    timestamp: 1789700000000,
+    probe: `SELECT 1 FROM information_schema.columns
+            WHERE table_name = 'user' AND column_name = 'onboardingVersion'`,
+  },
 ];
 
 /**
