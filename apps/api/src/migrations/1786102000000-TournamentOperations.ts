@@ -42,8 +42,8 @@ export class TournamentOperations1786102000000 implements MigrationInterface {
         "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
         CONSTRAINT "FK_match_result_proposal_match" FOREIGN KEY ("match_id") REFERENCES "match"("id") ON DELETE CASCADE,
         CONSTRAINT "FK_match_result_proposal_player" FOREIGN KEY ("proposer_player_id") REFERENCES "player"("id") ON DELETE CASCADE,
-        CONSTRAINT "FK_match_result_proposal_user" FOREIGN KEY ("proposer_user_id") REFERENCES "users"("id") ON DELETE SET NULL,
-        CONSTRAINT "FK_match_result_proposal_resolver" FOREIGN KEY ("resolved_by_user_id") REFERENCES "users"("id") ON DELETE SET NULL
+        CONSTRAINT "FK_match_result_proposal_user" FOREIGN KEY ("proposer_user_id") REFERENCES "user"("id") ON DELETE SET NULL,
+        CONSTRAINT "FK_match_result_proposal_resolver" FOREIGN KEY ("resolved_by_user_id") REFERENCES "user"("id") ON DELETE SET NULL
       );
     `);
 
@@ -72,7 +72,7 @@ export class TournamentOperations1786102000000 implements MigrationInterface {
         CONSTRAINT "UQ_tournament_deck_snapshot_player" UNIQUE ("tournament_id", "player_id"),
         CONSTRAINT "FK_tournament_deck_snapshot_tournament" FOREIGN KEY ("tournament_id") REFERENCES "tournament"("id") ON DELETE CASCADE,
         CONSTRAINT "FK_tournament_deck_snapshot_player" FOREIGN KEY ("player_id") REFERENCES "player"("id") ON DELETE CASCADE,
-        CONSTRAINT "FK_tournament_deck_snapshot_user" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL,
+        CONSTRAINT "FK_tournament_deck_snapshot_user" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE SET NULL,
         CONSTRAINT "FK_tournament_deck_snapshot_deck" FOREIGN KEY ("deck_id") REFERENCES "deck"("id") ON DELETE SET NULL
       );
     `);
