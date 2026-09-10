@@ -29,7 +29,8 @@ const mockUser: User = {
 };
 
 const TestConsumer = () => {
-  const { user, isLoading, isAuthenticated, login, logout } = useAuth();
+  const { user, isLoading, isAuthenticated, login, register, logout } =
+    useAuth();
 
   return (
     <div>
@@ -42,6 +43,19 @@ const TestConsumer = () => {
         trigger-login
       </button>
       <button onClick={() => logout()}>trigger-logout</button>
+      <button
+        onClick={() =>
+          register({
+            email: "misty@cerulean.com",
+            firstName: "Misty",
+            lastName: "Waterflower",
+            password: "starmie12",
+            confirmPassword: "starmie12",
+          })
+        }
+      >
+        trigger-register
+      </button>
     </div>
   );
 };
@@ -56,6 +70,7 @@ const setup = () =>
 const mockGetProfile = vi.mocked(authService.getProfile);
 const mockLogin = vi.mocked(authService.login);
 const mockLogout = vi.mocked(authService.logout);
+const mockRegister = vi.mocked(authService.register);
 
 describe("AuthContext", () => {
   beforeEach(() => {
@@ -113,5 +128,20 @@ describe("AuthContext", () => {
     const router = useRouter();
     expect(router.push).toHaveBeenCalledWith("/auth/login");
     expect(mockLogout).toHaveBeenCalledTimes(1);
+  });
+
+  it("redirects a newly registered user to the dashboard", async () => {
+    mockGetProfile.mockRejectedValueOnce({ response: { status: 401 } });
+    mockRegister.mockResolvedValueOnce({ user: mockUser });
+    setup();
+    const user = userEvent.setup();
+
+    await waitFor(() =>
+      expect(screen.getByTestId("auth-loading")).toHaveTextContent("idle"),
+    );
+    await user.click(screen.getByText("trigger-register"));
+
+    const router = useRouter();
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith("/dashboard"));
   });
 });

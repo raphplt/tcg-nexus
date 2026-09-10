@@ -5,6 +5,7 @@ import * as bcrypt from "bcrypt";
 import { Player } from "src/player/entities/player.entity";
 import { UserFollowService } from "../user-follow/user-follow.service";
 import { User } from "./entities/user.entity";
+import { OnboardingStatus } from "./user-onboarding.constants";
 import { UserService } from "./user.service";
 
 jest.mock("bcrypt", () => ({
@@ -183,6 +184,55 @@ describe("UserService", () => {
       preferredLocale: "en",
     });
     expect(updated.firstName).toBe("New");
+  });
+
+  it("should return the persisted onboarding state", async () => {
+    const updatedAt = new Date("2026-09-10T08:00:00Z");
+    repo.findOne.mockResolvedValueOnce({
+      id: 1,
+      onboardingVersion: 1,
+      onboardingStatus: OnboardingStatus.SKIPPED,
+      onboardingUpdatedAt: updatedAt,
+    });
+
+    await expect(service.getOnboardingState(1)).resolves.toEqual({
+      version: 1,
+      status: OnboardingStatus.SKIPPED,
+      updatedAt,
+    });
+  });
+
+  it("should persist onboarding completion with a server timestamp", async () => {
+    repo.findOne.mockResolvedValueOnce({
+      id: 1,
+      onboardingVersion: 0,
+      onboardingStatus: OnboardingStatus.PENDING,
+      onboardingUpdatedAt: null,
+    });
+    repo.update.mockResolvedValueOnce({ affected: 1 });
+
+    const result = await service.updateOnboardingState(1, {
+      version: 1,
+      status: OnboardingStatus.COMPLETED,
+    });
+
+    expect(repo.update).toHaveBeenCalledWith(1, {
+      onboardingVersion: 1,
+      onboardingStatus: OnboardingStatus.COMPLETED,
+      onboardingUpdatedAt: expect.any(Date),
+    });
+    expect(result).toEqual({
+      version: 1,
+      status: OnboardingStatus.COMPLETED,
+      updatedAt: expect.any(Date),
+    });
+  });
+
+  it("should reject onboarding reads for a missing user", async () => {
+    repo.findOne.mockResolvedValueOnce(null);
+    await expect(service.getOnboardingState(404)).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   it("should throw on email conflict during update", async () => {

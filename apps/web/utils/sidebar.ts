@@ -19,11 +19,13 @@ import {
   Shield,
   ShoppingBag,
   ShoppingCart,
+  Sparkles,
   Store,
   Swords,
   Trophy,
 } from "lucide-react";
 
+/** Nested sidebar link displayed under a navigation group. */
 export interface SubItem {
   labelKey: string;
   href: string;
@@ -31,6 +33,7 @@ export interface SubItem {
   requireAuth?: boolean;
 }
 
+/** Sidebar entry with optional role, authentication, and local-action guards. */
 export interface NavItem {
   labelKey: string;
   href: string;
@@ -38,6 +41,8 @@ export interface NavItem {
   requireAuth?: boolean;
   requireRole?: "admin";
   requireRoles?: Array<"admin" | "moderator">;
+  /** Local action performed instead of navigating to the item's href. */
+  action?: "onboarding";
   subItems?: SubItem[];
 }
 
@@ -158,6 +163,13 @@ const userNavItems: NavItem[] = [
 ];
 
 const secondaryNavItems: NavItem[] = [
+  {
+    labelKey: "guidedTour",
+    href: "/dashboard",
+    icon: Sparkles,
+    requireAuth: true,
+    action: "onboarding",
+  },
   { labelKey: "faq", href: "/faq", icon: HelpCircle },
 ];
 
@@ -171,6 +183,7 @@ const adminNavItems: NavItem[] = [
   },
 ];
 
+/** Role-aware navigation groups rendered by the application sidebar. */
 export const navItems = {
   main: mainNavItems,
   discover: discoverNavItems,

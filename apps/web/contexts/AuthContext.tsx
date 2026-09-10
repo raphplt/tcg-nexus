@@ -80,7 +80,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsLoading(true);
       const { user } = await authService.register(userData);
       setUser(user);
-      router.push("/");
+      router.push("/dashboard");
     } catch (error) {
       console.error("Registration failed:", error);
       throw error;

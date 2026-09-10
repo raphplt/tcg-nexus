@@ -1,3 +1,4 @@
+@import "driver.js/dist/driver.css";
 @import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
@@ -291,6 +292,132 @@ body {
   }
   ::-webkit-scrollbar-thumb:hover {
     background: var(--color-muted-foreground);
+  }
+}
+
+.tcg-onboarding-popover.driver-popover {
+  color: var(--popover-foreground);
+  background: var(--popover);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  box-shadow: var(--shadow-xl);
+  min-width: min(20rem, calc(100vw - 2rem));
+  max-width: min(24rem, calc(100vw - 2rem));
+  padding: 1.25rem;
+}
+
+.tcg-onboarding-popover .driver-popover-title {
+  color: var(--foreground);
+  font-family: var(--font-heading);
+  font-size: 1.125rem;
+}
+
+.tcg-onboarding-popover .driver-popover-description {
+  color: var(--muted-foreground);
+  line-height: 1.55;
+}
+
+.tcg-onboarding-popover .driver-popover-close-btn {
+  color: var(--muted-foreground);
+  border-radius: var(--radius);
+}
+
+.tcg-onboarding-popover .driver-popover-close-btn:hover,
+.tcg-onboarding-popover .driver-popover-close-btn:focus-visible {
+  color: var(--foreground);
+  background: var(--accent);
+}
+
+.tcg-onboarding-popover .driver-popover-progress-text {
+  color: var(--muted-foreground);
+}
+
+.tcg-onboarding-popover .driver-popover-footer-btn,
+.tcg-onboarding-popover .tcg-onboarding-skip {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.4rem 0.7rem;
+  color: var(--foreground);
+  background: var(--background);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.tcg-onboarding-popover .driver-popover-next-btn {
+  color: var(--primary-foreground);
+  border-color: var(--primary);
+  background: var(--primary);
+}
+
+.tcg-onboarding-popover .tcg-onboarding-skip {
+  margin-right: auto;
+  border-color: transparent;
+  color: var(--muted-foreground);
+  background: transparent;
+}
+
+.tcg-onboarding-popover .driver-popover-footer-btn:hover,
+.tcg-onboarding-popover .tcg-onboarding-skip:hover {
+  filter: brightness(0.96);
+}
+
+.tcg-onboarding-popover .driver-popover-footer-btn:focus-visible,
+.tcg-onboarding-popover .tcg-onboarding-skip:focus-visible,
+.tcg-onboarding-popover .driver-popover-close-btn:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.tcg-onboarding-popover .driver-popover-navigation-btns {
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.tcg-onboarding-popover .driver-popover-navigation-btns button + button {
+  margin-left: 0;
+}
+
+.tcg-onboarding-popover .driver-popover-arrow-side-left {
+  border-top-color: transparent;
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+  border-left-color: var(--popover);
+}
+
+.tcg-onboarding-popover .driver-popover-arrow-side-right {
+  border-top-color: transparent;
+  border-right-color: var(--popover);
+  border-bottom-color: transparent;
+  border-left-color: transparent;
+}
+
+.tcg-onboarding-popover .driver-popover-arrow-side-top {
+  border-top-color: var(--popover);
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+  border-left-color: transparent;
+}
+
+.tcg-onboarding-popover .driver-popover-arrow-side-bottom {
+  border-top-color: transparent;
+  border-right-color: transparent;
+  border-bottom-color: var(--popover);
+  border-left-color: transparent;
+}
+
+@media (max-width: 767px) {
+  .tcg-onboarding-popover .driver-popover-footer {
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .tcg-onboarding-popover .driver-popover-navigation-btns {
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
 }
 

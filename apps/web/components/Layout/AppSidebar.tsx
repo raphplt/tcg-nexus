@@ -47,14 +47,25 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
+import { useOnboarding } from "@/components/Onboarding/OnboardingProvider";
 import { Link, usePathname } from "@/i18n/navigation";
 import { PROTECTED_ROUTES } from "@/utils/constants";
 import { NavItem, navItems, SubItem } from "@/utils/sidebar";
 
+const onboardingTargetByHref: Partial<Record<string, string>> = {
+  "/marketplace": "marketplace",
+  "/play": "play",
+  "/decks": "decks",
+  "/dashboard": "dashboard",
+  "/collection": "collection",
+};
+
+/** Renders the role-aware application navigation and onboarding anchors. */
 export function AppSidebar() {
   const t = useTranslations("Sidebar");
   const pathname = usePathname();
   const { isAuthenticated, user } = useAuth();
+  const { replayTour } = useOnboarding();
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
@@ -74,7 +85,7 @@ export function AppSidebar() {
       ? false
       : undefined;
 
-  // Sous "/decks", "/decks/me" ne doit pas aussi allumer "/decks"
+  // A more specific deck route must not activate its parent entry as well.
   const isSubActive = (href: string, siblings: SubItem[]) =>
     isActive(href) &&
     !siblings.some(
@@ -93,7 +104,7 @@ export function AppSidebar() {
           defaultOpen={isGroupActive(item)}
           className="group/collapsible"
         >
-          <SidebarMenuItem>
+          <SidebarMenuItem data-onboarding={onboardingTargetByHref[item.href]}>
             <CollapsibleTrigger asChild>
               <SidebarMenuButton
                 tooltip={t(item.labelKey)}
@@ -127,14 +138,34 @@ export function AppSidebar() {
     }
 
     return (
-      <SidebarMenuItem key={item.href}>
+      <SidebarMenuItem
+        key={`${item.href}-${item.action ?? "link"}`}
+        data-onboarding={
+          item.action === "onboarding"
+            ? "guided-tour"
+            : onboardingTargetByHref[item.href]
+        }
+      >
         <SidebarMenuButton
           asChild
-          isActive={isActive(item.href)}
+          isActive={!item.action && isActive(item.href)}
           tooltip={t(item.labelKey)}
-          className={isActive(item.href) ? activeClass : inactiveClass}
+          className={
+            !item.action && isActive(item.href) ? activeClass : inactiveClass
+          }
         >
-          <Link href={item.href} prefetch={prefetchFor(item.href)}>
+          <Link
+            href={item.href}
+            prefetch={prefetchFor(item.href)}
+            onClick={
+              item.action === "onboarding"
+                ? (event) => {
+                    event.preventDefault();
+                    replayTour();
+                  }
+                : undefined
+            }
+          >
             <item.icon className="h-5 w-5" />
             <span>{t(item.labelKey)}</span>
           </Link>

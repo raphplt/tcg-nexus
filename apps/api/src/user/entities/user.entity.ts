@@ -24,6 +24,7 @@ import { SupportMessage } from "../../support-message/entities/support-message.e
 import { Notification } from "src/notification/entities/notification.entity";
 import { DeviceToken } from "src/notification/entities/device-token.entity";
 import { AuthIdentity } from "src/auth/entities/auth-identity.entity";
+import { OnboardingStatus } from "../user-onboarding.constants";
 
 @Entity()
 export class User {
@@ -67,6 +68,18 @@ export class User {
 
   @Column({ default: false })
   isPro: boolean;
+
+  @Column({ type: "integer", default: 0 })
+  @Exclude()
+  onboardingVersion: number;
+
+  @Column({ type: "varchar", length: 16, default: OnboardingStatus.PENDING })
+  @Exclude()
+  onboardingStatus: OnboardingStatus;
+
+  @Column({ type: "timestamp", nullable: true })
+  @Exclude()
+  onboardingUpdatedAt: Date | null;
 
   @Column({ default: true })
   @Expose({ groups: [SELF_SERIALIZATION_GROUP] })
