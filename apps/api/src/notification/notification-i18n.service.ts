@@ -3,7 +3,7 @@ import {
   DEFAULT_LOCALE,
   isSupportedLocale,
   type SupportedLocale,
-} from "src/translation/supported-locales";
+} from "../translation/supported-locales";
 import en from "./locales/en.json";
 import fr from "./locales/fr.json";
 

@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE } from "src/translation/supported-locales";
+import { DEFAULT_LOCALE } from "../translation/supported-locales";
 import { NotificationI18nService } from "./notification-i18n.service";
 import { MailI18nService } from "../mail/mail-i18n.service";
 import { Injectable, Logger } from "@nestjs/common";
