@@ -37,7 +37,7 @@ la VM, ouvre une connexion **sortante** vers Cloudflare. Aucun accès entrant à
 la VM à travers le VPN n'est nécessaire. Le chemin d'une requête est donc :
 
 ```text
-Navigateur → Cloudflare → tcg-nexus-main → service local vérifié → conteneur
+Navigateur → Cloudflare → tcg-nexus-main → localhost:3002 → conteneur docs
 ```
 
 Il ne faut pas enregistrer l'écran DNS de type A montré dans la capture.
@@ -56,108 +56,113 @@ Créer la route depuis le tunnel :
 3. ouvrir l'onglet **Routes** ;
 4. cliquer sur **Add route**, puis choisir **Published application** ;
 5. saisir `docs` comme sous-domaine et `tcg-nexus.org` comme domaine ;
-6. saisir l'URL locale vérifiée dans **Service URL** ;
-7. cliquer sur **Add route**.
+6. laisser **Path** vide ;
+7. saisir `http://localhost:3002` dans **Service URL** ;
+8. cliquer sur **Add route**.
 
-### Déterminer le Service URL avec certitude
+### Service URL confirmé par la configuration existante
 
-Ouvrir la route existante `api.tcg-nexus.org` dans `tcg-nexus-main` et relever
-son **Service URL**. Cela indique comment l'installation actuelle est routée :
+La capture des routes `tcg-nexus-main` confirme que le tunnel cible directement
+les ports publiés sur la VM :
 
-- si l'API utilise `http://localhost:3001`, le tunnel cible directement les
-  ports publiés sur la VM ;
-- si l'API utilise `http://localhost:80`, le tunnel passe par le proxy Coolify.
-  Coolify sélectionne ensuite le conteneur à partir du nom d'hôte ;
-- si l'API utilise une adresse VPN, `cloudflared` tourne probablement sur une
-  autre machine du VPN ou utilise explicitement l'interface VPN.
+| Route existante | Service URL |
+|---|---|
+| `api.tcg-nexus.org` | `http://localhost:3001` |
+| `tcg-nexus.org` | `http://localhost:3000` |
+| `www.tcg-nexus.org` | `http://localhost:3000` |
+| `coolify.tcg-nexus.org` | `http://localhost:8000` |
 
-Le déploiement Docusaurus recommandé dans ce guide est une application Coolify
-avec un domaine et un port interne `3002`. Dans cette configuration, commencer
-par tester le proxy Coolify sur le port 80. Depuis une session SSH ouverte à
-travers le VPN :
-
-```bash
-curl -I -H 'Host: docs.tcg-nexus.org' http://127.0.0.1:80/
-```
-
-Une réponse HTTP de Coolify (`200`, `301` ou `302`) confirme que le **Service
-URL** doit être `http://localhost:80`. Si cette requête échoue et que le projet
-est déployé avec `docker-compose.deploy.yml`, tester le port publié directement :
+Le fichier `docker-compose.deploy.yml` publie le service `docs` sur le port
+`3002`. Le Service URL correspondant est donc `http://localhost:3002`.
+Après le redéploiement Coolify et avant d'ajouter la route Cloudflare, il est
+possible de le confirmer depuis la VM :
 
 ```bash
 curl -I http://127.0.0.1:3002/
 ```
 
-Une réponse Docusaurus en `200` confirme alors
-`http://localhost:3002`. Ne créer la route Cloudflare qu'après avoir obtenu une
-réponse avec l'un de ces deux tests.
-
-Le mot `localhost` désigne la machine sur laquelle le connecteur `cloudflared`
-s'exécute. Vérifier son emplacement avec `sudo systemctl status cloudflared` ou
-`docker ps`. S'il tourne dans un conteneur ou sur une autre machine, exécuter le
-test depuis cet environnement : son `localhost` ne désigne pas forcément la VM
-Coolify.
+Une réponse `200 OK` confirme que le service est prêt. Comme les routes
+existantes emploient déjà `localhost`, le connecteur `cloudflared` accède bien
+aux ports de cette VM malgré son placement derrière le VPN.
 
 Le résultat doit être identique à la ligne `api.tcg-nexus.org` : type
 **Tunnel**, contenu `tcg-nexus-main`, statut **Proxied** et TTL **Auto**.
 
-| Public hostname | Service d'origine vérifié |
+| Public hostname | Service d'origine |
 |---|---|
-| `docs.tcg-nexus.org` | `http://localhost:80` ou `http://localhost:3002` selon le test ci-dessus |
+| `docs.tcg-nexus.org` | `http://localhost:3002` |
 
 L'ajout de cette *Published application route* crée et gère l'entrée DNS
 correspondante. La page DNS l'affiche alors avec le type **Tunnel** même si ce
 type n'apparaît pas dans la liste du formulaire DNS standard.
 
-Ni le port 80 ni le port 3002 n'ont besoin d'être accessibles depuis Internet.
-Ils doivent uniquement être joignables depuis l'environnement où `cloudflared`
-s'exécute ; le tunnel transporte ensuite la requête par sa connexion sortante.
+Le port 3002 n'a pas besoin d'être accessible depuis Internet. Il doit
+uniquement être joignable localement par `cloudflared` ; le tunnel transporte
+ensuite la requête par sa connexion sortante.
 
 ## 2. Déployer Docusaurus dans Coolify
 
-Créer une nouvelle application depuis le dépôt Git avec les paramètres
-suivants :
+**Ne pas créer une nouvelle application Coolify.** La ressource TCG Nexus
+existante utilise déjà le Build Pack **Docker Compose** et charge
+`/docker-compose.deploy.yml`. Ce fichier contient le service `docs` et référence
+lui-même le Dockerfile :
+
+```yaml
+docs:
+  build:
+    context: .
+    dockerfile: apps/docs/Dockerfile
+```
+
+Il n'existe donc aucun champ où saisir `/apps/docs/Dockerfile` dans Coolify :
+fermer l'écran **Create a new Application** montré dans la capture.
+
+Dans la ressource TCG Nexus existante, conserver les paramètres visibles :
 
 | Paramètre Coolify | Valeur |
 |---|---|
-| Build Pack | `Dockerfile` |
+| Build Pack | `Docker Compose` |
 | Base Directory | `/` |
-| Dockerfile Location | `/apps/docs/Dockerfile` |
-| Port Exposes | `3002` |
-| Domain | `https://docs.tcg-nexus.org:3002` |
+| Docker Compose Location | `/docker-compose.deploy.yml` |
+| Domains for docs | `http://docs.tcg-nexus.org` |
 
-Le suffixe `:3002` indique le port interne du conteneur à Coolify. L'URL
-publique reste une URL HTTPS standard sans port explicite.
-
-Ajouter ces variables et conserver l'option **Build Variable** activée :
+Dans **Environment Variables**, ajouter ou vérifier :
 
 ```dotenv
 DOCS_URL=https://docs.tcg-nexus.org
 SWAGGER_URL=https://api.tcg-nexus.org/api/docs
+SWAGGER_ENABLED=true
 ```
 
-Ces valeurs sont intégrées au site statique pendant le build. Après une
-modification, il faut reconstruire l'image, pas seulement redémarrer le
-conteneur.
+`DOCS_URL` et `SWAGGER_URL` doivent être disponibles pendant le build.
+`SWAGGER_ENABLED` doit être disponible au runtime.
 
-Le `Dockerfile` fournit déjà un contrôle de santé sur `/`. Ne pas configurer un
-second contrôle différent dans Coolify.
+Après avoir poussé les commits sur la branche suivie par Coolify :
+
+1. ouvrir la ressource TCG Nexus existante ;
+2. cliquer sur **Reload Compose File** si Coolify n'affiche pas les dernières
+   modifications du fichier ;
+3. vérifier que **Domains for docs** contient `http://docs.tcg-nexus.org` ;
+4. enregistrer, puis cliquer sur **Redeploy** ;
+5. vérifier dans les logs que le service `docs` démarre et devient sain ;
+6. seulement ensuite, ajouter la route Cloudflare vers
+   `http://localhost:3002`.
 
 ## 3. Activer Swagger sur l'application API
 
-Dans la ressource Coolify qui déploie `apps/api/Dockerfile`, ajouter la variable
-de runtime suivante :
+Dans les variables d'environnement de cette même ressource Docker Compose,
+ajouter la variable de runtime suivante :
 
 ```dotenv
 SWAGGER_ENABLED=true
 ```
 
-Vérifier aussi les paramètres de la ressource API :
+Vérifier aussi les paramètres affichés pour le service API :
 
 | Paramètre Coolify | Valeur |
 |---|---|
-| Port Exposes | `3001` |
-| Domain | `https://api.tcg-nexus.org:3001` |
+| Port publié par Compose | `3001` |
+| Domains for api | `http://api.tcg-nexus.org` |
 | Health check | `/api/health/live` sur le port `3001` |
 
 Redéployer l'API. Swagger doit alors répondre sur `/api/docs` et le document
@@ -204,7 +209,7 @@ route d'origine cible le Service URL vérifié ci-dessus.
 
 ## Documentation de référence
 
-- [Coolify — déploiement avec un Dockerfile](https://coolify.io/docs/applications/build-packs/dockerfile)
+- [Coolify — déploiement avec Docker Compose](https://coolify.io/docs/applications/build-packs/docker-compose)
 - [Coolify — domaines](https://coolify.io/docs/knowledge-base/domains)
 - [Coolify — contrôles de santé](https://coolify.io/docs/knowledge-base/health-checks)
 - [Coolify — variables de build et de runtime](https://coolify.io/docs/knowledge-base/environment-variables)
