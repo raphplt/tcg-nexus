@@ -851,8 +851,9 @@
   },
   "Decks": {
     "title": "Decks",
-    "subtitle": "Discover the best decks from the community, build your own and share your strategies.",
-    "allDecks": "All decks",
+    "subtitle": "Browse public decks shared by the community and find inspiration for your next matches.",
+    "allDecks": "All public decks",
+    "myDecks": "My decks",
     "loadError": "Something went wrong while loading the decks.",
     "allFormats": "All",
     "sortCreatedAt": "Creation date",
@@ -2913,16 +2914,6 @@
     "loginRequiredHelp": "You must be signed in to create a deck.",
     "submit": "Create a deck"
   },
-  "UserDecks": {
-    "title": "My decks",
-    "empty": "You have not created any deck yet.",
-    "createFirst": "Create my first deck",
-    "create": "Create a deck",
-    "import": "Import a deck",
-    "new": "New",
-    "newDeck": "New deck",
-    "importShort": "Import"
-  },
   "DeckAnalysisPage": {
     "title": "Deck analysis",
     "failed": "The analysis could not complete. Check that the deck contains cards, then try again.",
@@ -2986,7 +2977,12 @@
     "sortName": "Name",
     "sortType": "Type",
     "eyebrow": "Your play space",
-    "subtitle": "Build, refine and revisit your strategies. All your decks, in one place.",
+    "subtitle": "Build, refine and revisit your strategies, along with the public decks you added to your favorites. All in one place.",
+    "tabs": "My deck sections",
+    "tabMine": "My decks",
+    "tabFavorites": "Favorites",
+    "favoritesEmptyTitle": "No favorite decks yet",
+    "favoritesEmptyHelp": "Add public decks to your favorites from the community list to find them here.",
     "libraryHint": "From your first idea to your next match.",
     "explore": "Explore community decks",
     "create": "Create a deck",
@@ -3004,6 +3000,7 @@
     "results": "{count, plural, =0 {No decks} one {# deck} other {# decks}}",
     "sorts": {
       "updated": "Last modified",
+      "saved": "Recently added",
       "newest": "Newest first",
       "oldest": "Oldest first",
       "nameAsc": "Name: A → Z",

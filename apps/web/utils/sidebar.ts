@@ -5,6 +5,7 @@ import {
   HelpCircle,
   Home,
   Import,
+  Layers,
   LayoutDashboard,
   Library,
   Medal,
@@ -27,6 +28,7 @@ export interface SubItem {
   labelKey: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
+  requireAuth?: boolean;
 }
 
 export interface NavItem {
@@ -86,6 +88,12 @@ const mainNavItems: NavItem[] = [
     icon: Library,
     subItems: [
       { labelKey: "browse", href: "/decks", icon: Search },
+      {
+        labelKey: "myDecks",
+        href: "/decks/me",
+        icon: Layers,
+        requireAuth: true,
+      },
       { labelKey: "createDeck", href: "/decks/create", icon: Plus },
       { labelKey: "importDeck", href: "/decks/import", icon: Import },
     ],

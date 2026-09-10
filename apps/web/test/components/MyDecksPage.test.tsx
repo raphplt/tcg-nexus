@@ -25,6 +25,9 @@ vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => auth }));
 vi.mock("@/services/decks.service", () => ({
   decksService: {
     getUserDecksPaginated: vi.fn(),
+    getSavedDecksPaginated: vi.fn(),
+    getSavedDeckIds: vi.fn(),
+    incrementView: vi.fn(),
     removeDeck: vi.fn(),
     exportDeckJson: vi.fn(),
   },
@@ -268,5 +271,54 @@ describe("personal deck library", () => {
       "href",
       "/decks/42/analysis",
     );
+  });
+
+  it("lists favorited public decks in the favorites tab", async () => {
+    const user = userEvent.setup();
+    const favorite: Deck = {
+      ...deck,
+      id: 99,
+      name: "Lugia",
+      isPublic: true,
+      user: { ...deck.user!, id: 8 },
+    };
+    vi.mocked(decksService.getSavedDecksPaginated)
+      .mockReset()
+      .mockResolvedValue(result([favorite]));
+    vi.mocked(decksService.getSavedDeckIds).mockResolvedValue([99]);
+    mount();
+    await screen.findByText("Gardevoir");
+    expect(decksService.getSavedDecksPaginated).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("tab", { name: "Favoris" }));
+    await screen.findByText("Lugia");
+    expect(decksService.getSavedDecksPaginated).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        page: 1,
+        sortBy: "createdAt",
+        sortOrder: "DESC",
+      }),
+    );
+    expect(window.location.search).toBe("?tab=favorites");
+    expect(
+      await screen.findByRole("button", { name: "Retirer de ma bibliothèque" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Vue liste" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("points to public decks when no deck is favorited", async () => {
+    const user = userEvent.setup();
+    vi.mocked(decksService.getSavedDecksPaginated)
+      .mockReset()
+      .mockResolvedValue(result([]));
+    mount();
+    await user.click(screen.getByRole("tab", { name: "Favoris" }));
+    await screen.findByRole("heading", { name: "Aucun deck en favoris" });
+    for (const link of screen.getAllByRole("link", {
+      name: /Explorer les decks de la communauté/,
+    })) {
+      expect(link).toHaveAttribute("href", "/decks");
+    }
   });
 });

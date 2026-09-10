@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowRight,
+  BookmarkCheck,
   Download,
   Layers,
   LayoutGrid,
@@ -14,6 +15,7 @@ import {
   SearchX,
   X,
 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -31,41 +33,65 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "@/i18n/navigation";
 import { decksService, type DecksQueryParams } from "@/services/decks.service";
 import type { Deck } from "@/types/Decks";
 import type { DeckFormat } from "@/types/deckFormat";
 import { authedFetch } from "@/utils/fetch";
+import DeckCard from "../_components/DeckCard";
 import { MyDeckCard } from "./_components/MyDeckCard";
 
-const SORTS = {
-  updated: { sortBy: "updatedAt", sortOrder: "DESC" },
-  newest: { sortBy: "createdAt", sortOrder: "DESC" },
-  oldest: { sortBy: "createdAt", sortOrder: "ASC" },
-  nameAsc: { sortBy: "name", sortOrder: "ASC" },
-  nameDesc: { sortBy: "name", sortOrder: "DESC" },
-  popular: { sortBy: "views", sortOrder: "DESC" },
-  format: { sortBy: "format.type", sortOrder: "ASC" },
-} satisfies Record<string, Pick<DecksQueryParams, "sortBy" | "sortOrder">>;
+type Tab = "mine" | "favorites";
+type SortOption = Pick<DecksQueryParams, "sortBy" | "sortOrder">;
 
-type Sort = keyof typeof SORTS;
+// Côté favoris, "createdAt" trie sur la date d'ajout aux favoris
+const SORTS = {
+  mine: {
+    updated: { sortBy: "updatedAt", sortOrder: "DESC" },
+    newest: { sortBy: "createdAt", sortOrder: "DESC" },
+    oldest: { sortBy: "createdAt", sortOrder: "ASC" },
+    nameAsc: { sortBy: "name", sortOrder: "ASC" },
+    nameDesc: { sortBy: "name", sortOrder: "DESC" },
+    popular: { sortBy: "views", sortOrder: "DESC" },
+    format: { sortBy: "format.type", sortOrder: "ASC" },
+  },
+  favorites: {
+    saved: { sortBy: "createdAt", sortOrder: "DESC" },
+    nameAsc: { sortBy: "name", sortOrder: "ASC" },
+    nameDesc: { sortBy: "name", sortOrder: "DESC" },
+    popular: { sortBy: "views", sortOrder: "DESC" },
+    format: { sortBy: "format.type", sortOrder: "ASC" },
+  },
+} satisfies Record<Tab, Record<string, SortOption>>;
+
+const DEFAULT_SORT: Record<Tab, string> = {
+  mine: "updated",
+  favorites: "saved",
+};
 const selectClass =
   "h-10 min-w-0 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:w-auto";
 
-/** Provides the personal deck library with server-side discovery and management. */
+/** Provides the personal deck library and the favorited public decks. */
 export default function MyDecksPage() {
   const t = useTranslations("MyDecks");
   const locale = useLocale();
+  const searchParams = useSearchParams();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const queryClient = useQueryClient();
+  const [tab, setTab] = useState<Tab>(
+    searchParams.get("tab") === "favorites" ? "favorites" : "mine",
+  );
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [query, setQuery] = useState("");
   const [format, setFormat] = useState("");
-  const [sort, setSort] = useState<Sort>("updated");
+  const [sort, setSort] = useState(DEFAULT_SORT[tab]);
   const [layout, setLayout] = useState<"grid" | "list">("grid");
   const [selectedDeck, setSelectedDeck] = useState<Deck | null>(null);
+  const sorts: Record<string, SortOption> = SORTS[tab];
+  const favorites = tab === "favorites";
 
   useEffect(() => {
     if (search.trim() === query) return;
@@ -81,11 +107,20 @@ export default function MyDecksPage() {
     limit: 12,
     search: query || undefined,
     formatId: format ? Number(format) : undefined,
-    ...SORTS[sort],
+    ...(sorts[sort] ?? sorts[DEFAULT_SORT[tab]]),
   };
+  // "saved-decks" est invalidé par useToggleSavedDeck : retirer un favori met la liste à jour
   const decks = useQuery({
-    queryKey: ["my-decks", user?.id, locale, params],
-    queryFn: () => decksService.getUserDecksPaginated(params),
+    queryKey: [
+      favorites ? "saved-decks" : "my-decks",
+      user?.id,
+      locale,
+      params,
+    ],
+    queryFn: () =>
+      favorites
+        ? decksService.getSavedDecksPaginated(params)
+        : decksService.getUserDecksPaginated(params),
     enabled: isAuthenticated && !authLoading,
   });
   const formats = useQuery({
@@ -107,7 +142,6 @@ export default function MyDecksPage() {
       toast.success(t("deleted"));
       for (const key of [
         "my-decks",
-        "user-decks",
         "decks",
         "saved-decks",
         "saved-deck-ids",
@@ -137,11 +171,22 @@ export default function MyDecksPage() {
     onError: () => toast.error(t("exportError")),
   });
 
+  const changeTab = (value: string) => {
+    const next: Tab = value === "favorites" ? "favorites" : "mine";
+    setTab(next);
+    setSort(DEFAULT_SORT[next]);
+    setPage(1);
+    // Garde l'onglet dans l'URL pour pouvoir partager ou recharger la vue
+    const url = new URL(window.location.href);
+    if (next === "favorites") url.searchParams.set("tab", next);
+    else url.searchParams.delete("tab");
+    window.history.replaceState(null, "", url);
+  };
   const reset = () => {
     setSearch("");
     setQuery("");
     setFormat("");
-    setSort("updated");
+    setSort(DEFAULT_SORT[tab]);
     setPage(1);
   };
   const filtered = Boolean(query || format);
@@ -183,7 +228,7 @@ export default function MyDecksPage() {
 
   return (
     <PageWrapper gradient="secondary">
-      <div className="space-y-6">
+      <Tabs value={tab} onValueChange={changeTab} className="space-y-6">
         <section className="tcg-surface tcg-surface--hero space-y-5 p-5 md:p-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-2">
@@ -202,10 +247,19 @@ export default function MyDecksPage() {
             </div>
           </div>
           <div className="flex flex-col gap-3 border-t border-border/60 pt-4 text-sm sm:flex-row sm:items-center sm:justify-between">
-            <span className="hidden items-center gap-2 text-muted-foreground sm:inline-flex">
-              <Layers className="h-4 w-4 text-primary" />
-              {t("libraryHint")}
-            </span>
+            <TabsList
+              aria-label={t("tabs")}
+              className="grid w-full grid-cols-2 sm:inline-flex sm:w-auto"
+            >
+              <TabsTrigger value="mine" className="gap-2">
+                <Layers className="h-4 w-4" />
+                {t("tabMine")}
+              </TabsTrigger>
+              <TabsTrigger value="favorites" className="gap-2">
+                <BookmarkCheck className="h-4 w-4" />
+                {t("tabFavorites")}
+              </TabsTrigger>
+            </TabsList>
             <Link
               href="/decks"
               className="inline-flex items-center gap-2 font-medium text-primary hover:underline"
@@ -216,208 +270,245 @@ export default function MyDecksPage() {
           </div>
         </section>
 
-        <section
-          aria-label={t("filters")}
-          className="tcg-surface space-y-4 p-4"
-        >
-          <div className="flex flex-col gap-3 lg:flex-row">
-            <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder={t("searchPlaceholder")}
-                aria-label={t("searchPlaceholder")}
-                className="pl-9 pr-10"
-              />
-              {search && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-0 top-0"
-                  aria-label={t("clearSearch")}
-                  onClick={() => setSearch("")}
-                >
-                  <X />
-                </Button>
-              )}
-            </div>
-            <div className="grid grid-cols-2 gap-3 sm:flex">
-              <select
-                aria-label={t("format")}
-                className={selectClass}
-                value={format}
-                disabled={formats.isLoading || formats.isError}
-                onChange={(event) => {
-                  setFormat(event.target.value);
-                  setPage(1);
-                }}
-              >
-                <option value="">{t("allFormats")}</option>
-                {formats.data?.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.type}
-                  </option>
-                ))}
-              </select>
-              <select
-                aria-label={t("sort")}
-                className={selectClass}
-                value={sort}
-                onChange={(event) => {
-                  const value = event.target.value;
-                  if (value in SORTS) {
-                    setSort(value as Sort);
-                    setPage(1);
-                  }
-                }}
-              >
-                {Object.keys(SORTS).map((key) => (
-                  <option key={key} value={key}>
-                    {t(`sorts.${key}`)}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/60 pt-3">
-            <div className="flex flex-wrap items-center gap-3">
-              <p role="status" className="text-sm text-muted-foreground">
-                {loading
-                  ? t("loading")
-                  : decks.isError
-                    ? t("loadError")
-                    : t("results", { count: data?.meta.totalItems ?? 0 })}
-              </p>
-              {(search || format || sort !== "updated") && (
-                <Button variant="ghost" size="sm" onClick={reset}>
-                  <RotateCcw />
-                  {t("reset")}
-                </Button>
-              )}
-              {decks.isFetching && !loading && (
-                <Loader2
-                  className="h-4 w-4 animate-spin text-primary"
-                  aria-label={t("loading")}
-                />
-              )}
-            </div>
-            <div
-              className="flex gap-1 rounded-lg border border-border bg-muted/40 p-1"
-              role="group"
-              aria-label={t("display")}
-            >
-              <Button
-                variant={layout === "grid" ? "secondary" : "ghost"}
-                size="icon"
-                className="h-8 w-9"
-                aria-label={t("grid")}
-                aria-pressed={layout === "grid"}
-                onClick={() => setLayout("grid")}
-              >
-                <LayoutGrid />
-              </Button>
-              <Button
-                variant={layout === "list" ? "secondary" : "ghost"}
-                size="icon"
-                className="h-8 w-9"
-                aria-label={t("list")}
-                aria-pressed={layout === "list"}
-                onClick={() => setLayout("list")}
-              >
-                <List />
-              </Button>
-            </div>
-          </div>
-          {formats.isError && (
-            <p className="text-sm text-destructive">
-              {t("formatsError")}{" "}
-              <button
-                type="button"
-                className="underline"
-                onClick={() => void formats.refetch()}
-              >
-                {t("retry")}
-              </button>
-            </p>
-          )}
-        </section>
-
-        {loading ? (
-          <div
-            className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
-            aria-label={t("loading")}
-            aria-busy="true"
-          >
-            {Array.from({ length: 6 }, (_, index) => (
-              <Skeleton key={index} className="h-96 rounded-xl" />
-            ))}
-          </div>
-        ) : decks.isError ? (
+        <TabsContent value={tab} className="mt-0 space-y-6">
           <section
-            role="alert"
-            className="tcg-surface space-y-4 p-10 text-center"
+            aria-label={t("filters")}
+            className="tcg-surface space-y-4 p-4"
           >
-            <h2 className="text-lg font-semibold">{t("loadError")}</h2>
-            <p className="text-muted-foreground">{t("loadErrorHelp")}</p>
-            <Button variant="outline" onClick={() => void decks.refetch()}>
-              <RotateCcw />
-              {t("retry")}
-            </Button>
-          </section>
-        ) : data?.data.length ? (
-          <>
-            <div
-              className={
-                layout === "grid"
-                  ? "grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
-                  : "grid gap-3"
-              }
-            >
-              {data.data.map((deck) => (
-                <MyDeckCard
-                  key={deck.id}
-                  deck={deck}
-                  layout={layout}
-                  exporting={exportDeck.isPending}
-                  onExport={(item) => exportDeck.mutate(item)}
-                  onDelete={(item) => {
-                    deletion.reset();
-                    setSelectedDeck(item);
-                  }}
+            <div className="flex flex-col gap-3 lg:flex-row">
+              <div className="relative flex-1">
+                <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder={t("searchPlaceholder")}
+                  aria-label={t("searchPlaceholder")}
+                  className="pl-9 pr-10"
                 />
+                {search && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-0 top-0"
+                    aria-label={t("clearSearch")}
+                    onClick={() => setSearch("")}
+                  >
+                    <X />
+                  </Button>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-3 sm:flex">
+                <select
+                  aria-label={t("format")}
+                  className={selectClass}
+                  value={format}
+                  disabled={formats.isLoading || formats.isError}
+                  onChange={(event) => {
+                    setFormat(event.target.value);
+                    setPage(1);
+                  }}
+                >
+                  <option value="">{t("allFormats")}</option>
+                  {formats.data?.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.type}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  aria-label={t("sort")}
+                  className={selectClass}
+                  value={sort}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    if (value in sorts) {
+                      setSort(value);
+                      setPage(1);
+                    }
+                  }}
+                >
+                  {Object.keys(sorts).map((key) => (
+                    <option key={key} value={key}>
+                      {t(`sorts.${key}`)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/60 pt-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <p role="status" className="text-sm text-muted-foreground">
+                  {loading
+                    ? t("loading")
+                    : decks.isError
+                      ? t("loadError")
+                      : t("results", { count: data?.meta.totalItems ?? 0 })}
+                </p>
+                {(search || format || sort !== DEFAULT_SORT[tab]) && (
+                  <Button variant="ghost" size="sm" onClick={reset}>
+                    <RotateCcw />
+                    {t("reset")}
+                  </Button>
+                )}
+                {decks.isFetching && !loading && (
+                  <Loader2
+                    className="h-4 w-4 animate-spin text-primary"
+                    aria-label={t("loading")}
+                  />
+                )}
+              </div>
+              {!favorites && (
+                <div
+                  className="flex gap-1 rounded-lg border border-border bg-muted/40 p-1"
+                  role="group"
+                  aria-label={t("display")}
+                >
+                  <Button
+                    variant={layout === "grid" ? "secondary" : "ghost"}
+                    size="icon"
+                    className="h-8 w-9"
+                    aria-label={t("grid")}
+                    aria-pressed={layout === "grid"}
+                    onClick={() => setLayout("grid")}
+                  >
+                    <LayoutGrid />
+                  </Button>
+                  <Button
+                    variant={layout === "list" ? "secondary" : "ghost"}
+                    size="icon"
+                    className="h-8 w-9"
+                    aria-label={t("list")}
+                    aria-pressed={layout === "list"}
+                    onClick={() => setLayout("list")}
+                  >
+                    <List />
+                  </Button>
+                </div>
+              )}
+            </div>
+            {formats.isError && (
+              <p className="text-sm text-destructive">
+                {t("formatsError")}{" "}
+                <button
+                  type="button"
+                  className="underline"
+                  onClick={() => void formats.refetch()}
+                >
+                  {t("retry")}
+                </button>
+              </p>
+            )}
+          </section>
+
+          {loading ? (
+            <div
+              className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
+              aria-label={t("loading")}
+              aria-busy="true"
+            >
+              {Array.from({ length: 6 }, (_, index) => (
+                <Skeleton key={index} className="h-96 rounded-xl" />
               ))}
             </div>
-            <PaginatedNav meta={data.meta} page={page} onPageChange={setPage} />
-          </>
-        ) : (
-          <section className="tcg-surface flex flex-col items-center gap-4 px-5 py-16 text-center">
-            <div className="rounded-2xl bg-primary/10 p-5">
-              {filtered ? (
-                <SearchX className="h-10 w-10 text-primary" />
-              ) : (
-                <Layers className="h-10 w-10 text-primary" />
-              )}
-            </div>
-            <h2 className="font-heading text-2xl font-bold">
-              {t(filtered ? "noResults" : "emptyTitle")}
-            </h2>
-            <p className="max-w-md text-sm leading-6 text-muted-foreground">
-              {t(filtered ? "noResultsHelp" : "emptyHelp")}
-            </p>
-            <div className="mt-2 flex flex-wrap justify-center gap-2">
-              {filtered ? (
-                <Button variant="outline" onClick={reset}>
-                  <RotateCcw />
-                  {t("reset")}
-                </Button>
-              ) : (
-                createActions
-              )}
-            </div>
-          </section>
-        )}
-      </div>
+          ) : decks.isError ? (
+            <section
+              role="alert"
+              className="tcg-surface space-y-4 p-10 text-center"
+            >
+              <h2 className="text-lg font-semibold">{t("loadError")}</h2>
+              <p className="text-muted-foreground">{t("loadErrorHelp")}</p>
+              <Button variant="outline" onClick={() => void decks.refetch()}>
+                <RotateCcw />
+                {t("retry")}
+              </Button>
+            </section>
+          ) : data?.data.length ? (
+            <>
+              <div
+                className={
+                  favorites || layout === "grid"
+                    ? "grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
+                    : "grid gap-3"
+                }
+              >
+                {data.data.map((deck) =>
+                  favorites ? (
+                    <DeckCard
+                      key={deck.id}
+                      deck={deck}
+                      onClick={() => decksService.incrementView(deck.id)}
+                    />
+                  ) : (
+                    <MyDeckCard
+                      key={deck.id}
+                      deck={deck}
+                      layout={layout}
+                      exporting={exportDeck.isPending}
+                      onExport={(item) => exportDeck.mutate(item)}
+                      onDelete={(item) => {
+                        deletion.reset();
+                        setSelectedDeck(item);
+                      }}
+                    />
+                  ),
+                )}
+              </div>
+              <PaginatedNav
+                meta={data.meta}
+                page={page}
+                onPageChange={setPage}
+              />
+            </>
+          ) : (
+            <section className="tcg-surface flex flex-col items-center gap-4 px-5 py-16 text-center">
+              <div className="rounded-2xl bg-primary/10 p-5">
+                {filtered ? (
+                  <SearchX className="h-10 w-10 text-primary" />
+                ) : favorites ? (
+                  <BookmarkCheck className="h-10 w-10 text-primary" />
+                ) : (
+                  <Layers className="h-10 w-10 text-primary" />
+                )}
+              </div>
+              <h2 className="font-heading text-2xl font-bold">
+                {t(
+                  filtered
+                    ? "noResults"
+                    : favorites
+                      ? "favoritesEmptyTitle"
+                      : "emptyTitle",
+                )}
+              </h2>
+              <p className="max-w-md text-sm leading-6 text-muted-foreground">
+                {t(
+                  filtered
+                    ? "noResultsHelp"
+                    : favorites
+                      ? "favoritesEmptyHelp"
+                      : "emptyHelp",
+                )}
+              </p>
+              <div className="mt-2 flex flex-wrap justify-center gap-2">
+                {filtered ? (
+                  <Button variant="outline" onClick={reset}>
+                    <RotateCcw />
+                    {t("reset")}
+                  </Button>
+                ) : favorites ? (
+                  <Button asChild>
+                    <Link href="/decks">
+                      {t("explore")}
+                      <ArrowRight />
+                    </Link>
+                  </Button>
+                ) : (
+                  createActions
+                )}
+              </div>
+            </section>
+          )}
+        </TabsContent>
+      </Tabs>
       <AlertDialog
         open={!!selectedDeck}
         onOpenChange={(open) => {

@@ -576,7 +576,9 @@ export class DeckService {
       .leftJoinAndSelect("deck.cards", "cards")
       .leftJoinAndSelect("cards.card", "card")
       .leftJoinAndSelect("card.pokemonDetails", "cardDetails")
-      .where("savedUser.id = :userId", { userId: user.id });
+      .where("savedUser.id = :userId", { userId: user.id })
+      // Un deck repassé en privé par son auteur disparaît des favoris
+      .andWhere("deck.isPublic = true");
 
     if (formatId !== 0) {
       qb.andWhere("format.id = :formatId", { formatId });

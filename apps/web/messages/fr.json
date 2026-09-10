@@ -851,8 +851,9 @@
   },
   "Decks": {
     "title": "Decks",
-    "subtitle": "Découvrez les meilleurs decks de la communauté, créez les vôtres et partagez vos stratégies.",
-    "allDecks": "Tous les decks",
+    "subtitle": "Parcourez les decks publics partagés par la communauté et trouvez l'inspiration pour vos prochaines parties.",
+    "allDecks": "Tous les decks publics",
+    "myDecks": "Mes decks",
     "loadError": "Une erreur est survenue lors du chargement des decks.",
     "allFormats": "Tous",
     "sortCreatedAt": "Date de création",
@@ -2913,16 +2914,6 @@
     "loginRequiredHelp": "Vous devez être connecté pour créer un deck.",
     "submit": "Créer un deck"
   },
-  "UserDecks": {
-    "title": "Mes decks",
-    "empty": "Vous n'avez pas encore créé de deck.",
-    "createFirst": "Créer mon premier deck",
-    "create": "Créer un deck",
-    "import": "Importer un deck",
-    "new": "Nouveau",
-    "newDeck": "Nouveau deck",
-    "importShort": "Importer"
-  },
   "DeckAnalysisPage": {
     "title": "Analyse du deck",
     "failed": "L'analyse n'a pas pu aboutir. Vérifiez que le deck contient des cartes puis réessayez.",
@@ -2986,7 +2977,12 @@
     "sortName": "Nom",
     "sortType": "Type",
     "eyebrow": "Votre espace de jeu",
-    "subtitle": "Construisez, peaufinez et retrouvez vos stratégies. Tous vos decks, au même endroit.",
+    "subtitle": "Construisez, peaufinez et retrouvez vos stratégies, ainsi que les decks publics mis en favoris. Tout au même endroit.",
+    "tabs": "Sections de mes decks",
+    "tabMine": "Mes decks",
+    "tabFavorites": "Favoris",
+    "favoritesEmptyTitle": "Aucun deck en favoris",
+    "favoritesEmptyHelp": "Ajoutez des decks publics à vos favoris depuis la liste de la communauté pour les retrouver ici.",
     "libraryHint": "De la première idée à votre prochaine partie.",
     "explore": "Explorer les decks de la communauté",
     "create": "Créer un deck",
@@ -3004,6 +3000,7 @@
     "results": "{count, plural, =0 {Aucun deck} one {# deck} other {# decks}}",
     "sorts": {
       "updated": "Dernière modification",
+      "saved": "Ajoutés récemment",
       "newest": "Plus récents",
       "oldest": "Plus anciens",
       "nameAsc": "Nom : A → Z",

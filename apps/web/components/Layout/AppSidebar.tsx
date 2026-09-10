@@ -49,7 +49,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, usePathname } from "@/i18n/navigation";
 import { PROTECTED_ROUTES } from "@/utils/constants";
-import { NavItem, navItems } from "@/utils/sidebar";
+import { NavItem, navItems, SubItem } from "@/utils/sidebar";
 
 export function AppSidebar() {
   const t = useTranslations("Sidebar");
@@ -74,8 +74,18 @@ export function AppSidebar() {
       ? false
       : undefined;
 
+  // Sous "/decks", "/decks/me" ne doit pas aussi allumer "/decks"
+  const isSubActive = (href: string, siblings: SubItem[]) =>
+    isActive(href) &&
+    !siblings.some(
+      (sibling) => sibling.href.length > href.length && isActive(sibling.href),
+    );
+
   const renderNavItem = (item: NavItem) => {
-    if (item.subItems && item.subItems.length > 0) {
+    const subItems = item.subItems?.filter(
+      (sub) => !sub.requireAuth || isAuthenticated,
+    );
+    if (subItems && subItems.length > 0) {
       return (
         <Collapsible
           key={item.href}
@@ -96,9 +106,12 @@ export function AppSidebar() {
             </CollapsibleTrigger>
             <CollapsibleContent>
               <SidebarMenuSub>
-                {item.subItems.map((sub) => (
+                {subItems.map((sub) => (
                   <SidebarMenuSubItem key={sub.href}>
-                    <SidebarMenuSubButton asChild isActive={isActive(sub.href)}>
+                    <SidebarMenuSubButton
+                      asChild
+                      isActive={isSubActive(sub.href, subItems)}
+                    >
                       <Link href={sub.href} prefetch={prefetchFor(sub.href)}>
                         <sub.icon className="h-4 w-4" />
                         <span>{t(sub.labelKey)}</span>

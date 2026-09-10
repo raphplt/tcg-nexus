@@ -1,25 +1,28 @@
 "use client";
 import { useTranslations } from "next-intl";
 import { H1, H2 } from "@components/Shared/Titles";
+import { Button } from "@components/ui/button";
 import { Skeleton } from "@components/ui/skeleton";
 import { usePaginatedQuery } from "@hooks/usePaginatedQuery";
 import { authedFetch } from "@utils/fetch";
-import { Library } from "lucide-react";
+import { Layers, Library } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PageWrapper } from "@/components/Layout/PageWrapper";
 import { PaginatedNav } from "@/components/Shared/PaginatedNav";
+import { useAuth } from "@/contexts/AuthContext";
+import { Link } from "@/i18n/navigation";
 import { decksService } from "@/services/decks.service";
 import { Deck } from "@/types/Decks";
 import { DeckFormat } from "@/types/deckFormat";
 import { PaginatedResult } from "@/types/pagination";
 import DeckCard from "./_components/DeckCard";
 import DecksFilters, { DecksFiltersTypes } from "./_components/DecksFilters";
-import SavedDecks from "./_components/SavedDecks";
 import TrendingDecks from "./_components/TrendingDecks";
-import UserDecks from "./_components/UserDecks";
 
+/** Lists the community's public decks; personal decks live under /decks/me. */
 export default function DecksPage() {
   const t = useTranslations("Decks");
+  const { isAuthenticated } = useAuth();
   const [page, setPage] = useState(1);
   const [formatList, setFormatList] = useState<[] | DeckFormat[]>([]);
   const [filters, setFilters] = useState<DecksFiltersTypes>({
@@ -40,7 +43,14 @@ export default function DecksPage() {
   };
 
   const { data, isLoading, error } = usePaginatedQuery<PaginatedResult<Deck>>(
-    ["decks", page, filters.search, filters.sortBy, filters.sortOrder],
+    [
+      "decks",
+      page,
+      filters.search,
+      filters.format,
+      filters.sortBy,
+      filters.sortOrder,
+    ],
     decksService.getPaginated,
     {
       page,
@@ -84,10 +94,16 @@ export default function DecksPage() {
           <p className="text-muted-foreground max-w-2xl mx-auto">
             {t("subtitle")}
           </p>
+          {isAuthenticated && (
+            <Button asChild variant="outline">
+              <Link href="/decks/me">
+                <Layers />
+                {t("myDecks")}
+              </Link>
+            </Button>
+          )}
         </div>
         <TrendingDecks />
-        <UserDecks />
-        <SavedDecks />
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <H2 className="flex items-center gap-2">
