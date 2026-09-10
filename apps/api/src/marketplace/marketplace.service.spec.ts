@@ -1101,5 +1101,22 @@ describe("MarketplaceService", () => {
       );
       expect(qb.orderBy).toHaveBeenCalledWith("sortTranslation.name", "ASC");
     });
+
+    it("sorts card numbers numerically", async () => {
+      const qb = createMockQb();
+      mockPokemonCardRepo.createQueryBuilder.mockReturnValue(qb);
+
+      await service.getCardsWithMarketplaceData({
+        setId: "sv01",
+        sortBy: "localId",
+      });
+
+      expect(qb.addOrderBy).toHaveBeenCalledWith(
+        expect.stringContaining("AS NUMERIC"),
+        "ASC",
+        "NULLS LAST",
+      );
+      expect(qb.addOrderBy).toHaveBeenCalledWith("card.localId", "ASC");
+    });
   });
 });

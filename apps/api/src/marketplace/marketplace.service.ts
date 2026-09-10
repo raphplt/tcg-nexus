@@ -1139,11 +1139,21 @@ export class MarketplaceService {
     } else if (sortBy === "popularity") {
       qb.orderBy("listing_count", "DESC");
     } else if (sortBy === "localId") {
-      // For localId, sort as text but it will work for numeric strings
-      // Since we added it to GROUP BY, we can reference it directly
-      qb.orderBy("card.localId", safeSortOrder);
-      // Add secondary sort by name for consistency
-      qb.addOrderBy("sortTranslation.name", "ASC");
+      // Numeric order within a set ("2" before "10"), letter-prefixed numbers
+      // such as "TG01" after plain ones. card.localId is grouped on, so these
+      // expressions can be ordered on directly.
+      qb.orderBy(
+        "regexp_replace(\"card\".\"localId\", '\\d', '', 'g')",
+        safeSortOrder,
+      )
+        .addOrderBy(
+          "CAST(NULLIF(regexp_replace(\"card\".\"localId\", '\\D', '', 'g'), '') AS NUMERIC)",
+          safeSortOrder,
+          "NULLS LAST",
+        )
+        .addOrderBy("card.localId", safeSortOrder)
+        // Add secondary sort by name for consistency
+        .addOrderBy("sortTranslation.name", "ASC");
     } else if (sortBy === "name" || sortBy === "rarity") {
       // Localized fields, taken from the joined translation
       qb.orderBy(`sortTranslation.${sortBy}`, safeSortOrder);
