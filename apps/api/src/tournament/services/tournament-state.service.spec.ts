@@ -112,11 +112,38 @@ describe("TournamentStateService", () => {
       expect(result.warnings).toContain("Le tournoi est presque complet");
     });
 
-    it("fails DRAFT -> REGISTRATION_OPEN when required fields are missing", async () => {
+    it("allows DRAFT -> REGISTRATION_OPEN when optional fields are missing", async () => {
       const t = tournamentBase();
       t.status = TournamentStatus.DRAFT;
       t.registrationDeadline = undefined as any;
       t.minPlayers = undefined as any;
+      mockTournamentRepository.findOne.mockResolvedValue(t);
+
+      const result = await service.validateStateTransition(
+        1,
+        TournamentStatus.REGISTRATION_OPEN,
+      );
+      expect(result.canTransition).toBe(true);
+    });
+
+    it("fails DRAFT -> REGISTRATION_OPEN when registration deadline already passed", async () => {
+      const t = tournamentBase();
+      t.status = TournamentStatus.DRAFT;
+      t.registrationDeadline = new Date(Date.now() - 10_000);
+      mockTournamentRepository.findOne.mockResolvedValue(t);
+
+      const result = await service.validateStateTransition(
+        1,
+        TournamentStatus.REGISTRATION_OPEN,
+      );
+      expect(result.canTransition).toBe(false);
+      expect(result.errors.length).toBeGreaterThan(0);
+    });
+
+    it("fails DRAFT -> REGISTRATION_OPEN when minPlayers is below 2", async () => {
+      const t = tournamentBase();
+      t.status = TournamentStatus.DRAFT;
+      t.minPlayers = 1;
       mockTournamentRepository.findOne.mockResolvedValue(t);
 
       const result = await service.validateStateTransition(
